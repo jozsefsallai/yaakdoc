@@ -1,0 +1,12 @@
+{
+  "name": "@yaakdoc/example-request-builder",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@types/node": "^22.10.2",
+    "typescript": "5.5.4"
+  }
+}
