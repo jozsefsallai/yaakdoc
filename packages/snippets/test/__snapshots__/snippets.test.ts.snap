@@ -782,9 +782,24 @@ curl -X POST https://api.acme.dev/v1/graphql \\
   -H 'User-Agent: acme-docs/1.0' \\
   -H 'Authorization: Bearer {{api_token}}' \\
   -H 'Content-Type: application/json' \\
-  --data-raw '{"query":"query Search($term: String!) {\\n  products(search: $term, first: 5) {\\n    id\\n    name\\n    price\\n  }\\n}","variables":{"term":"shoes"}}'
+  --data-raw '{
+  "query": "query Search($term: String!) { products(search: $term, first: 5) { id name price } }",
+  "variables": {
+    "term": "shoes"
+  }
+}'
 
 --- javascript (javascript)
+const query = /* GraphQL */ \`
+  query Search($term: String!) {
+    products(search: $term, first: 5) {
+      id
+      name
+      price
+    }
+  }
+\`;
+
 const response = await fetch("https://api.acme.dev/v1/graphql", {
   method: "POST",
   headers: {
@@ -794,10 +809,10 @@ const response = await fetch("https://api.acme.dev/v1/graphql", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    "query": "query Search($term: String!) {\\n  products(search: $term, first: 5) {\\n    id\\n    name\\n    price\\n  }\\n}",
-    "variables": {
+    query,
+    variables: {
       "term": "shoes"
-    }
+    },
   }),
 });
 
@@ -812,10 +827,20 @@ headers = {
     "Accept": "application/json",
     "User-Agent": "acme-docs/1.0",
     "Authorization": "Bearer {{api_token}}",
-    "Content-Type": "application/json",
 }
+
+query = """
+query Search($term: String!) {
+  products(search: $term, first: 5) {
+    id
+    name
+    price
+  }
+}
+"""
+
 payload = {
-    "query": "query Search($term: String!) {\\n  products(search: $term, first: 5) {\\n    id\\n    name\\n    price\\n  }\\n}",
+    "query": query,
     "variables": {
         "term": "shoes",
     },
@@ -828,21 +853,33 @@ print(response.json())
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
 
 func main() {
-	body := strings.NewReader(\`{
-  "query": "query Search($term: String!) {\\n  products(search: $term, first: 5) {\\n    id\\n    name\\n    price\\n  }\\n}",
-  "variables": {
-    "term": "shoes"
-  }
-}\`)
+	query := \`
+		query Search($term: String!) {
+		  products(search: $term, first: 5) {
+		    id
+		    name
+		    price
+		  }
+		}
+	\`
+	variables := json.RawMessage(\`{
+		"term": "shoes"
+	}\`)
 
-	req, err := http.NewRequest("POST", "https://api.acme.dev/v1/graphql", body)
+	payload, _ := json.Marshal(map[string]any{
+		"query":     query,
+		"variables": variables,
+	})
+
+	req, err := http.NewRequest("POST", "https://api.acme.dev/v1/graphql", bytes.NewReader(payload))
 	if err != nil {
 		panic(err)
 	}

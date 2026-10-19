@@ -21,7 +21,7 @@ export const rawKeyValueSchema = z.looseObject({
   enabled: z.boolean().optional(),
   name: z.string().default(""),
   value: z.string().default(""),
-  id: z.string().optional(),
+  id: z.string().nullish(),
 });
 
 export const rawMultipartFieldSchema = rawKeyValueSchema.extend({

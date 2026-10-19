@@ -197,3 +197,38 @@ describe("errors", () => {
     );
   });
 });
+
+describe("normalize (exports with null ids)", () => {
+  it("accepts key-values with a null id (as written by Yaak 2026.9)", () => {
+    const doc = normalize({
+      yaakVersion: "2026.9.0",
+      yaakSchema: 4,
+      resources: {
+        workspaces: [
+          {
+            id: "wk_1",
+            name: "API",
+            headers: [{ enabled: true, name: "X-A", value: "1", id: null }],
+          },
+        ],
+        httpRequests: [
+          {
+            id: "rq_1",
+            workspaceId: "wk_1",
+            folderId: null,
+            name: "Ping",
+            url: "https://example.com",
+            headers: [{ enabled: true, name: "Accept", value: "application/json", id: null }],
+            urlParameters: [{ enabled: true, name: "q", value: "1", id: null }],
+          },
+        ],
+      },
+    });
+
+    const request = doc.workspaces[0]!.requests.rq_1!;
+    expect(request.kind === "http" && request.headers.map((h) => h.name)).toEqual([
+      "X-A",
+      "Accept",
+    ]);
+  });
+});

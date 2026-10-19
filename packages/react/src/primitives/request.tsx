@@ -53,19 +53,15 @@ export const RequestBody = overridable(
       default:
         return request.bodyHtml ? (
           <div data-yd="body" data-kind={body.type} className={className}>
-            {body.type === "graphql" && body.variables ? (
-              <span data-yd="body-label">Query</span>
-            ) : null}
+            {request.variablesHtml ? <span data-yd="body-label">Query</span> : null}
 
             <Html html={request.bodyHtml} />
 
-            {body.type === "graphql" && body.variables ? (
+            {request.variablesHtml ? (
               <>
                 <span data-yd="body-label">Variables</span>
 
-                <pre data-yd="body-variables">
-                  <code>{body.variables}</code>
-                </pre>
+                <Html html={request.variablesHtml ?? ""} data-yd="body-variables" />
               </>
             ) : null}
           </div>

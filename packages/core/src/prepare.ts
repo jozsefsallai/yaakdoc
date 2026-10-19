@@ -150,6 +150,7 @@ export async function prepareDocument(options: PrepareOptions): Promise<Prepared
         }),
       ),
       bodyHtml: bodySource ? await options.highlight(bodySource.code, bodySource.language) : null,
+      variablesHtml: await graphqlVariablesHtml(request, options.highlight),
       ...links(request.slug, request.anchor),
     } as PreparedRequest;
   }
@@ -240,6 +241,23 @@ function displayBody(
     default:
       return body;
   }
+}
+
+/** Highlighted GraphQL variables (pretty-printed when they are valid JSON). */
+async function graphqlVariablesHtml(
+  request: RequestDoc,
+  highlight: PrepareOptions["highlight"],
+): Promise<string | null> {
+  if (
+    request.kind !== "http" ||
+    request.body.type !== "graphql" ||
+    !request.body.variables?.trim()
+  ) {
+    return null;
+  }
+
+  const text = formatTemplate(request.body.variables);
+  return highlight(prettyJson(text) ?? text, "json");
 }
 
 function bodySourceOf(request: RequestDoc): { code: string; language: string } | null {

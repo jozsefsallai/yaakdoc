@@ -6,7 +6,7 @@ import { createDevServer } from "../src/index";
 
 // Runs in its own file (worker): React's development build is loaded here, the production build in
 // the build tests.
-const DEMO_EXPORT = new URL("../../../apps/demo/yaak.json", import.meta.url);
+const FIXTURE_EXPORT = new URL("../../core/test/fixtures/current.json", import.meta.url);
 
 describe("dev server", () => {
   let server: Awaited<ReturnType<typeof createDevServer>>;
@@ -14,7 +14,7 @@ describe("dev server", () => {
 
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), "yaakdoc-test-"));
-    await cp(DEMO_EXPORT, join(dir, "yaak.json"));
+    await cp(FIXTURE_EXPORT, join(dir, "yaak.json"));
     server = await createDevServer({ cwd: dir, port: 0, watch: false });
   });
 

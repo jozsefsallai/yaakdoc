@@ -1,6 +1,6 @@
 import { applyAuth } from "@yaakdoc/core";
 import { defineSnippet } from "../define";
-import { graphqlPayload, shellQuote, withContentType } from "../utils";
+import { graphqlPayload, graphqlQuery, minifyGraphql, shellQuote, withContentType } from "../utils";
 
 export const curl = defineSnippet({
   id: "curl",
@@ -43,7 +43,9 @@ export const curl = defineSnippet({
         break;
 
       case "graphql": {
-        parts.push(`--data-raw ${shellQuote(JSON.stringify(graphqlPayload(body)))}`);
+        // JSON can't hold multi-line strings: send the query on one (readable) line.
+        const payload = graphqlPayload(body, minifyGraphql(graphqlQuery(body)));
+        parts.push(`--data-raw ${shellQuote(JSON.stringify(payload, null, 2))}`);
         break;
       }
 

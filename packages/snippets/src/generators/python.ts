@@ -1,6 +1,6 @@
 import { applyAuth, tryParseJson } from "@yaakdoc/core";
 import { defineSnippet } from "../define";
-import { graphqlPayload, withContentType } from "../utils";
+import { graphqlQuery, graphqlVariables, withContentType } from "../utils";
 
 const pyStr = (value: string) => JSON.stringify(value);
 
@@ -68,7 +68,7 @@ export const python = defineSnippet({
       // `json=` sets the JSON content type automatically
       (h) =>
         !(
-          body.type === "json" &&
+          (body.type === "json" || body.type === "graphql") &&
           h.name.toLowerCase() === "content-type" &&
           h.value === "application/json"
         ),
@@ -97,10 +97,26 @@ export const python = defineSnippet({
         break;
       }
 
-      case "graphql":
-        lines.push(`payload = ${toPython(graphqlPayload(body))}`);
+      case "graphql": {
+        const variables = graphqlVariables(body);
+        const query = graphqlQuery(body).replace(/\\/g, "\\\\").replace(/"""/g, '\\"\\"\\"');
+
+        lines.push(
+          "",
+          `query = """\n${query}\n"""`,
+          "",
+          [
+            "payload = {",
+            '    "query": query,',
+            ...(variables !== undefined ? [`    "variables": ${toPython(variables, 1)},`] : []),
+            ...(body.operationName ? [`    "operationName": ${pyStr(body.operationName)},`] : []),
+            "}",
+          ].join("\n"),
+        );
+
         args.push("json=payload");
         break;
+      }
 
       case "text":
         if (body.text) {

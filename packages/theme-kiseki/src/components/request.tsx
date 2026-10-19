@@ -60,13 +60,11 @@ function Body({ request }: { request: PreparedRequest }) {
           <div className="overflow-hidden rounded-lg border bg-muted/40 [&_pre]:overflow-x-auto [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[0.8125rem] [&_pre]:leading-6">
             <Html html={request.bodyHtml} />
 
-            {body.type === "graphql" && body.variables ? (
+            {request.variablesHtml ? (
               <div className="border-t">
                 <p className="px-4 pt-3 text-xs font-medium text-muted-foreground">Variables</p>
 
-                <pre>
-                  <code>{body.variables}</code>
-                </pre>
+                <Html html={request.variablesHtml ?? ""} />
               </div>
             ) : null}
           </div>

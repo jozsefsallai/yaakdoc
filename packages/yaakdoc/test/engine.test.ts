@@ -6,12 +6,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { normalizeArgs } from "../src/cli/index";
 import { build, eject, init, preview } from "../src/index";
 
-const DEMO_EXPORT = new URL("../../../apps/demo/yaak.json", import.meta.url);
+const FIXTURE_EXPORT = new URL("../../core/test/fixtures/current.json", import.meta.url);
 
 /** A fresh project directory containing only a Yaak export (named yaak.json). */
 async function project() {
   const dir = await mkdtemp(join(tmpdir(), "yaakdoc-test-"));
-  await cp(DEMO_EXPORT, join(dir, "yaak.json"));
+  await cp(FIXTURE_EXPORT, join(dir, "yaak.json"));
   return dir;
 }
 

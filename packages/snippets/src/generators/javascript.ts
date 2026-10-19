@@ -1,6 +1,6 @@
 import { applyAuth, type ResolvedHttpRequest, tryParseJson } from "@yaakdoc/core";
 import { defineSnippet } from "../define";
-import { graphqlPayload, indent, withContentType } from "../utils";
+import { graphqlQuery, graphqlVariables, indent, indentLines, withContentType } from "../utils";
 
 const str = (value: string) => JSON.stringify(value);
 
@@ -96,12 +96,26 @@ function fetchSnippet(req: ResolvedHttpRequest, basicCredentials?: string): stri
 
       break;
 
-    case "graphql":
-      options.push(
-        `body: JSON.stringify(${indent(JSON.stringify(graphqlPayload(body), null, 2), "  ")}),`,
+    case "graphql": {
+      // A separate, tagged template keeps the query readable (and highlighted as GraphQL).
+      pre.push(
+        `const query = /* GraphQL */ \`\n${indentLines(escapeTemplate(graphqlQuery(body)), "  ")}\n\`;`,
+        "",
       );
 
+      const variables = graphqlVariables(body);
+
+      const fields = [
+        "    query,",
+        ...(variables !== undefined
+          ? [`    variables: ${indent(JSON.stringify(variables, null, 2), "    ")},`]
+          : []),
+        ...(body.operationName ? [`    operationName: ${str(body.operationName)},`] : []),
+      ];
+
+      options.push(`body: JSON.stringify({\n${fields.join("\n")}\n  }),`);
       break;
+    }
 
     case "form-urlencoded":
       options.push(
@@ -147,5 +161,10 @@ function templateString(value: string): string {
     return str(value);
   }
 
-  return `\`${value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${")}\``;
+  return `\`${escapeTemplate(value)}\``;
+}
+
+/** Escapes text for a JavaScript template literal. */
+function escapeTemplate(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 }

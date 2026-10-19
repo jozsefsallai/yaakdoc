@@ -8,7 +8,12 @@ import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
-import { bundledLanguages, createHighlighter, type Highlighter } from "shiki";
+import {
+  bundledLanguages,
+  createHighlighter,
+  type Highlighter,
+  type LanguageRegistration,
+} from "shiki";
 import { unified } from "unified";
 
 const PRELOADED_LANGUAGES = [
@@ -25,6 +30,49 @@ const PRELOADED_LANGUAGES = [
   "http",
 ];
 
+/** Highlights a delimited region as GraphQL (opening captures: prefix tokens, then the delimiter). */
+const embeddedGraphql = (begin: string, end: string, prefixScopes: string[]) => ({
+  begin,
+  beginCaptures: Object.fromEntries(prefixScopes.map((name, index) => [index + 1, { name }])),
+  end,
+  endCaptures: { 0: { name: prefixScopes.at(-1)! } },
+  contentName: "meta.embedded.block.graphql",
+  patterns: [{ include: "source.graphql" }],
+});
+
+/**
+ * Injection grammar highlighting GraphQL inside code examples (like VS Code's GraphQL extension):
+ * `/* GraphQL *\/ \`…\`` and `gql\`…\`` in JavaScript, `query = """…"""` in Python and
+ * `query := \`…\`` in Go.
+ */
+const GRAPHQL_INJECTION = {
+  name: "yaakdoc-graphql-injection",
+  scopeName: "inline.graphql.yaakdoc",
+  injectTo: ["source.js", "source.ts", "source.python", "source.go"],
+  injectionSelector: "L:source -comment -string",
+  embeddedLangs: ["graphql"],
+  patterns: [
+    embeddedGraphql("(/\\*\\s*GraphQL\\s*\\*/)\\s*(`)", "`", [
+      "comment.block.js",
+      "punctuation.definition.string.template.begin.js",
+    ]),
+    embeddedGraphql("\\b(gql|graphql)(`)", "`", [
+      "entity.name.function.tagged-template.js",
+      "punctuation.definition.string.template.begin.js",
+    ]),
+    embeddedGraphql('\\b(query)\\s*(=)\\s*(""")', '"""', [
+      "variable.other.python",
+      "keyword.operator.assignment.python",
+      "punctuation.definition.string.begin.python",
+    ]),
+    embeddedGraphql("\\b(query)\\s*(:=)\\s*(`)", "`", [
+      "variable.other.go",
+      "keyword.operator.assignment.go",
+      "punctuation.definition.string.begin.go",
+    ]),
+  ],
+} as unknown as LanguageRegistration;
+
 export type Renderer = {
   markdown: (source: string) => Promise<string>;
   highlight: (code: string, language: string) => Promise<string>;
@@ -39,7 +87,7 @@ function getHighlighter(themes: { light: string; dark: string }) {
   if (!highlighter) {
     highlighter = createHighlighter({
       themes: [themes.light, themes.dark],
-      langs: PRELOADED_LANGUAGES,
+      langs: [...PRELOADED_LANGUAGES, GRAPHQL_INJECTION],
     });
 
     highlighters.set(key, highlighter);

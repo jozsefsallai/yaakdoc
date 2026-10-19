@@ -1,6 +1,13 @@
 import { applyAuth } from "@yaakdoc/core";
 import { defineSnippet } from "../define";
-import { bodyText, withContentType } from "../utils";
+import {
+  bodyText,
+  graphqlQuery,
+  graphqlVariables,
+  indent,
+  indentLines,
+  withContentType,
+} from "../utils";
 
 const goStr = (value: string) =>
   value.includes("`") || !value.includes("\n") ? JSON.stringify(value) : `\`${value}\``;
@@ -64,6 +71,48 @@ export const go = defineSnippet({
       );
 
       bodyVar = "body";
+    } else if (body.type === "graphql") {
+      imports.add("bytes");
+      imports.add("encoding/json");
+
+      const query = graphqlQuery(body);
+      const variables = graphqlVariables(body);
+      const fields: Array<[string, string]> = [["query", "query"]];
+
+      // A raw string keeps the query readable; fall back to a quoted string if it has backticks.
+      setup.push(
+        query.includes("`")
+          ? `\tquery := ${JSON.stringify(query)}`
+          : `\tquery := \`\n${indentLines(query, "\t\t")}\n\t\``,
+      );
+
+      if (variables !== undefined) {
+        const json = JSON.stringify(variables, null, "\t");
+
+        setup.push(
+          json.includes("`")
+            ? `\tvariables := json.RawMessage(${JSON.stringify(json)})`
+            : `\tvariables := json.RawMessage(\`${indent(json, "\t")}\`)`,
+        );
+
+        fields.push(["variables", "variables"]);
+      }
+
+      if (body.operationName) {
+        fields.push(["operationName", goStr(body.operationName)]);
+      }
+
+      const width = Math.max(...fields.map(([key]) => key.length)) + 3;
+
+      setup.push(
+        "",
+        "\tpayload, _ := json.Marshal(map[string]any{",
+        ...fields.map(([key, value]) => `\t\t${`"${key}":`.padEnd(width)} ${value},`),
+        "\t})",
+        "",
+      );
+
+      bodyVar = "bytes.NewReader(payload)";
     } else {
       const text = bodyText(body);
 

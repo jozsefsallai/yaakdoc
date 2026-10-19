@@ -33,7 +33,14 @@ export type HttpBody =
   | { type: "text"; contentType: string | null; text: string }
   | { type: "form-urlencoded"; contentType: string; fields: KeyValue[] }
   | { type: "multipart"; contentType: string; fields: MultipartField[] }
-  | { type: "graphql"; contentType: string; query: string; variables: string | null }
+  | {
+      type: "graphql";
+      contentType: string;
+      query: string;
+      /** Variables as JSON text. */
+      variables: string | null;
+      operationName: string | null;
+    }
   | { type: "binary"; contentType: string | null; filePath: string | null };
 
 export type Breadcrumb = { id: string; name: string; slug: string };
@@ -205,6 +212,8 @@ export type PreparedRequest = RequestDoc &
     responses: ResponseExample[];
     /** Highlighted HTML of the request body / message, when present. */
     bodyHtml: string | null;
+    /** Highlighted HTML of GraphQL variables, when present. */
+    variablesHtml: string | null;
   };
 
 export type PreparedFolder = FolderDoc &

@@ -366,14 +366,21 @@ function toHttpBody(bodyType: string | null, body: Record<string, unknown>): Htt
   if (bodyType === "graphql") {
     let query = str("query");
     let variables: string | null = typeof body.variables === "string" ? body.variables : null;
+    let operationName = str("operationName");
 
     // Some importers store `{ query, variables }` as JSON in `text`.
     if (!query && str("text")) {
       const parsed = tryParseJson(str("text"));
 
       if (parsed.ok && parsed.value && typeof parsed.value === "object") {
-        const graphql = parsed.value as { query?: string; variables?: unknown };
+        const graphql = parsed.value as {
+          query?: string;
+          variables?: unknown;
+          operationName?: string;
+        };
+
         query = graphql.query ?? "";
+        operationName ||= graphql.operationName ?? "";
 
         if (graphql.variables !== undefined) {
           variables = JSON.stringify(graphql.variables, null, 2);
@@ -388,6 +395,7 @@ function toHttpBody(bodyType: string | null, body: Record<string, unknown>): Htt
       contentType: "application/json",
       query,
       variables: variables || null,
+      operationName: operationName || null,
     };
   }
 
