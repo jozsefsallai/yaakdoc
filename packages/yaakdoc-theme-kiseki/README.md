@@ -1,1 +1,0 @@
-# `yaakdoc-theme-kiseki`

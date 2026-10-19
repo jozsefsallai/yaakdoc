@@ -1,0 +1,45 @@
+{
+  "yaakVersion": "2024.5.0",
+  "yaakSchema": 2,
+  "timestamp": "2024-05-01T10:00:00",
+  "resources": {
+    "workspaces": [
+      {
+        "model": "workspace",
+        "id": "wk_old",
+        "name": "Legacy API",
+        "description": "",
+        "variables": [{ "enabled": true, "name": "host", "value": "https://old.example.com" }]
+      }
+    ],
+    "environments": [
+      {
+        "model": "environment",
+        "id": "ev_dev",
+        "workspaceId": "wk_old",
+        "environmentId": "ev_whatever",
+        "name": "Dev",
+        "variables": [{ "enabled": true, "name": "host", "value": "https://dev.example.com" }]
+      }
+    ],
+    "folders": [],
+    "requests": [
+      {
+        "model": "http_request",
+        "id": "rq_ping",
+        "workspaceId": "wk_old",
+        "folderId": null,
+        "name": "Ping",
+        "method": "get",
+        "url": "${[ host ]}/ping",
+        "sortPriority": 0,
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      }
+    ]
+  }
+}

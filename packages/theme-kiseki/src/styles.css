@@ -1,0 +1,323 @@
+/*
+ * Kiseki – the default yaakdoc theme.
+ *
+ * Colors are shadcn/ui-style tokens. Branding from yaakdoc.config.json arrives as `--yd-*` custom
+ * properties and takes precedence over the defaults below. Light and dark values use `light-dark()`,
+ * driven by `color-scheme` (set from `data-theme` on <html>, or the OS setting without JavaScript).
+ */
+@import "tailwindcss" source(none);
+@source "./";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light dark;
+  --radius: 0.5rem;
+
+  --background: var(
+    --yd-color-background,
+    light-dark(oklch(0.993 0.002 280), oklch(0.17 0.012 275))
+  );
+  --foreground: var(--yd-color-foreground, light-dark(oklch(0.22 0.02 275), oklch(0.93 0.008 275)));
+  --primary: var(--yd-color-primary, light-dark(oklch(0.52 0.19 283), oklch(0.72 0.14 283)));
+  --primary-foreground: light-dark(oklch(0.99 0 0), oklch(0.16 0.02 283));
+  --brand-accent: var(--yd-color-accent, var(--primary));
+  --muted: light-dark(oklch(0.965 0.005 280), oklch(0.215 0.013 275));
+  --muted-foreground: light-dark(oklch(0.48 0.02 275), oklch(0.7 0.015 275));
+  --accent: light-dark(oklch(0.955 0.012 283), oklch(0.25 0.02 280));
+  --accent-foreground: var(--foreground);
+  --popover: light-dark(oklch(1 0 0), oklch(0.205 0.013 275));
+  --popover-foreground: var(--foreground);
+  --border: light-dark(oklch(0.915 0.006 280), oklch(0.27 0.014 275));
+  --input: var(--border);
+  --ring: color-mix(in oklch, var(--primary) 60%, transparent);
+  --sidebar: light-dark(oklch(0.978 0.004 280), oklch(0.155 0.012 275));
+
+  /* The code panel is dark in both modes (like Insomnia Documenter). */
+  --code-panel: oklch(0.205 0.018 275);
+  --code-panel-border: oklch(0.29 0.02 275);
+  --code-panel-foreground: oklch(0.9 0.01 275);
+
+  /* Method colors. */
+  --method-get: light-dark(oklch(0.56 0.13 160), oklch(0.74 0.13 160));
+  --method-post: light-dark(oklch(0.55 0.15 250), oklch(0.74 0.12 250));
+  --method-put: light-dark(oklch(0.6 0.14 70), oklch(0.8 0.13 75));
+  --method-patch: light-dark(oklch(0.55 0.17 305), oklch(0.75 0.13 305));
+  --method-delete: light-dark(oklch(0.56 0.19 22), oklch(0.72 0.15 22));
+  --method-other: light-dark(oklch(0.5 0.02 275), oklch(0.72 0.02 275));
+  --method-grpc: light-dark(oklch(0.55 0.11 195), oklch(0.75 0.1 195));
+  --method-ws: light-dark(oklch(0.55 0.12 225), oklch(0.76 0.1 225));
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--yd-font-sans, "Geist Variable", ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(
+    --yd-font-mono,
+    "Geist Mono Variable",
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-code-panel: var(--code-panel);
+  --color-code-panel-border: var(--code-panel-border);
+  --color-code-panel-foreground: var(--code-panel-foreground);
+  --radius-sm: calc(var(--radius) - 3px);
+  --radius-md: calc(var(--radius) - 1px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-pt-20 antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+@layer components {
+  /* Shiki dual themes: pick the variant matching the element's color scheme. */
+  .shiki,
+  .shiki span {
+    color: light-dark(var(--shiki-light), var(--shiki-dark));
+  }
+
+  /* Method colors as a custom property (used by badges, the nav rail and section markers). */
+  [data-method],
+  [data-yd="nav-link"] {
+    --method: var(--method-other);
+  }
+
+  [data-method="get"],
+  [data-yd="nav-link"]:has(> [data-method="get"]) {
+    --method: var(--method-get);
+  }
+
+  [data-method="post"],
+  [data-yd="nav-link"]:has(> [data-method="post"]) {
+    --method: var(--method-post);
+  }
+
+  [data-method="put"],
+  [data-yd="nav-link"]:has(> [data-method="put"]) {
+    --method: var(--method-put);
+  }
+
+  [data-method="patch"],
+  [data-yd="nav-link"]:has(> [data-method="patch"]) {
+    --method: var(--method-patch);
+  }
+
+  [data-method="delete"],
+  [data-yd="nav-link"]:has(> [data-method="delete"]) {
+    --method: var(--method-delete);
+  }
+
+  [data-method="grpc"],
+  [data-yd="nav-link"]:has(> [data-method="grpc"]) {
+    --method: var(--method-grpc);
+  }
+
+  [data-method="ws"],
+  [data-yd="nav-link"]:has(> [data-method="ws"]) {
+    --method: var(--method-ws);
+  }
+
+  /* Request URL parts */
+  [data-yd="url-variable"] {
+    @apply rounded-sm px-0.5 text-primary;
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+  }
+
+  [data-yd="url-param"] {
+    @apply font-semibold text-(--method-patch);
+  }
+
+  /* Rendered Markdown */
+  .kiseki-prose {
+    @apply max-w-[68ch] text-[0.9375rem] leading-7 text-foreground/90;
+
+    & > * + * {
+      @apply mt-4;
+    }
+
+    & h1,
+    & h2,
+    & h3,
+    & h4 {
+      @apply mt-8 font-semibold tracking-tight text-foreground;
+    }
+
+    & h1 {
+      @apply text-2xl;
+    }
+
+    & h2 {
+      @apply text-xl;
+    }
+
+    & h3 {
+      @apply text-lg;
+    }
+
+    & a {
+      @apply font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary;
+    }
+
+    & strong {
+      @apply font-semibold text-foreground;
+    }
+
+    & ul {
+      @apply list-disc pl-5;
+    }
+
+    & ol {
+      @apply list-decimal pl-5;
+    }
+
+    & li + li {
+      @apply mt-1.5;
+    }
+
+    & blockquote {
+      @apply border-l-2 border-primary/40 pl-4 text-muted-foreground;
+    }
+
+    & :not(pre) > code {
+      @apply rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground;
+    }
+
+    & pre {
+      @apply overflow-x-auto rounded-lg border bg-muted/60 p-4 font-mono text-[0.8125rem] leading-6;
+    }
+
+    & table {
+      @apply w-full border-collapse text-sm;
+    }
+
+    & th {
+      @apply border-b px-3 py-2 text-left font-medium text-muted-foreground;
+    }
+
+    & td {
+      @apply border-b px-3 py-2 align-top;
+    }
+
+    & hr {
+      @apply my-8;
+    }
+
+    & img {
+      @apply rounded-lg;
+    }
+  }
+
+  .kiseki-nav {
+    & [data-yd="nav-list"] {
+      @apply space-y-px;
+    }
+
+    & [data-yd="nav-list"][data-depth]:not([data-depth="0"]) {
+      @apply relative mt-px ml-3 border-l pl-2;
+    }
+
+    & summary {
+      @apply flex cursor-pointer list-none items-center gap-1.5 rounded-md px-2 py-1.5 text-[0.8125rem] font-semibold text-foreground select-none hover:bg-accent;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::before {
+        content: "";
+        @apply size-1.5 shrink-0 border-r-[1.5px] border-b-[1.5px] border-muted-foreground transition-transform motion-reduce:transition-none;
+        transform: rotate(-45deg);
+      }
+    }
+
+    & details[open] > summary::before {
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    & [data-yd="nav-link"] {
+      @apply relative flex items-center gap-2 rounded-md px-2 py-1.5 text-[0.8125rem] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground;
+    }
+
+    & [data-yd="nav-link"][aria-current] {
+      @apply bg-accent font-medium text-foreground;
+
+      &::before {
+        content: "";
+        @apply absolute top-1.5 bottom-1.5 -left-[9.5px] w-0.5 rounded-full;
+        background: var(--method);
+      }
+    }
+
+    & [data-yd="nav-label"] {
+      @apply min-w-0 truncate;
+    }
+  }
+
+  /* Sidebar off-canvas on small screens */
+  .kiseki-sidebar {
+    @media (width < 64rem) {
+      @apply invisible -translate-x-full transition-[translate,visibility] duration-200 motion-reduce:transition-none;
+
+      &[data-open="true"] {
+        @apply visible translate-x-0;
+      }
+    }
+  }
+
+  /* Code inside the dark code and response panels */
+  :is([data-yd="code-examples"], [data-yd="response-examples"]) [data-yd-tab-panel] pre {
+    @apply m-0 overflow-x-auto p-4 font-mono text-[0.8125rem] leading-6;
+  }
+}

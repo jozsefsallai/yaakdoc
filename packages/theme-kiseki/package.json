@@ -1,0 +1,70 @@
+{
+  "name": "@yaakdoc/theme-kiseki",
+  "version": "0.1.0",
+  "description": "Kiseki - the default yaakdoc theme. Uses Tailwind CSS v4 + shadcn/ui, support light & dark modes.",
+  "type": "module",
+  "exports": {
+    ".": "./theme.ts",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "yaak",
+    "yaakdoc",
+    "yaakdoc-theme",
+    "theme",
+    "tailwindcss",
+    "shadcn"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "files": [
+    "/theme.ts",
+    "/src",
+    "/components.json",
+    "/tsconfig.json",
+    "/README.md",
+    "/LICENSE"
+  ],
+  "scripts": {
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/theme-kiseki"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@yaakdoc/core": "workspace:^",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@yaakdoc/react": "workspace:^",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.59.0",
+    "radix-ui": "^1.8.1",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.7"
+  }
+}

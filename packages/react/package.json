@@ -1,0 +1,89 @@
+{
+  "name": "@yaakdoc/react",
+  "version": "0.1.0",
+  "description": "Unstyled, composable React components and the island runtime for yaakdoc themes.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@yaakdoc/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./islands": {
+      "@yaakdoc/source": "./src/islands/index.ts",
+      "types": "./dist/islands.d.ts",
+      "default": "./dist/islands.js"
+    },
+    "./client": {
+      "@yaakdoc/source": "./src/client.ts",
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./server": {
+      "@yaakdoc/source": "./src/server.tsx",
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./theme": {
+      "@yaakdoc/source": "./src/theme.ts",
+      "types": "./dist/theme.d.ts",
+      "default": "./dist/theme.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "yaak",
+    "yaakdoc",
+    "react",
+    "components",
+    "headless",
+    "theme"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "files": [
+    "/dist",
+    "/README.md",
+    "/LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch --no-clean",
+    "test": "vitest run",
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write",
+    "prepack": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "dependencies": {
+    "@yaakdoc/config": "workspace:^",
+    "@yaakdoc/core": "workspace:^"
+  }
+}

@@ -1,0 +1,807 @@
+{
+  "yaakVersion": "2025.6.0",
+  "yaakSchema": 4,
+  "timestamp": "2025-06-01T12:00:00",
+  "resources": {
+    "workspaces": [
+      {
+        "model": "workspace",
+        "id": "wk_acme",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "name": "Acme Store API",
+        "description": "The **Acme Store API** lets you manage products, orders and customers of an Acme storefront.\n\nAll requests are made over HTTPS and return JSON. Authenticate by sending a bearer token in the\n`Authorization` header \u2014 see [Authentication](#authentication).\n\n| Status | Meaning |\n| --- | --- |\n| `2xx` | Success |\n| `4xx` | Client error, check the `error` field |\n| `5xx` | Server error, please retry |\n",
+        "headers": [
+          {
+            "enabled": true,
+            "name": "Accept",
+            "value": "application/json"
+          },
+          {
+            "enabled": true,
+            "name": "User-Agent",
+            "value": "acme-docs/1.0"
+          },
+          {
+            "enabled": false,
+            "name": "X-Debug",
+            "value": "1"
+          }
+        ],
+        "authenticationType": "bearer",
+        "authentication": {
+          "token": "${[ api_token ]}"
+        }
+      }
+    ],
+    "environments": [
+      {
+        "model": "environment",
+        "id": "ev_base",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "name": "Global Variables",
+        "public": true,
+        "parentModel": "workspace",
+        "parentId": null,
+        "variables": [
+          {
+            "enabled": true,
+            "name": "base_url",
+            "value": "https://api.acme.dev/v1"
+          },
+          {
+            "enabled": true,
+            "name": "api_token",
+            "value": "${[ secure(\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9\") ]}"
+          },
+          {
+            "enabled": true,
+            "name": "store_id",
+            "value": "store_42"
+          }
+        ],
+        "color": null,
+        "sortPriority": 0
+      },
+      {
+        "model": "environment",
+        "id": "ev_prod",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "name": "Production",
+        "public": true,
+        "parentModel": "environment",
+        "parentId": null,
+        "variables": [
+          {
+            "enabled": true,
+            "name": "base_url",
+            "value": "https://api.acme.dev/v1"
+          }
+        ],
+        "color": "#10b981",
+        "sortPriority": 1
+      },
+      {
+        "model": "environment",
+        "id": "ev_staging",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "name": "Staging",
+        "public": true,
+        "parentModel": "environment",
+        "parentId": null,
+        "variables": [
+          {
+            "enabled": true,
+            "name": "base_url",
+            "value": "https://staging.api.acme.dev/v1"
+          },
+          {
+            "enabled": true,
+            "name": "store_id",
+            "value": "store_test"
+          }
+        ],
+        "color": "#f59e0b",
+        "sortPriority": 2
+      },
+      {
+        "model": "environment",
+        "id": "ev_local",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "name": "Local",
+        "public": false,
+        "parentModel": "environment",
+        "parentId": null,
+        "variables": [
+          {
+            "enabled": true,
+            "name": "base_url",
+            "value": "http://localhost:8080/v1"
+          },
+          {
+            "enabled": true,
+            "name": "client_secret",
+            "value": "local-secret"
+          }
+        ],
+        "color": null,
+        "sortPriority": 3
+      },
+      {
+        "model": "environment",
+        "id": "ev_orders",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "name": "Orders",
+        "public": true,
+        "parentModel": "folder",
+        "parentId": "fl_orders",
+        "variables": [
+          {
+            "enabled": true,
+            "name": "orders_version",
+            "value": "2025-01"
+          }
+        ],
+        "color": null,
+        "sortPriority": 0
+      }
+    ],
+    "folders": [
+      {
+        "model": "folder",
+        "id": "fl_auth",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Authentication",
+        "sortPriority": 0,
+        "description": "Obtain and refresh access tokens. These endpoints don't require authentication.",
+        "headers": [],
+        "authenticationType": "none",
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_products",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Products",
+        "sortPriority": 1,
+        "description": "Products are the items sold in your store.\n\n> Prices are always expressed in the smallest currency unit (e.g. cents).",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_images",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "Images",
+        "sortPriority": 10,
+        "description": "Upload and manage product images.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_orders",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Orders",
+        "sortPriority": 2,
+        "description": "Orders placed by customers. Requires an API key with the `orders:read` scope.",
+        "headers": [
+          {
+            "enabled": true,
+            "name": "Acme-Version",
+            "value": "${[ orders_version ]}"
+          }
+        ],
+        "authenticationType": "apikey",
+        "authentication": {
+          "location": "header",
+          "key": "X-API-Key",
+          "value": "${[ orders_api_key ]}"
+        }
+      },
+      {
+        "model": "folder",
+        "id": "fl_graphql",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "GraphQL",
+        "sortPriority": 3,
+        "description": "A GraphQL endpoint is available for flexible queries.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_realtime",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Realtime",
+        "sortPriority": 4,
+        "description": "Streaming APIs over WebSockets and gRPC.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_catalog",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Catalog",
+        "sortPriority": 1.5,
+        "description": "Browse the product catalog by category. Folders can be nested as deeply as you like.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_categories",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_catalog",
+        "name": "Categories",
+        "sortPriority": 0,
+        "description": "Top-level product categories.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_subcategories",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_categories",
+        "name": "Subcategories",
+        "sortPriority": 10,
+        "description": "Categories within a category.",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "folder",
+        "id": "fl_attributes",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_subcategories",
+        "name": "Attributes",
+        "sortPriority": 10,
+        "description": "Filterable attributes of a subcategory (size, color, \u2026).",
+        "headers": [],
+        "authenticationType": null,
+        "authentication": {}
+      }
+    ],
+    "httpRequests": [
+      {
+        "model": "http_request",
+        "id": "rq_login",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_auth",
+        "name": "Log in",
+        "method": "POST",
+        "url": "${[ base_url ]}/auth/login",
+        "sortPriority": 0,
+        "description": "Exchange user credentials for an access token.\n\nThe token expires after **1 hour**; use [Refresh token](#authentication-refresh-token) to get a new one.\n\n```response:200\n{\n  \"accessToken\": \"eyJhbGciOi...\",\n  \"refreshToken\": \"rt_8f2k...\",\n  \"expiresIn\": 3600\n}\n```\n\n```response:401\n{\n  \"error\": \"invalid_credentials\",\n  \"message\": \"Email or password is incorrect.\"\n}\n```",
+        "headers": [
+          {
+            "enabled": true,
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "urlParameters": [],
+        "bodyType": "application/json",
+        "body": {
+          "text": "{\n  \"email\": \"jane@acme.dev\",\n  \"password\": \"${[ password ]}\",\n  \"remember\": true\n}"
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_refresh",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_auth",
+        "name": "Refresh token",
+        "method": "POST",
+        "url": "${[ base_url ]}/auth/token",
+        "sortPriority": 1,
+        "description": "Get a new access token using a refresh token (OAuth 2 style form body).",
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": "application/x-www-form-urlencoded",
+        "body": {
+          "form": [
+            {
+              "enabled": true,
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "enabled": true,
+              "name": "refresh_token",
+              "value": "${[ refresh_token ]}"
+            },
+            {
+              "enabled": false,
+              "name": "scope",
+              "value": "products orders"
+            }
+          ]
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_list_products",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "List products",
+        "method": "GET",
+        "url": "${[ base_url ]}/stores/${[ store_id ]}/products",
+        "sortPriority": 0,
+        "description": "Returns a paginated list of products, newest first.\n\n```response\n{\n  \"data\": [\n    {\n      \"id\": \"prod_123\",\n      \"name\": \"Running shoes\",\n      \"price\": 8999,\n      \"currency\": \"USD\"\n    },\n    {\n      \"id\": \"prod_124\",\n      \"name\": \"Trail socks\",\n      \"price\": 1299,\n      \"currency\": \"USD\"\n    }\n  ],\n  \"page\": 1,\n  \"hasMore\": true\n}\n```",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": "page",
+            "value": "1"
+          },
+          {
+            "enabled": true,
+            "name": "limit",
+            "value": "20"
+          },
+          {
+            "enabled": false,
+            "name": "search",
+            "value": "shoes"
+          },
+          {
+            "enabled": true,
+            "name": "sort",
+            "value": "-created_at"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_get_product",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "Get a product",
+        "method": "GET",
+        "url": "${[ base_url ]}/products/:id",
+        "sortPriority": 1,
+        "description": "Retrieve a single product by its id.\n\n```response:200\n{\n  \"id\": \"prod_123\",\n  \"name\": \"Running shoes\",\n  \"price\": 8999,\n  \"currency\": \"USD\",\n  \"inStock\": true\n}\n```\n\n```response:404\n{\n  \"error\": \"not_found\",\n  \"message\": \"No product with id prod_999.\"\n}\n```",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":id",
+            "value": "prod_123"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_create_product",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "Create a product",
+        "method": "POST",
+        "url": "${[ base_url ]}/products",
+        "sortPriority": 2,
+        "description": "Create a new product.\n\n```json\n{ \"id\": \"prod_124\", \"status\": \"draft\" }\n```\n\nThe response contains the created product.\n\nThe API validates the payload and returns `422` when a field is invalid.\n\n```response:201\n{\n  \"id\": \"prod_125\",\n  \"name\": \"Running shoes\",\n  \"status\": \"draft\"\n}\n```\n\n```response:422\n{\n  \"error\": \"validation_failed\",\n  \"fields\": {\n    \"price\": \"must be a positive integer\"\n  }\n}\n```",
+        "headers": [
+          {
+            "enabled": true,
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "enabled": true,
+            "name": "Idempotency-Key",
+            "value": "${[ uuid.v4() ]}"
+          }
+        ],
+        "urlParameters": [],
+        "bodyType": "application/json",
+        "body": {
+          "text": "{\n  \"name\": \"Running shoes\",\n  \"price\": 8999,\n  \"currency\": \"USD\",\n  \"tags\": [\n    \"sport\",\n    \"shoes\"\n  ],\n  \"inStock\": true,\n  \"dimensions\": {\n    \"weight\": 0.8,\n    \"unit\": \"kg\"\n  }\n}"
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_update_product",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "Update a product",
+        "method": "PATCH",
+        "url": "${[ base_url ]}/products/:id",
+        "sortPriority": 3,
+        "description": "Partially update a product. Only the fields you send are changed.",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":id",
+            "value": "prod_123"
+          }
+        ],
+        "bodyType": "application/json",
+        "body": {
+          "text": "{\n  \"price\": 7999\n}"
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_delete_product",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_products",
+        "name": "Delete a product",
+        "method": "DELETE",
+        "url": "${[ base_url ]}/products/:id",
+        "sortPriority": 4,
+        "description": "Permanently delete a product. This cannot be undone.\n\n```response:204\n\n```\n\n```response:409\n{\n  \"error\": \"conflict\",\n  \"message\": \"Product has open orders.\"\n}\n```",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":id",
+            "value": "prod_123"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_upload_image",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_images",
+        "name": "Upload an image",
+        "method": "POST",
+        "url": "${[ base_url ]}/products/:id/images",
+        "sortPriority": 0,
+        "description": "Upload a product image (PNG or JPEG, max 5 MB).",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":id",
+            "value": "prod_123"
+          }
+        ],
+        "bodyType": "multipart/form-data",
+        "body": {
+          "form": [
+            {
+              "enabled": true,
+              "name": "alt",
+              "value": "Side view"
+            },
+            {
+              "enabled": true,
+              "name": "file",
+              "value": "",
+              "file": "./shoe.png",
+              "contentType": "image/png"
+            }
+          ]
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_list_orders",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_orders",
+        "name": "List orders",
+        "method": "GET",
+        "url": "${[ base_url ]}/orders",
+        "sortPriority": 0,
+        "description": "List orders, optionally filtered by status.",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": "status",
+            "value": "paid"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_create_order",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_orders",
+        "name": "Create an order",
+        "method": "POST",
+        "url": "${[ base_url ]}/orders",
+        "sortPriority": 1,
+        "description": "Place an order on behalf of a customer.",
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": "application/json",
+        "body": {
+          "text": "{\n  \"customerId\": \"cus_9\",\n  \"items\": [\n    {\n      \"productId\": \"prod_123\",\n      \"quantity\": 2\n    }\n  ]\n}"
+        },
+        "authenticationType": "basic",
+        "authentication": {
+          "username": "merchant",
+          "password": "${[ merchant_password ]}"
+        }
+      },
+      {
+        "model": "http_request",
+        "id": "rq_xml",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_orders",
+        "name": "Export orders (XML)",
+        "method": "GET",
+        "url": "${[ base_url ]}/orders/export.xml",
+        "sortPriority": 2,
+        "description": "Legacy XML export.\n\n```response:200\n<?xml version=\"1.0\"?>\n<orders>\n  <order id=\"ord_1\" status=\"paid\" total=\"17998\"/>\n</orders>\n```",
+        "headers": [
+          {
+            "enabled": true,
+            "name": "Accept",
+            "value": "application/xml"
+          }
+        ],
+        "urlParameters": [],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_graphql",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_graphql",
+        "name": "Search products",
+        "method": "POST",
+        "url": "${[ base_url ]}/graphql",
+        "sortPriority": 0,
+        "description": "Full-text product search with GraphQL.",
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": "graphql",
+        "body": {
+          "query": "query Search($term: String!) {\n  products(search: $term, first: 5) {\n    id\n    name\n    price\n  }\n}",
+          "variables": "{\n  \"term\": \"shoes\"\n}"
+        },
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_health",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": null,
+        "name": "Health check",
+        "method": "GET",
+        "url": "${[ base_url ]}/health",
+        "sortPriority": 10,
+        "description": "Returns `ok` when the API is up. No authentication required.\n\n```response:200\nok\n```\n\n```response:503\n{\n  \"status\": \"degraded\",\n  \"checks\": {\n    \"database\": \"down\"\n  }\n}\n```",
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": "none",
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_list_categories",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_categories",
+        "name": "List categories",
+        "method": "GET",
+        "url": "${[ base_url ]}/catalog/categories",
+        "sortPriority": 0,
+        "description": "Returns all top-level categories.\n\n```response:200\n{\n  \"data\": [\n    {\n      \"id\": \"cat_shoes\",\n      \"name\": \"Shoes\"\n    },\n    {\n      \"id\": \"cat_apparel\",\n      \"name\": \"Apparel\"\n    }\n  ]\n}\n```",
+        "headers": [],
+        "urlParameters": [],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_list_subcategories",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_subcategories",
+        "name": "List subcategories",
+        "method": "GET",
+        "url": "${[ base_url ]}/catalog/categories/:category/subcategories",
+        "sortPriority": 0,
+        "description": "Returns the subcategories of a category.\n\n```response:200\n{\n  \"data\": [\n    {\n      \"id\": \"sub_running\",\n      \"name\": \"Running\"\n    },\n    {\n      \"id\": \"sub_trail\",\n      \"name\": \"Trail\"\n    }\n  ]\n}\n```",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":category",
+            "value": "cat_shoes"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      },
+      {
+        "model": "http_request",
+        "id": "rq_list_attributes",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_attributes",
+        "name": "List attribute values",
+        "method": "GET",
+        "url": "${[ base_url ]}/catalog/categories/:category/subcategories/:subcategory/attributes",
+        "sortPriority": 0,
+        "description": "Returns the values of every filterable attribute in a subcategory.\n\n```response:200\n{\n  \"size\": [\n    \"38\",\n    \"39\",\n    \"40\",\n    \"41\",\n    \"42\"\n  ],\n  \"color\": [\n    \"black\",\n    \"white\",\n    \"volt\"\n  ]\n}\n```\n\n```response:404\n{\n  \"error\": \"not_found\",\n  \"message\": \"Unknown subcategory.\"\n}\n```",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": ":category",
+            "value": "cat_shoes"
+          },
+          {
+            "enabled": true,
+            "name": ":subcategory",
+            "value": "sub_running"
+          }
+        ],
+        "bodyType": null,
+        "body": {},
+        "authenticationType": null,
+        "authentication": {}
+      }
+    ],
+    "grpcRequests": [
+      {
+        "model": "grpc_request",
+        "id": "gr_stock",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_realtime",
+        "name": "Get stock level",
+        "url": "http://grpc.acme.dev:50051",
+        "service": "acme.inventory.v1.Inventory",
+        "method": "GetStock",
+        "message": "{\n  \"productId\": \"prod_123\"\n}",
+        "metadata": [
+          {
+            "enabled": true,
+            "name": "x-store-id",
+            "value": "${[ store_id ]}"
+          }
+        ],
+        "sortPriority": 1,
+        "description": "Query live inventory via gRPC.",
+        "authenticationType": null,
+        "authentication": {}
+      }
+    ],
+    "websocketRequests": [
+      {
+        "model": "websocket_request",
+        "id": "ws_orders",
+        "createdAt": "2025-06-01T10:00:00",
+        "updatedAt": "2025-06-01T10:00:00",
+        "workspaceId": "wk_acme",
+        "folderId": "fl_realtime",
+        "name": "Order updates",
+        "url": "wss://stream.acme.dev/orders",
+        "headers": [],
+        "urlParameters": [
+          {
+            "enabled": true,
+            "name": "store",
+            "value": "${[ store_id ]}"
+          }
+        ],
+        "message": "{\"subscribe\": \"orders.*\"}",
+        "sortPriority": 0,
+        "description": "Subscribe to real-time order events.",
+        "authenticationType": null,
+        "authentication": {}
+      }
+    ]
+  }
+}

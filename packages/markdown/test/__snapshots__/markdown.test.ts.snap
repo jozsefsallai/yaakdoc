@@ -1,0 +1,115 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`llms.txt > matches snapshot 1`] = `
+"# Acme Store API
+
+> Manage your Acme store.
+
+This is the API reference generated from a Yaak workspace. Every page is available as Markdown by appending \`.md\` to its URL.
+
+## Endpoints
+
+- [Health check](https://docs.acme.dev/health-check.md): Returns ok when the API is up.
+
+## Authentication
+
+Obtain and refresh access tokens.
+
+- [Authentication overview](https://docs.acme.dev/authentication.md)
+- [Log in](https://docs.acme.dev/authentication/log-in.md): Exchange user credentials for an access token.
+- [Refresh token](https://docs.acme.dev/authentication/refresh-token.md): Get a new access token using a refresh token (OAuth 2 style form body).
+
+## Products
+
+Products are the items sold in your store.
+
+- [Products overview](https://docs.acme.dev/products.md)
+- [List products](https://docs.acme.dev/products/list-products.md): Returns a paginated list of products, newest first.
+- [Get a product](https://docs.acme.dev/products/get-a-product.md): Retrieve a single product by its id.
+- [Create a product](https://docs.acme.dev/products/create-a-product.md): Create a new product.
+- [Update a product](https://docs.acme.dev/products/update-a-product.md): Partially update a product.
+- [Delete a product](https://docs.acme.dev/products/delete-a-product.md): Permanently delete a product.
+- [Images](https://docs.acme.dev/products/images.md): Upload and manage product images.
+  - [Upload an image](https://docs.acme.dev/products/images/upload-an-image.md): Upload a product image (PNG or JPEG, max 5 MB).
+
+## Orders
+
+Orders placed by customers.
+
+- [Orders overview](https://docs.acme.dev/orders.md)
+- [List orders](https://docs.acme.dev/orders/list-orders.md): List orders, optionally filtered by status.
+- [Create an order](https://docs.acme.dev/orders/create-an-order.md): Place an order on behalf of a customer.
+- [Export orders (XML)](https://docs.acme.dev/orders/export-orders-xml.md): Legacy XML export.
+
+## GraphQL
+
+A GraphQL endpoint is available for flexible queries.
+
+- [GraphQL overview](https://docs.acme.dev/graphql.md)
+- [Search products](https://docs.acme.dev/graphql/search-products.md): Full-text product search with GraphQL.
+
+## Realtime
+
+Streaming APIs over WebSockets and gRPC.
+
+- [Realtime overview](https://docs.acme.dev/realtime.md)
+- [Order updates](https://docs.acme.dev/realtime/order-updates.md): Subscribe to real-time order events.
+- [Get stock level](https://docs.acme.dev/realtime/get-stock-level.md): Query live inventory via gRPC.
+
+## Optional
+
+- [Full documentation](https://docs.acme.dev/llms-full.txt): All endpoints in a single file
+"
+`;
+
+exports[`request markdown > documents a request with examples 1`] = `
+"# Upload an image
+
+Section: Products › Images
+
+\`\`\`
+POST https://api.acme.dev/v1/products/prod_123/images
+\`\`\`
+
+Upload a product image (PNG or JPEG, max 5 MB).
+
+## Authentication
+
+Bearer Token — \`Authorization: Bearer <token>\` (inherited from workspace "Acme Store API")
+
+## Path parameters
+
+| Name | Value |
+| --- | --- |
+| \`id\` | \`prod_123\` |
+
+## Headers
+
+| Name | Value |
+| --- | --- |
+| \`Accept\` | \`application/json\` |
+| \`User-Agent\` | \`acme-docs/1.0\` |
+
+## Body
+
+Content type: \`multipart/form-data\`
+
+| Field | Value |
+| --- | --- |
+| \`alt\` | \`Side view\` |
+| \`file\` | \`@./shoe.png\` |
+
+## Examples
+
+### cURL
+
+\`\`\`bash
+curl -X POST https://api.acme.dev/v1/products/prod_123/images \\
+  -H 'Accept: application/json' \\
+  -H 'User-Agent: acme-docs/1.0' \\
+  -H 'Authorization: Bearer {{api_token}}' \\
+  -F 'alt=Side view' \\
+  -F 'file=@./shoe.png;type=image/png'
+\`\`\`
+"
+`;

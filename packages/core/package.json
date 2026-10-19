@@ -1,0 +1,65 @@
+{
+  "name": "@yaakdoc/core",
+  "version": "0.1.0",
+  "description": "Parse and normalize Yaak exports into a documentation-friendly model.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@yaakdoc/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "@yaakdoc/source": "./src/node.ts",
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "yaak",
+    "yaakdoc",
+    "api",
+    "documentation",
+    "export",
+    "parser"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "files": [
+    "/dist",
+    "/README.md",
+    "/LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch --no-clean",
+    "test": "vitest run",
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write",
+    "prepack": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

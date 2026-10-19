@@ -1,1 +1,0 @@
-# `@yaakdoc/example-request-builder`

@@ -1,0 +1,60 @@
+{
+  "name": "@yaakdoc/snippets",
+  "version": "0.1.0",
+  "description": "Code example generators (cURL, fetch, Python, Go, grpcurl, wscat) for yaakdoc.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@yaakdoc/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "yaak",
+    "yaakdoc",
+    "code",
+    "snippets",
+    "curl",
+    "examples"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "files": [
+    "/dist",
+    "/README.md",
+    "/LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch --no-clean",
+    "test": "vitest run",
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write",
+    "prepack": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/snippets"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  },
+  "dependencies": {
+    "@yaakdoc/core": "workspace:^"
+  }
+}
