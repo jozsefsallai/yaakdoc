@@ -4,6 +4,8 @@
 
 Static, themable, and LLM-friendly API documentation generated from [Yaak](https://yaak.app) exports.
 
+**SEE A LIVE DEMO HERE: https://yaakdoc-demo.vercel.app**
+
 ```sh
 npx yaakdoc
 ```
