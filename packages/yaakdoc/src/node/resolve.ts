@@ -3,11 +3,21 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJiti } from "jiti";
 
-/** Directory of the installed `yaakdoc` package. */
+/**
+ * Directory of the installed `yaakdoc` package. When yaakdoc is bundled into CommonJS (the Yaak
+ * plugin), `import.meta.url` is not available and the bundle's own location is used.
+ */
 export const ENGINE_DIR = (() => {
-  let dir = dirname(fileURLToPath(import.meta.url));
+  const start =
+    typeof __filename === "string" ? dirname(__filename) : dirname(fileURLToPath(import.meta.url));
+
+  let dir = start;
 
   while (!existsSync(join(dir, "package.json"))) {
+    if (dirname(dir) === dir) {
+      return start;
+    }
+
     dir = dirname(dir);
   }
 

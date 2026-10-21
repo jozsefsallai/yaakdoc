@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { basename, extname, resolve } from "node:path";
 import type { ResolvedConfig, YaakdocConfig } from "@yaakdoc/config";
 import { loadConfig } from "@yaakdoc/config/node";
@@ -26,8 +26,8 @@ import {
 import type { PageData, SiteData, SiteLogo } from "@yaakdoc/react";
 import { generateExamples } from "@yaakdoc/snippets";
 import { createRenderer, loadSnippets } from "./render";
-import { ENGINE_DIR } from "./resolve";
 import { type ResolvedTheme, resolveTheme } from "./theme";
+import { VERSION } from "./version";
 
 export type YaakdocOptions = {
   /** Project directory (default: `process.cwd()`). */
@@ -36,6 +36,13 @@ export type YaakdocOptions = {
   configFile?: string;
   /** Config overrides (e.g. from CLI flags). Takes precedence over the config file. */
   overrides?: YaakdocConfig;
+  /** The Yaak export itself, instead of reading it from `export` or auto-detecting it. */
+  exportData?: unknown;
+  /** Replaces theme loading, e.g. for an engine that bundles its theme (the Yaak plugin). */
+  resolveTheme?: (
+    spec: string,
+    options: { root: string; themeOptions: Record<string, unknown> },
+  ) => ResolvedTheme | Promise<ResolvedTheme>;
 };
 
 export type Route = {
@@ -51,7 +58,8 @@ export type Context = {
   root: string;
   configFile: string | null;
   config: ResolvedConfig;
-  exportPath: string;
+  /** Path of the export, or null when it was passed as `exportData`. */
+  exportPath: string | null;
   source: YaakDocument;
   theme: ResolvedTheme;
   document: PreparedDocument;
@@ -66,10 +74,6 @@ export type Context = {
   watchFiles: string[];
 };
 
-export const VERSION: string = JSON.parse(
-  readFileSync(resolve(ENGINE_DIR, "package.json"), "utf8"),
-).version;
-
 /** Loads config, export and theme, and prepares everything needed to render the site. */
 export async function resolveContext(options: YaakdocOptions = {}): Promise<Context> {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -80,8 +84,9 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     ...(options.overrides ? { overrides: options.overrides } : {}),
   });
 
-  const exportPath = config.export ?? (await detectExport(root));
-  const rawExport = await readExport(exportPath);
+  const exportPath =
+    options.exportData === undefined ? (config.export ?? (await detectExport(root))) : null;
+  const rawExport = exportPath ? await readExport(exportPath) : options.exportData;
 
   const source = normalize(rawExport);
 
@@ -99,7 +104,10 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
         ? environments[0]
         : selectEnvironment(workspace, config.environment);
 
-  const theme = await resolveTheme(config.theme, { root, themeOptions: config.themeOptions });
+  const theme = await (options.resolveTheme ?? resolveTheme)(config.theme, {
+    root,
+    themeOptions: config.themeOptions,
+  });
   const renderer = await createRenderer(theme.highlight);
   const snippets = await loadSnippets(config.snippets, root);
 
@@ -185,7 +193,11 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     notFound,
     textFiles,
     assets,
-    watchFiles: [exportPath, ...(configFile ? [configFile] : []), ...assets.values()],
+    watchFiles: [
+      ...(exportPath ? [exportPath] : []),
+      ...(configFile ? [configFile] : []),
+      ...assets.values(),
+    ],
   };
 }
 
@@ -222,10 +234,11 @@ function shareableExport(
 }
 
 /**
- * Maps a local asset (logo, favicon) to a public URL under `<base>_yaakdoc/`. URLs and site-root
- * paths that don't exist on disk (e.g. `/logo.svg` served from `public/`) are kept as is.
+ * Maps a local asset (logo, favicon) to a public URL under `<base>_yaakdoc/`, registering it in
+ * `assets` so it's copied into the site. URLs and site-root paths that don't exist on disk (e.g.
+ * `/logo.svg` served from `public/`) are kept as is.
  */
-function publicAsset(
+export function publicAsset(
   path: string | undefined,
   base: string,
   assets: Map<string, string>,

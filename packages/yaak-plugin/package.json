@@ -1,0 +1,54 @@
+{
+  "name": "@yaakdoc/yaakdoc",
+  "displayName": "yaakdoc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build static, LLM-friendly API docs from your Yaak workspace with yaakdoc.",
+  "keywords": [
+    "yaak",
+    "yaak-plugin",
+    "api",
+    "documentation",
+    "docs"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/prebuild.mjs && yaak plugin build",
+    "dev": "yaak plugin dev",
+    "test": "vitest run",
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write",
+    "publish:yaak": "node scripts/prebuild.mjs && yaak plugin publish",
+    "prebuild": "node scripts/prebuild.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/yaak-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc/tree/master/packages/yaak-plugin#readme",
+  "dependencies": {
+    "@yaakapp/api": "^0.9.0",
+    "@yaakdoc/config": "workspace:^"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@yaakapp/cli": "^2026.9.0",
+    "@yaakdoc/core": "workspace:^",
+    "@yaakdoc/react": "workspace:^",
+    "@yaakdoc/theme-kiseki": "workspace:^",
+    "rolldown": "^1.2.14",
+    "yaakdoc": "workspace:^"
+  },
+  "yaak": {
+    "buildAssets": [
+      "generated/engine.cjs"
+    ]
+  }
+}

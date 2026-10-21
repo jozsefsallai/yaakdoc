@@ -1,15 +1,17 @@
 import { relative } from "node:path";
 import * as p from "@clack/prompts";
-import type { YaakdocConfig } from "@yaakdoc/config";
+import { mergeConfig, type YaakdocConfig } from "@yaakdoc/config";
 import { type ArgsDef, defineCommand, runMain } from "citty";
 import { consola } from "consola";
 import colors from "picocolors";
 import { build } from "../node/build";
-import { type Context, VERSION } from "../node/context";
+import type { Context } from "../node/context";
 import { createDevServer } from "../node/dev";
 import { eject } from "../node/eject";
 import { init } from "../node/init";
 import { preview } from "../node/preview";
+import { VERSION } from "../node/version";
+import { readOverrides } from "./overrides";
 
 const sharedArgs = {
   export: {
@@ -27,6 +29,10 @@ const sharedArgs = {
   base: { type: "string", description: "Base path the site is served from, e.g. /docs/" },
   environment: { type: "string", alias: "e", description: "Environment used to resolve variables" },
   workspace: { type: "string", alias: "w", description: "Workspace to document (id or name)" },
+  overrides: {
+    type: "string",
+    description: "Config values merged over the config file (a JSON file or inline JSON)",
+  },
 } satisfies ArgsDef;
 
 type SharedArgs = { [K in keyof typeof sharedArgs]?: string | undefined };
@@ -58,7 +64,8 @@ function overridesFrom(args: SharedArgs & Record<string, unknown>): YaakdocConfi
     overrides.workspace = args.workspace;
   }
 
-  return overrides;
+  // Explicit flags win over --overrides.
+  return args.overrides ? mergeConfig(readOverrides(args.overrides), overrides) : overrides;
 }
 
 const rel = (path: string) => relative(process.cwd(), path) || ".";
@@ -68,7 +75,7 @@ function summary(context: Context) {
   const folders = Object.keys(context.document.folders).length;
 
   const lines = [
-    `${colors.dim("Export")}       ${rel(context.exportPath)} ${colors.dim(`(Yaak ${context.source.yaakVersion})`)}`,
+    `${colors.dim("Export")}       ${context.exportPath ? rel(context.exportPath) : "(in memory)"} ${colors.dim(`(Yaak ${context.source.yaakVersion})`)}`,
     `${colors.dim("Workspace")}    ${context.document.workspace.name} ${colors.dim(`· ${requests} requests, ${folders} folders`)}`,
     `${colors.dim("Environment")}  ${context.document.environment?.name ?? colors.dim("none")}`,
     `${colors.dim("Theme")}        ${context.theme.name} ${colors.dim(context.theme.packageName ?? rel(context.theme.root))}`,

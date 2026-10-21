@@ -12,3 +12,5 @@ test-results
 playwright-report
 packages/yaakdoc/config.schema.json
 .vscode
+packages/yaak-plugin/build
+packages/yaak-plugin/generated

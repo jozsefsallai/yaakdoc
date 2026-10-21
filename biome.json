@@ -53,7 +53,12 @@
   },
   "overrides": [
     {
-      "includes": ["packages/core/**", "packages/snippets/test/**", "packages/markdown/test/**"],
+      "includes": [
+        "packages/core/**",
+        "packages/snippets/test/**",
+        "packages/markdown/test/**",
+        "packages/yaak-plugin/test/**"
+      ],
       "linter": {
         "rules": {
           "suspicious": {

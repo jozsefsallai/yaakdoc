@@ -20,8 +20,9 @@ import {
   resolveContext,
   type YaakdocOptions,
 } from "./context";
-import { type RenderEntry, styleEntries, VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
+import { styleEntries, VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
 import { CONTENT_TYPES, listen, serverUrl } from "./server";
+import type { RenderEntry } from "./site";
 import { createViteConfig } from "./vite";
 
 export type DevServerOptions = YaakdocOptions & {

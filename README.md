@@ -21,6 +21,19 @@ Run it next to a Yaak export (`yaak.json`) and your docs are served at `http://l
 
 ## Getting started
 
+There are multiple ways to generate a documentation site from your Yaak workspace.
+
+## Yaak plugin
+
+The [yaakdoc plugin for Yaak](packages/yaak-plugin) builds the docs without leaving Yaak. Install `@yaakdoc/yaakdoc` from Yaak's plugin registry (**Settings → Plugins**), then use the workspace menu:
+
+- **Build docs with yaakdoc...** exports the workspace, lets you set every config option in a form, and builds the static site into a folder you choose.
+- **Save as yaakdoc project...** writes `yaakdoc.json` and `yaakdoc.config.json` into a folder, ready to commit and build in CI.
+
+With Kiseki, the default theme, there's nothing else to install: the plugin bundles yaakdoc and a precompiled Kiseki and builds inside Yaak. Other themes are built with the yaakdoc CLI, so they need Node.js ≥ 20.19 with npm. Install the [Yaak CLI](https://github.com/mountain-loop/yaak) too, so environments and gRPC/WebSocket requests are included in the docs.
+
+## CLI
+
 1. In Yaak, export your workspace (**Settings (cog in the top right corner) → Export Data**) and save it as `yaak.json`.
 2. Run `npx yaakdoc` in the same folder to start the dev server. It reloads when the export changes.
 3. Run `npx yaakdoc build` to produce a static site in `dist/`.
@@ -32,7 +45,7 @@ npm i -D yaakdoc
 npx yaakdoc init     # creates yaakdoc.config.json (with editor autocomplete)
 ```
 
-## CLI
+### Commands
 
 | Command | Description |
 | --- | --- |
@@ -44,6 +57,12 @@ npx yaakdoc init     # creates yaakdoc.config.json (with editor autocomplete)
 | `yaakdoc eject` | Copies the current theme to `./theme` and switches the config to it. Options: `--out`, `--force`. |
 
 `dev` and `build` also accept `--config/-c`, `--theme/-t`, `--pages single|per-request`, `--base`, `--environment/-e` and `--workspace/-w`. Flags take precedence over the config file.
+
+For anything else, `--overrides` takes a JSON file or inline JSON with any [config](#configuration) values. It's deep-merged over the config file, and explicit flags still win over it. Paths in it are relative to the current directory.
+
+```sh
+npx yaakdoc build --overrides '{"branding":{"title":"Staging API"},"runInYaak":false}'
+```
 
 When no export is passed (as an argument or `export` in the config), yaakdoc uses `yaakdoc.json` or, failing that, `yaak.json` from the current directory.
 
@@ -199,6 +218,7 @@ The quickest way to customize is `npx yaakdoc eject`. The ejected theme's depend
 | [`@yaakdoc/markdown`](packages/markdown) | Markdown rendering of requests and folders, `llms.txt` and `llms-full.txt`. |
 | [`@yaakdoc/react`](packages/react) | Unstyled components, hooks, component overrides, the island runtime and the theme contract. |
 | [`@yaakdoc/theme-kiseki`](packages/theme-kiseki) | The default theme. |
+| [`@yaakdoc/yaakdoc`](packages/yaak-plugin) | The Yaak plugin (published to Yaak's plugin registry, not npm). |
 
 ## How it works
 

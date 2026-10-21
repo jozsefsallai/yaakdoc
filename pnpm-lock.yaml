@@ -325,6 +325,37 @@ importers:
 
   packages/tsconfig: {}
 
+  packages/yaak-plugin:
+    dependencies:
+      '@yaakapp/api':
+        specifier: ^0.9.0
+        version: 0.9.0
+      '@yaakdoc/config':
+        specifier: workspace:^
+        version: link:../config
+    devDependencies:
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@yaakapp/cli':
+        specifier: ^2026.9.0
+        version: 2026.9.0
+      '@yaakdoc/core':
+        specifier: workspace:^
+        version: link:../core
+      '@yaakdoc/react':
+        specifier: workspace:^
+        version: link:../react
+      '@yaakdoc/theme-kiseki':
+        specifier: workspace:^
+        version: link:../theme-kiseki
+      rolldown:
+        specifier: ^1.2.14
+        version: 1.2.14
+      yaakdoc:
+        specifier: workspace:^
+        version: link:../yaakdoc
+
   packages/yaakdoc:
     dependencies:
       '@clack/prompts':
@@ -1724,6 +1755,43 @@ packages:
 
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
+
+  '@yaakapp/api@0.9.0':
+    resolution: {integrity: sha512-Aw+tHWeYQ3FelbYT16HuytpS7ScksIMgP2ZmP1z/e7MGItJ/AE96DQZPgOoE1ikaUdLf9RhA9/ZaFplSoG/jWA==}
+
+  '@yaakapp/cli-darwin-arm64@2026.9.0':
+    resolution: {integrity: sha512-JD+BmkEr4WMgLcoVQQYt/SAivdNQzxIKblj3mu83qAujm1FJHDWDMy9rblVlmJUL0/axYmkTaeV54Bhu1nuJdQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@yaakapp/cli-darwin-x64@2026.9.0':
+    resolution: {integrity: sha512-DVjBmbMoVJdolCJxTH88Ze+utu/Bd1Z46hRJVktcD6z9VqfKc0Kof1iw1CLboMKUz0qsxGaWveldi+anZ9gnNQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@yaakapp/cli-linux-arm64@2026.9.0':
+    resolution: {integrity: sha512-iIeLFIU6tGQj5is1F83Dmeprl/89FDwaWovfn2hkINtzeCVmATZdQ2K6hcYX1z8jBen3pdZ/yPsip0SGTI3TYw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@yaakapp/cli-linux-x64@2026.9.0':
+    resolution: {integrity: sha512-w29VVXyNA225g/vtVTQFT8xMlAnGXunUAC9WUskXt31K3IIxDvsOhPfv4ryngn7SbjvsTs7NhbmmopUQcZfv3Q==}
+    cpu: [x64]
+    os: [linux]
+
+  '@yaakapp/cli-win32-arm64@2026.9.0':
+    resolution: {integrity: sha512-cbOpdGzUIrpZB/7zkI+XkNGq0/e3QPLAbHAmYUJ6y7PtH8kA8hrPt1jB+g5e6e3p3Aida5W5uMTfM/baI0x2Gw==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@yaakapp/cli-win32-x64@2026.9.0':
+    resolution: {integrity: sha512-yK9jV57pEmZcivdaA8UBQ5gCkYNwOL05Ka1gHOU8FCsiQGFUUva0bURodsUWnmfnWMHB8ai7cA9RiaZnv5CvSw==}
+    cpu: [x64]
+    os: [win32]
+
+  '@yaakapp/cli@2026.9.0':
+    resolution: {integrity: sha512-1bT2hNzCEBozASd0Lf5sr9wWMSu+3pXZJEVsgHsCj+ofm8nF7qQSKhH+JqloOWCAbCoJJ2Z7ScGfUuWouN8WAA==}
+    hasBin: true
 
   '@yuku-core/binding-android-arm64@0.19.0':
     resolution: {integrity: sha512-wdL2XmTiZixAOaHk9Z0JJZ8u9Qm8d333Zjpc6gaxXFX+UR5BlsfxZ7a2+2Rm71pamppsPYGUGFq2oVLbh6DISw==}
@@ -4045,6 +4113,37 @@ snapshots:
       vite: 8.3.4(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)
 
   '@vitest/spy@5.0.5': {}
+
+  '@yaakapp/api@0.9.0':
+    dependencies:
+      '@types/node': 24.19.2
+
+  '@yaakapp/cli-darwin-arm64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli-darwin-x64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli-linux-arm64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli-linux-x64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli-win32-arm64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli-win32-x64@2026.9.0':
+    optional: true
+
+  '@yaakapp/cli@2026.9.0':
+    optionalDependencies:
+      '@yaakapp/cli-darwin-arm64': 2026.9.0
+      '@yaakapp/cli-darwin-x64': 2026.9.0
+      '@yaakapp/cli-linux-arm64': 2026.9.0
+      '@yaakapp/cli-linux-x64': 2026.9.0
+      '@yaakapp/cli-win32-arm64': 2026.9.0
+      '@yaakapp/cli-win32-x64': 2026.9.0
 
   '@yuku-core/binding-android-arm64@0.19.0':
     optional: true

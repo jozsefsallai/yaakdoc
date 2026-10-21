@@ -1,3 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+allowBuilds:
+  # Only a fallback download; the binary comes from the platform-specific optional dependency.
+  "@yaakapp/cli": false

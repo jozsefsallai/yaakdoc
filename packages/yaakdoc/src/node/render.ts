@@ -42,8 +42,8 @@ const embeddedGraphql = (begin: string, end: string, prefixScopes: string[]) => 
 
 /**
  * Injection grammar highlighting GraphQL inside code examples (like VS Code's GraphQL extension):
- * `/* GraphQL *\/ \`…\`` and `gql\`…\`` in JavaScript, `query = """…"""` in Python and
- * `query := \`…\`` in Go.
+ * `/* GraphQL *\/ \`...\`` and `gql\`...\`` in JavaScript, `query = """..."""` in Python and
+ * `query := \`...\`` in Go.
  */
 const GRAPHQL_INJECTION = {
   name: "yaakdoc-graphql-injection",

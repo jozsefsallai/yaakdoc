@@ -15,10 +15,11 @@ yaakdoc generates static, themable, LLM-friendly API documentation sites from [Y
 | `packages/react` | `@yaakdoc/react` | Unstyled components, hooks, the override system, the island runtime and the theme contract (`./theme` is Node-safe). |
 | `packages/theme-kiseki` | `@yaakdoc/theme-kiseki` | The default theme (Tailwind CSS v4 + shadcn/ui). Ships TSX **source**; there's no build step. |
 | `packages/yaakdoc` | `yaakdoc` | CLI (citty), Node API and the Vite-based engine (dev server, SSR, static build, eject, init). |
+| `packages/yaak-plugin` | `@yaakdoc/yaakdoc` | The Yaak plugin (private; published to Yaak's registry with `yaak plugin publish`). Workspace actions that export the workspace and build it with a bundled engine (`yaakdoc/static` and a precompiled Kiseki), or with the yaakdoc CLI for other themes. |
 | `packages/tsconfig` | `@repo/tsconfig` | Shared tsconfigs (private). |
 | `apps/demo` | `demo` | Demo docs (`yaak.json`, `yaakdoc.config.json`) and the Playwright e2e tests. |
 
-Package dependencies: config, snippets and markdown depend on core; react depends on core and config; theme-kiseki depends on react; yaakdoc depends on all of them. Keep `@yaakdoc/core` free of the other packages, and don't add dependency cycles.
+Package dependencies: config, snippets and markdown depend on core; react depends on core and config; theme-kiseki depends on react; yaakdoc depends on all of them; the Yaak plugin bundles config and, through its prebuild, yaakdoc/static and Kiseki. Keep `@yaakdoc/core` free of the other packages, and don't add dependency cycles.
 
 ## Commands
 
@@ -56,13 +57,13 @@ Key files:
 ## Conventions
 
 - **No duplicated logic or types.** Generic helpers go in `@yaakdoc/core` (`util.ts`, `tree.ts`). React and theme helpers go in `@yaakdoc/react` (hooks, `site-url.ts`, tab helpers in `islands/tabs.tsx`, `primitives/heading.tsx`). Config-shaped types derive from `@yaakdoc/config` (`ResolvedConfig`, `Branding`). Search for an existing helper before writing a new one.
-- **Themes override, they don't re-implement.** `<Content />` decides what a page shows. Themes restyle pieces by registering overrides (`components: { RequestDoc, FolderDoc, Overview, ChildLinks, NotFound, … }`). New base components must be wrapped with `overridable(name, Component)`.
-- **Islands:** props must be JSON-serializable, and islands can't use the data hooks (`useDocument`, `useSite`, …). Create them with `createIsland(name, Component)` and register them in the theme's `client.ts`. Keep big data out of island props: panels are static HTML, and islands only control them (see `TabList` and `tabPanelProps`).
-- **Secrets never reach the output.** Variables defined with template functions (e.g. `secure(…)`), names matching `variables.hide`, and private environments must never appear in HTML, Markdown, examples or the shared export. Add a test if you touch resolution, display or `sanitizeExport`.
+- **Themes override, they don't re-implement.** `<Content />` decides what a page shows. Themes restyle pieces by registering overrides (`components: { RequestDoc, FolderDoc, Overview, ChildLinks, NotFound, ... }`). New base components must be wrapped with `overridable(name, Component)`.
+- **Islands:** props must be JSON-serializable, and islands can't use the data hooks (`useDocument`, `useSite`, ...). Create them with `createIsland(name, Component)` and register them in the theme's `client.ts`. Keep big data out of island props: panels are static HTML, and islands only control them (see `TabList` and `tabPanelProps`).
+- **Secrets never reach the output.** Variables defined with template functions (e.g. `secure(...)`), names matching `variables.hide`, and private environments must never appear in HTML, Markdown, examples or the shared export. Add a test if you touch resolution, display or `sanitizeExport`.
 - **Formatting and lint:** Biome (`biome.json`), with double quotes, semicolons and 100 columns. Don't add ESLint or Prettier.
 - **TypeScript:** strict, `moduleResolution: Bundler`, no `.ts` extensions in relative imports. Packages build with tsdown (`fixedExtension: false`, so the output is `.js`/`.d.ts`).
 - **Exports:** `package.json` exports include an `"@yaakdoc/source"` condition that points at `src/`. tsconfig uses it so type-checking doesn't need a build. Keep it in sync when adding entry points.
-- **Package format:** public packages follow the `package.json` layout already in place (author, `files` with a leading `/`, `repository.directory`, `prepack`, MIT, and a `LICENSE` file in each package). Package READMEs must use **absolute** GitHub links (`https://github.com/jozsefsallai/yaakdoc…`), because relative links break on npm.
+- **Package format:** public packages follow the `package.json` layout already in place (author, `files` with a leading `/`, `repository.directory`, `prepack`, MIT, and a `LICENSE` file in each package). Package READMEs must use **absolute** GitHub links (`https://github.com/jozsefsallai/yaakdoc...`), because relative links break on npm.
 - **Docs:** user-facing changes need README updates. Use the root README for config and CLI, and the package READMEs for APIs; the React README doubles as the theme authoring guide. The config's JSON schema is generated from the Zod schema (`packages/yaakdoc/scripts/generate-schema.js`); never edit it by hand.
 - **Releases:** use Changesets (`pnpm changeset`). All public packages are versioned together (`fixed` in `.changeset/config.json`).
 
@@ -87,4 +88,5 @@ Key files:
 - **Radix menus:** dropdowns in the sticky header must restore focus with `preventScroll` (see `useRestoreFocus` in Kiseki's `islands.tsx`), or closing them scrolls the page.
 - **Overlays:** fixed overlays must not render inside an element with `backdrop-filter`, because it becomes their containing block. Portal them to `document.body`.
 - **Island ids:** islands are server-rendered as isolated roots with their own `identifierPrefix`, so `useId()` matches when they hydrate. Keep it that way when touching `island.tsx` or `server.tsx`.
+- **Yaak plugin:** `yaak plugin build` bundles into one CommonJS file and can't handle dynamic imports (Shiki loads languages that way), so `scripts/prebuild.mjs` bundles the engine into `generated/engine.cjs` itself. The engine is `yaakdoc/static` plus Kiseki, precompiled with `bundleTheme(…, { base: "./" })`. Keep `yaakdoc/static` free of Vite, and keep `ENGINE_DIR` working when bundled to CommonJS (no `import.meta.url`, and maybe no `package.json` above it). Themes other than Kiseki go through the yaakdoc CLI (`--overrides`), which needs Node.js. Yaak's plugin API only lists folders and HTTP requests, so the full export comes from `yaak export` (with `--data-dir` found from the plugin's install path); the API is only a fallback. The plugin's version follows yaakdoc's (changesets `fixed`), because it pins `npx yaakdoc@<version>`.
 - **Background processes:** when stopping servers you started, don't use `pkill -f <pattern>`; the pattern can match your own shell. Look up the PID and kill that.

@@ -110,7 +110,29 @@ export async function resolveTheme(
     );
   }
 
-  const root = dirname(manifest);
+  return themeFromDefinition(definition, {
+    manifest,
+    packageName,
+    themeOptions: options.themeOptions,
+    fallbackImporters,
+  });
+}
+
+/**
+ * Validates the options of an already loaded theme definition. `resolveTheme` loads the definition
+ * from a manifest; bundled engines (the Yaak plugin) pass a definition they import themselves.
+ */
+export function themeFromDefinition(
+  definition: ThemeDefinition,
+  options: {
+    /** Path of the theme manifest; `entry`, `client` and `styles` are resolved against it. */
+    manifest: string;
+    packageName?: string | null;
+    themeOptions: Record<string, unknown>;
+    fallbackImporters?: string[];
+  },
+): ResolvedTheme {
+  const root = dirname(options.manifest);
   const abs = (path: string) => resolve(root, path);
 
   let themeOptions: Record<string, unknown> = options.themeOptions;
@@ -129,13 +151,13 @@ export async function resolveTheme(
     name: definition.name,
     definition,
     root,
-    manifest,
+    manifest: options.manifest,
     entry: abs(definition.entry),
     client: definition.client ? abs(definition.client) : null,
     styles: (definition.styles ?? []).map(abs),
     options: themeOptions,
-    packageName,
-    fallbackImporters,
+    packageName: options.packageName ?? null,
+    fallbackImporters: options.fallbackImporters ?? [],
     highlight: definition.highlight ?? {
       light: "github-light",
       dark: "github-dark",

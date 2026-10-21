@@ -1,11 +1,11 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { readFile, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { absoluteUrl } from "@yaakdoc/core";
 import type { Assets } from "@yaakdoc/react";
 import { type Manifest, build as viteBuild } from "vite";
 import { type Context, resolveContext, type YaakdocOptions } from "./context";
-import { type RenderEntry, VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
+import { VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
+import { assertSafeOutDir, type RenderEntry, withBase, writeSite } from "./site";
 import { createViteConfig } from "./vite";
 
 export type BuildResult = {
@@ -39,8 +39,36 @@ export async function buildWithContext(context: Context): Promise<BuildResult> {
 
   assertSafeOutDir(outDir, context.root);
 
+  const { assets, ssrEntry } = await bundleTheme(context, outDir);
+  const { render } = (await import(pathToFileURL(ssrEntry).href)) as RenderEntry;
+
+  const files = await writeSite(context, { render, assets: withBase(assets, context.config.base) });
+
+  await rm(dirname(ssrEntry), { recursive: true, force: true });
+
+  return { outDir, files, context };
+}
+
+export type ThemeBundle = {
+  /** Client assets, relative to the output directory. */
+  assets: Assets;
+  /** The SSR entry (exports `render`), in a temporary directory inside the output directory. */
+  ssrEntry: string;
+};
+
+/**
+ * Builds the theme with Vite: the island runtime and CSS into `outDir` (emptied first), and the SSR
+ * entry, fully bundled so it runs from anywhere. Pass `base: "./"` for client assets that work
+ * under any base path (used to precompile the theme bundled into the Yaak plugin).
+ */
+export async function bundleTheme(
+  context: Context,
+  outDir: string,
+  options: { base?: string } = {},
+): Promise<ThemeBundle> {
   const getContext = () => context;
-  const base = await createViteConfig(getContext, "production");
+  const viteConfig = await createViteConfig(getContext, "production");
+  const base = { ...viteConfig, ...(options.base ? { base: options.base } : {}) };
 
   // 1. Client: island runtime + theme CSS.
   await viteBuild({
@@ -79,58 +107,13 @@ export async function buildWithContext(context: Context): Promise<BuildResult> {
     await readFile(join(outDir, ".vite", "manifest.json"), "utf8"),
   ) as Manifest;
 
-  const assets = assetsFromManifest(manifest, context.config.base);
-
-  const { render } = (await import(
-    pathToFileURL(join(ssrOutDir, "entry-server.mjs")).href
-  )) as RenderEntry;
-
-  const files: string[] = [];
-
-  const write = async (file: string, content: string) => {
-    const target = join(outDir, file);
-
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, content);
-
-    files.push(file);
-  };
-
-  // 3. Prerender every route.
-  for (const route of [...context.routes, context.notFound]) {
-    await write(
-      route.file,
-      await render({ document: context.document, site: context.site, page: route.page, assets }),
-    );
-  }
-
-  // 4. Markdown twins, llms.txt, branding assets, sitemap.
-  for (const [url, content] of context.textFiles) {
-    await write(stripBase(url, context.config.base), content);
-  }
-
-  for (const [url, source] of context.assets) {
-    const file = stripBase(url, context.config.base);
-
-    await mkdir(dirname(join(outDir, file)), { recursive: true });
-    await copyFile(source, join(outDir, file));
-
-    files.push(file);
-  }
-
-  if (context.site.url) {
-    await write("sitemap.xml", sitemap(context));
-  }
-
-  await write(".nojekyll", "");
-
-  await rm(ssrOutDir, { recursive: true, force: true });
   await rm(join(outDir, ".vite"), { recursive: true, force: true });
 
-  return { outDir, files, context };
+  return { assets: assetsFromManifest(manifest), ssrEntry: join(ssrOutDir, "entry-server.mjs") };
 }
 
-function assetsFromManifest(manifest: Manifest, base: string): Assets {
+/** Client assets of the build, relative to the output directory. */
+function assetsFromManifest(manifest: Manifest): Assets {
   const entry = Object.values(manifest).find((chunk) => chunk.isEntry);
   if (!entry) {
     throw new Error("Client build produced no entry chunk.");
@@ -157,33 +140,9 @@ function assetsFromManifest(manifest: Manifest, base: string): Assets {
   }
 
   return {
-    styles: [...css].map((file) => base + file),
-    scripts: [base + entry.file],
+    styles: [...css],
+    scripts: [entry.file],
     inlineStyles: [],
-    modulePreloads: collectImports(entry.imports).map((file) => base + file),
+    modulePreloads: collectImports(entry.imports),
   };
-}
-
-const stripBase = (url: string, base: string) =>
-  url.startsWith(base) ? url.slice(base.length) : url.replace(/^\//, "");
-
-function sitemap(context: Context): string {
-  const urls = context.routes.map((route) =>
-    absoluteUrl(context.site.url!, context.config.base, route.path),
-  );
-
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((url) => `  <url><loc>${url}</loc></url>`)
-    .join("\n")}\n</urlset>\n`;
-}
-
-/** Refuses to empty the project directory (or a parent of it). */
-function assertSafeOutDir(outDir: string, root: string) {
-  const rel = relative(resolve(outDir), resolve(root));
-
-  if (rel === "" || (!rel.startsWith("..") && !rel.startsWith(sep) && !rel.includes(":"))) {
-    throw new Error(
-      `Refusing to use ${outDir} as outDir: it contains the project directory and would be emptied.`,
-    );
-  }
 }

@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import type { YaakdocConfig } from "@yaakdoc/config";
 import { detectExport } from "@yaakdoc/core/node";
-import { VERSION } from "./context";
 import { writeJson } from "./fs";
+import { VERSION } from "./version";
 
 /** `$schema` value for yaakdoc.config.json: local copy when installed, otherwise unpkg. */
 export function schemaUrl(cwd: string): string {

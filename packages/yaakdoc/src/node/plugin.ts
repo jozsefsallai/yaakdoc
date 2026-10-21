@@ -4,22 +4,12 @@ import type { DevEnvironment, Plugin, Rollup } from "vite";
 
 type ResolvedId = Rollup.ResolvedId;
 
-import type { Assets } from "@yaakdoc/react";
-import type { Context, Route } from "./context";
+import type { Context } from "./context";
 import { ENGINE_ANCHOR } from "./resolve";
 
 export const VIRTUAL_SERVER = "virtual:yaakdoc/entry-server";
 
-/** What the SSR entry (`VIRTUAL_SERVER`) exports, in dev and in builds. */
-export type RenderEntry = {
-  render: (input: {
-    document: Context["document"];
-    site: Context["site"];
-    page: Route["page"];
-    assets: Assets;
-  }) => Promise<string>;
-};
-
+/** The SSR entry exports `render` (see `RenderEntry`). */
 export const VIRTUAL_CLIENT = "virtual:yaakdoc/entry-client";
 
 const RESOLVED = (id: string) => `\0${id}`;

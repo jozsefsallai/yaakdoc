@@ -14,6 +14,11 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./static": {
+      "@yaakdoc/source": "./src/static.ts",
+      "types": "./dist/static.d.ts",
+      "default": "./dist/static.js"
+    },
     "./config.schema.json": "./config.schema.json",
     "./package.json": "./package.json"
   },
