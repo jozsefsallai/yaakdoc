@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { cp, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -208,6 +208,34 @@ describe("eject", () => {
     await build({ cwd: dir });
 
     expect(await readFile(join(dir, "dist", "404.html"), "utf8")).toContain("Custom 404");
+  });
+
+  it("renders with yaakdoc's @yaakdoc/react when the theme has its own copy", async () => {
+    const dir = await project();
+    await eject({ cwd: dir });
+
+    // An npm theme can come with an older @yaakdoc/react, whose hooks don't see yaakdoc's provider.
+    const stale = join(dir, "theme", "node_modules", "@yaakdoc", "react");
+    await mkdir(stale, { recursive: true });
+
+    await writeFile(
+      join(stale, "package.json"),
+      JSON.stringify({
+        name: "@yaakdoc/react",
+        type: "module",
+        exports: { ".": "./index.js", "./theme": "./theme.js" },
+      }),
+    );
+
+    await writeFile(join(stale, "index.js"), 'throw new Error("stale @yaakdoc/react");\n');
+    await writeFile(
+      join(stale, "theme.js"),
+      `export * from ${JSON.stringify(import.meta.resolve("@yaakdoc/react/theme"))};\n`,
+    );
+
+    await build({ cwd: dir });
+
+    expect(await readFile(join(dir, "dist", "index.html"), "utf8")).toContain("Acme Store API");
   });
 });
 

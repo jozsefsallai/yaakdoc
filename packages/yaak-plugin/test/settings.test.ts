@@ -1,7 +1,13 @@
 import { configSchema } from "@yaakdoc/config";
 import { describe, expect, it } from "vitest";
-import { buildForm } from "../src/form";
-import { NO_ENVIRONMENT, OTHER_THEME, settingsToConfig, validateConfig } from "../src/settings";
+import { buildForm, SECTION } from "../src/form";
+import {
+  NO_ENVIRONMENT,
+  OTHER_THEME,
+  type Settings,
+  settingsToConfig,
+  validateConfig,
+} from "../src/settings";
 
 describe("settingsToConfig", () => {
   it("leaves out empty fields and defaults", () => {
@@ -23,6 +29,9 @@ describe("settingsToConfig", () => {
       pages: "per-request",
       environment: NO_ENVIRONMENT,
       environments: "public",
+      pagesDir: "/docs/pages",
+      apiPath: "/reference/",
+      search: "off",
       title: "Acme",
       primaryColor: "#0f766e",
       colorModeToggle: "off",
@@ -41,6 +50,9 @@ describe("settingsToConfig", () => {
       pages: "per-request",
       environment: false,
       environments: "public",
+      pagesDir: "/docs/pages",
+      apiPath: "/reference/",
+      search: false,
       branding: {
         title: "Acme",
         colors: { primary: "#0f766e" },
@@ -115,35 +127,70 @@ describe("buildForm", () => {
     expect(flat).not.toContain("projectDir");
   });
 
-  it("shows the theme name and its Node.js notice only for other themes", () => {
-    const general = (themeChoice: string) => {
-      const inputs = buildForm({
-        kind: "build",
-        settings: { themeChoice },
-        environments: [],
-        yaakdocCommand: "yaakdoc",
-      });
+  type Input = Record<string, unknown> & {
+    dynamic?: (ctx: unknown, args: { values: Settings }) => Promise<{ hidden?: boolean }>;
+  };
 
-      const accordion = inputs.find((input) => "label" in input && input.label === "General");
+  const form = (settings: Settings = {}) =>
+    buildForm({ kind: "build", settings, environments: [], yaakdocCommand: "yaakdoc" }) as Input[];
 
-      return (accordion as { inputs: Record<string, unknown>[] }).inputs;
-    };
+  /** Whether an input is hidden after the user changed `values`. */
+  const hidden = async (input: Input, values: Settings) =>
+    (await input.dynamic!(null, { values })).hidden;
 
-    const name = (inputs: Record<string, unknown>[]) =>
-      inputs.find((input) => input.name === "theme")!;
+  it("shows one section at a time instead of accordions", async () => {
+    const inputs = form();
+    const banner = inputs.find((input) => input.type === "banner" && input.color === "primary")!;
+    const [hint, select] = banner.inputs as [Input, Input];
+    const title = inputs.find((input) => input.name === "title")!;
+    const base = inputs.find((input) => input.name === "base")!;
 
-    const banner = (inputs: Record<string, unknown>[]) =>
-      inputs.find((input) => input.type === "banner")!;
+    expect(inputs.some((input) => input.type === "accordion")).toBe(false);
+    expect(select).toMatchObject({ type: "select", name: SECTION, defaultValue: "general" });
+    expect(hint.content).toBe(
+      "**More settings** are in the other sections: Pages and search, Branding, Code examples, LLMs, Variables, Filter, Run in Yaak, and Advanced.",
+    );
+    expect((select.options as { value: string }[]).map((option) => option.value)).toEqual([
+      "general",
+      "pages-and-search",
+      "branding",
+      "code-examples",
+      "llms",
+      "variables",
+      "filter",
+      "run-in-yaak",
+      "advanced",
+    ]);
 
-    expect(name(general("kiseki")).hidden).toBe(true);
-    expect(banner(general("kiseki")).hidden).toBe(true);
-    expect(name(general(OTHER_THEME)).hidden).toBe(false);
+    // The output directory is outside the sections.
+    expect(inputs.find((input) => input.name === "outDir")!.hidden).toBeUndefined();
 
-    const dynamic = name(general("kiseki")).dynamic as (
-      ctx: unknown,
-      args: { values: Record<string, string> },
-    ) => { hidden: boolean };
+    expect(base.hidden).toBe(false);
+    expect(title.hidden).toBe(true);
+    expect(await hidden(title, { [SECTION]: "branding" })).toBe(false);
+    expect(await hidden(base, { [SECTION]: "branding" })).toBe(true);
 
-    expect(dynamic(null, { values: { themeChoice: OTHER_THEME } })).toEqual({ hidden: false });
+    // Values of other fields don't change the section.
+    expect(await hidden(base, { title: "Acme" })).toBe(false);
+  });
+
+  it("shows the theme name and its Node.js notice only for other themes", async () => {
+    const name = (inputs: Input[]) => inputs.find((input) => input.name === "theme")!;
+    const banner = (inputs: Input[]) =>
+      inputs.find((input) => input.type === "banner" && input.color === "notice")!;
+
+    expect(name(form({ themeChoice: "kiseki" })).hidden).toBe(true);
+    expect(banner(form({ themeChoice: "kiseki" })).hidden).toBe(true);
+    expect(name(form({ themeChoice: OTHER_THEME })).hidden).toBe(false);
+
+    expect(await hidden(name(form()), { themeChoice: OTHER_THEME })).toBe(false);
+
+    // An untouched select keeps its stored value.
+    expect(await hidden(name(form({ themeChoice: OTHER_THEME })), { title: "Acme" })).toBe(false);
+
+    // Hidden in other sections either way.
+    expect(await hidden(name(form()), { themeChoice: OTHER_THEME, [SECTION]: "branding" })).toBe(
+      true,
+    );
   });
 });

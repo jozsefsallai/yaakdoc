@@ -123,6 +123,9 @@ export function settingsToConfig(settings: Settings): YaakdocConfig {
     base: text(settings.base),
     environment: environment === NO_ENVIRONMENT ? false : environment,
     environments: text(settings.environments) as YaakdocConfig["environments"],
+    pagesDir: text(settings.pagesDir),
+    apiPath: text(settings.apiPath),
+    search: toggle(settings.search),
     branding: {
       title: text(settings.title),
       description: text(settings.description),

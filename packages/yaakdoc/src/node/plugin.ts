@@ -24,6 +24,7 @@ const isBare = (id: string) =>
 const json = (value: string) => JSON.stringify(value);
 
 const REACT_RE = /^react(-dom)?(\/|$)/;
+const YAAKDOC_REACT_RE = /^@yaakdoc\/react(\/|$)/;
 const CJS_PREFIX = "\0yaakdoc-cjs:";
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
 
@@ -93,6 +94,16 @@ export function yaakdocPlugin(getContext: () => Context, onSsrUpdate?: () => voi
         return `${CJS_PREFIX}${source}`;
       if (REACT_RE.test(source)) {
         return finish(await this.resolve(source, ENGINE_ANCHOR, { ...options, skipSelf: true }));
+      }
+
+      // The same for @yaakdoc/react: the virtual entries' provider and the theme's hooks must share
+      // one copy, even when an npm theme was installed with an older one of its own.
+      if (YAAKDOC_REACT_RE.test(source)) {
+        const resolved = await this.resolve(source, ENGINE_ANCHOR, { ...options, skipSelf: true });
+
+        if (resolved) {
+          return finish(resolved);
+        }
       }
 
       const virtualImporter = !importer || importer.startsWith("\0");

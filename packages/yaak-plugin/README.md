@@ -10,18 +10,21 @@ There's nothing else to install for [Kiseki](https://github.com/jozsefsallai/yaa
 
 Other themes (npm packages, local paths, ejected themes) need [Node.js](https://nodejs.org) ≥ 20.19 with npm. The plugin builds them with the yaakdoc CLI through `npx`. Without Node.js, it says so and offers to build with Kiseki instead.
 
+You don't have to install npm themes yourself. When a theme isn't installed next to the chosen config file, the plugin looks it up on npm (`winxp` → `@yaakdoc/theme-winxp`, then `yaakdoc-theme-winxp`) and installs it into a cache in your temp folder, which later builds reuse. The build only fails when no such package exists. A full package name (`yaakdoc-theme-winxp`, `@acme/docs-theme`) is fetched as written. A package named just `winxp` is never fetched, because it might not be a theme; to use one, install it next to your config file.
+
 Installing the [Yaak CLI](https://github.com/mountain-loop/yaak) is recommended too. The plugin uses it to export the workspace, because Yaak's plugin API can't see environments or gRPC/WebSocket requests. Without it, the plugin falls back to the plugin API and warns you that those parts are missing.
 
 ## Actions
 
-Both actions are in the workspace menu.
+Both actions are in the workspace menu. Each one runs in a single dialog, from the export to the result. While a step runs, the dialog shows it (with the end of a command's output) and the steps already done. **Run in background** hides the dialog, and the result then comes as a toast. To bring the dialog back, choose the same action again: while it runs for a workspace, it shows its progress instead of starting over. **Cancel** stops the export, the theme install or a CLI build. The built-in Kiseki build can't be stopped halfway, so it finishes and the dialog says so.
 
 - **Build docs with yaakdoc...** exports the workspace, shows a form with the yaakdoc options, and builds the static site into the output directory you choose. You can also pick an existing `yaakdoc.config.*` file to build on.
-- **Save as yaakdoc project...** writes `yaakdoc.json` (the export) and `yaakdoc.config.json` into a folder. From there you can commit it, run `npx yaakdoc` to preview it, or build it in CI. An existing `yaakdoc.config.json` gets the form's values merged into it, unless you choose to replace it. A logo, favicon or custom CSS picked from outside the folder is copied into its `assets/` folder, so the project still works after you commit or move it.
+- **Save as yaakdoc project...** writes `yaakdoc.json` (the export) and `yaakdoc.config.json` into a folder. From there you can commit it, run `npx yaakdoc` to preview it, or build it in CI. An existing `yaakdoc.config.json` gets the form's values merged into it, unless you choose to replace it. A logo, favicon or custom CSS picked from outside the folder is copied into its `assets/` folder, so the project still works after you commit or move it. A pages directory inside the folder is saved as a relative path; one outside it stays absolute, so keep your pages in the project folder.
 
-The form is remembered per workspace. It covers the whole [configuration](https://github.com/jozsefsallai/yaakdoc#configuration):
+The form is remembered per workspace. Its **Settings** select switches between sections (Yaak's plugin forms have no tabs), and values in the other sections are kept. Together they cover the whole [configuration](https://github.com/jozsefsallai/yaakdoc#configuration):
 
-- General: theme (Kiseki or another theme), pages, base path, environment, environment switcher
+- General: theme (Kiseki or another theme), request pages, base path, environment, environment switcher
+- Pages and search: the [pages directory](https://github.com/jozsefsallai/yaakdoc#custom-pages), the API reference path, search
 - Branding: title, description, URL, logo, favicon, colors, fonts, header links, footer, color mode, custom CSS
 - Code example snippets
 - LLM outputs
@@ -29,7 +32,7 @@ The form is remembered per workspace. It covers the whole [configuration](https:
 - Slug filters
 - Run in Yaak
 
-Anything else goes in the **Extra config (JSON)** field, including a URL for the logo, favicon or custom CSS (the pickers only take local files).
+Anything else goes in the **Extra config (JSON)** field, including `navigation` and a URL for the logo, favicon or custom CSS (the pickers only take local files).
 
 With Kiseki, custom CSS is published as it is and linked after the theme's styles. The CLI bundles it with the theme instead, so with Kiseki, `@import`s of npm packages and `url()`s relative to the CSS file aren't resolved. Plain CSS works the same either way.
 

@@ -128,3 +128,5 @@ await writeSite(context, {
 ```
 
 The theme's client assets and its `render` function come from `bundleTheme(context, outDir, { base: "./" })` in the main entry. It builds the theme with Vite once, and the `"./"` base makes the client assets work under any base path.
+
+`themePackageCandidates(spec)` lists the npm packages a theme name can refer to, in the order yaakdoc tries them (`winxp` → `@yaakdoc/theme-winxp`, `yaakdoc-theme-winxp`, `winxp`).

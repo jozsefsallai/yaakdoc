@@ -30,7 +30,7 @@ The [yaakdoc plugin for Yaak](packages/yaak-plugin) builds the docs without leav
 - **Build docs with yaakdoc...** exports the workspace, lets you set every config option in a form, and builds the static site into a folder you choose.
 - **Save as yaakdoc project...** writes `yaakdoc.json` and `yaakdoc.config.json` into a folder, ready to commit and build in CI.
 
-With Kiseki, the default theme, there's nothing else to install: the plugin bundles yaakdoc and a precompiled Kiseki and builds inside Yaak. Other themes are built with the yaakdoc CLI, so they need Node.js ≥ 20.19 with npm. Install the [Yaak CLI](https://github.com/mountain-loop/yaak) too, so environments and gRPC/WebSocket requests are included in the docs.
+With Kiseki, the default theme, there's nothing else to install: the plugin bundles yaakdoc and a precompiled Kiseki and builds inside Yaak. Other themes are built with the yaakdoc CLI, so they need Node.js ≥ 20.19 with npm; the plugin fetches npm themes itself. Install the [Yaak CLI](https://github.com/mountain-loop/yaak) too, so environments and gRPC/WebSocket requests are included in the docs.
 
 ## CLI
 

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { Context, Folder, HttpRequest, Workspace } from "@yaakapp/api";
 import type { RawYaakExportInput } from "@yaakdoc/core";
 import { findYaakDataDir } from "./paths";
-import { runCommand } from "./run";
+import { type RunOptions, runCommand } from "./run";
 
 /** The commands tried, in order, when no Yaak CLI command is configured. */
 export const DEFAULT_YAAK_COMMANDS = ["yaak", "npx -y @yaakapp/cli"];
@@ -44,12 +44,13 @@ async function cliExport(
   workspaceId: string,
   file: string,
   dir: string,
+  options: RunOptions,
 ): Promise<{ data?: RawYaakExportInput; error?: string }> {
   const dataDir = findYaakDataDir(__dirname);
 
   // Private environments are left out, as in Yaak's own export.
   const args = ["export", ...(dataDir ? ["--data-dir", dataDir] : []), file, workspaceId];
-  const result = await runCommand(command, args, dir);
+  const result = await runCommand(command, args, dir, options);
 
   if (!result.ok) {
     return { error: `${command}: ${result.output.trim() || "failed"}` };
@@ -69,18 +70,25 @@ async function cliExport(
   }
 }
 
-/** Exports the workspace with the Yaak CLI, falling back to the plugin API. */
+/**
+ * Exports the workspace with the Yaak CLI, falling back to the plugin API. Returns null when
+ * `signal` is aborted.
+ */
 export async function loadExport(
   ctx: Context,
   workspace: Workspace,
   dir: string,
-  yaakCommand?: string,
-): Promise<LoadedExport> {
+  { yaakCommand, signal }: { yaakCommand?: string | undefined; signal?: AbortSignal } = {},
+): Promise<LoadedExport | null> {
   const file = join(dir, "yaakdoc.json");
   const errors: string[] = [];
 
   for (const command of yaakCommand ? [yaakCommand] : DEFAULT_YAAK_COMMANDS) {
-    const { data, error } = await cliExport(command, workspace.id, file, dir);
+    const { data, error } = await cliExport(command, workspace.id, file, dir, { signal });
+
+    if (signal?.aborted) {
+      return null;
+    }
 
     if (data) {
       return { file, data, source: "cli" };

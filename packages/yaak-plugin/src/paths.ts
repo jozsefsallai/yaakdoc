@@ -27,6 +27,11 @@ export function workDir(workspaceId: string): string {
   return join(tmpdir(), "yaakdoc", workspaceId.replace(/[^\w-]/g, "_"));
 }
 
+/** Where themes fetched from npm are installed, shared by all workspaces. */
+export function themeCacheDir(): string {
+  return join(tmpdir(), "yaakdoc", "themes");
+}
+
 /** Rewrites an absolute path inside `dir` to a `./` path, so a saved project can be moved. */
 export function toProjectRelative(path: string, dir: string): string {
   if (!isAbsolute(path)) {

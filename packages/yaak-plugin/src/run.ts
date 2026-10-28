@@ -77,12 +77,24 @@ const quoteWindows = (arg: string) =>
   /[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '""')}"` : arg;
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matches ANSI escape codes.
-const stripAnsi = (text: string) => text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
+export const stripAnsi = (text: string) => text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
 
 export type RunResult = { ok: boolean; output: string };
 
+export type RunOptions = {
+  /** Kills the command when aborted. */
+  signal?: AbortSignal;
+  /** Called with the output so far whenever the command prints something. */
+  onOutput?: (output: string) => void;
+};
+
 /** Runs `command` (a command setting, possibly with its own arguments) and captures its output. */
-export function runCommand(command: string, args: string[], cwd: string): Promise<RunResult> {
+export function runCommand(
+  command: string,
+  args: string[],
+  cwd: string,
+  { signal, onOutput }: RunOptions = {},
+): Promise<RunResult> {
   const [bin, ...prefix] = splitCommand(command);
 
   if (!bin) {
@@ -99,19 +111,20 @@ export function runCommand(command: string, args: string[], cwd: string): Promis
       isWindows ? argv.map(quoteWindows) : argv,
       {
         cwd,
+        signal,
         shell: isWindows,
         windowsHide: true,
         env: { ...process.env, PATH: userPath(), FORCE_COLOR: "0", NO_COLOR: "1", CI: "1" },
       },
     );
 
-    child.stdout.on("data", (chunk) => {
+    const append = (chunk: Buffer) => {
       output += chunk;
-    });
+      onOutput?.(output);
+    };
 
-    child.stderr.on("data", (chunk) => {
-      output += chunk;
-    });
+    child.stdout.on("data", append);
+    child.stderr.on("data", append);
 
     child.on("error", (error) => {
       resolve({ ok: false, output: `${output}${error.message}\n` });

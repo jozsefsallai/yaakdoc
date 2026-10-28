@@ -10,15 +10,95 @@ export type FormOptions = {
   environments: string[];
   /** Placeholder for the yaakdoc command setting. */
   yaakdocCommand: string;
+  /** A problem with the export, shown above the form. */
+  warning?: string;
 };
 
 const onOff = (value: boolean) => (value ? "on" : "off");
+
+/** Name of the select that picks the section shown. */
+export const SECTION = "section";
+
+type Dynamic = (
+  ctx: unknown,
+  args: { values: Settings },
+) => Promise<{ hidden?: boolean } | null | undefined> | { hidden?: boolean } | null | undefined;
+
+/** `a, b, and c` */
+const listOf = (items: string[]) =>
+  items.length < 3 ? items.join(" and ") : `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
+
+const slug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+/**
+ * Yaak's forms have no tabs, so the top-level accordions become sections: a select (in a banner) at
+ * the place of the first one picks the section shown, and the inputs of the others are hidden. Hidden inputs
+ * keep their values. The form always opens on the first section.
+ */
+export function asSections(inputs: FormInput[]): FormInput[] {
+  const sections = inputs.filter(
+    (input): input is Extract<FormInput, { type: "accordion" }> => input.type === "accordion",
+  );
+
+  const first = sections[0] ? slug(sections[0].label) : "";
+
+  const inSection = (input: FormInput, id: string): FormInput => {
+    const own = (input as { dynamic?: Dynamic }).dynamic;
+    const ownHidden = Boolean((input as { hidden?: boolean }).hidden);
+
+    const dynamic: Dynamic = async (ctx, args) => {
+      const result = own ? await own(ctx, args) : undefined;
+      const shown = (args.values[SECTION] ?? first) === id;
+
+      return { ...result, hidden: !shown || (result?.hidden ?? ownHidden) };
+    };
+
+    return { ...input, hidden: id !== first || ownHidden, dynamic } as FormInput;
+  };
+
+  return inputs.flatMap((input): FormInput[] => {
+    if (input.type !== "accordion") {
+      return [input];
+    }
+
+    const id = slug(input.label);
+    // A select looks like any other setting, so a banner sets it apart and names the sections
+    // that are out of sight.
+    const select: FormInput[] =
+      id === first
+        ? [
+            {
+              type: "banner",
+              color: "primary",
+              inputs: [
+                {
+                  type: "markdown",
+                  content: `**More settings** are in the other sections: ${listOf(
+                    sections.slice(1).map(({ label }) => label),
+                  )}.`,
+                },
+                {
+                  type: "select",
+                  name: SECTION,
+                  label: "Section",
+                  defaultValue: first,
+                  options: sections.map(({ label }) => ({ label, value: slug(label) })),
+                },
+              ],
+            },
+          ]
+        : [];
+
+    return [...select, ...(input.inputs ?? []).map((child) => inSection(child, id))];
+  });
+}
 
 export function buildForm({
   kind,
   settings,
   environments,
   yaakdocCommand,
+  warning,
 }: FormOptions): FormInput[] {
   const value = (name: string, fallback = "") => {
     const stored = settings[name];
@@ -85,11 +165,12 @@ export function buildForm({
       description,
     );
 
-  // The theme name field and its notice only show when "Other theme..." is selected.
+  // The theme name field and its notice only show when "Other theme..." is selected. Yaak only
+  // passes the values the user changed, so an untouched select still has its stored value.
   const otherTheme = {
     hidden: settings.themeChoice !== OTHER_THEME,
     dynamic: (_ctx: unknown, { values }: { values: Settings }) => ({
-      hidden: values.themeChoice !== OTHER_THEME,
+      hidden: (values.themeChoice ?? settings.themeChoice) !== OTHER_THEME,
     }),
   };
 
@@ -122,7 +203,17 @@ export function buildForm({
           },
         ];
 
-  return [
+  return asSections([
+    ...(warning
+      ? [
+          {
+            type: "banner",
+            color: "warning",
+            inputs: [{ type: "markdown", content: warning }],
+          } satisfies FormInput,
+        ]
+      : []),
+
     ...target,
 
     {
@@ -169,7 +260,7 @@ export function buildForm({
           ...otherTheme,
         },
 
-        select("pages", "Pages", DEFAULTS.pages, [
+        select("pages", "Request pages", DEFAULTS.pages, [
           { label: "Single page", value: "single" },
           { label: "Page per request", value: "per-request" },
         ]),
@@ -194,6 +285,26 @@ export function buildForm({
           [{ label: "All shared environments", value: "public" }],
           "Lets readers switch environments.",
         ),
+      ],
+    },
+
+    {
+      type: "accordion",
+      label: "Pages and search",
+      inputs: [
+        ...file(
+          "pagesDir",
+          "Pages directory",
+          "Markdown pages (`.md`, with optional front matter) shown next to the API reference. Subfolders become groups; for tabs and custom groups, set `navigation` in the extra config.",
+          { directory: true },
+        ),
+
+        text("apiPath", "API reference path", {
+          placeholder: "The site root, or reference when the pages have an index.md",
+          description: "Where the API reference is served, relative to the base path.",
+        }),
+
+        toggle("search", "Search", DEFAULTS.search, "Adds a search dialog and its index."),
       ],
     },
 
@@ -371,7 +482,7 @@ export function buildForm({
           name: "extraConfig",
           label: "Extra config (JSON)",
           description:
-            "Any other config values, e.g. themeOptions, head or a logo URL. Merged over the fields above.",
+            "Any other config values, e.g. themeOptions, navigation, head or a logo URL. Merged over the other fields.",
           language: "json",
           optional: true,
           rows: 5,
@@ -390,5 +501,5 @@ export function buildForm({
         }),
       ],
     },
-  ];
+  ]);
 }

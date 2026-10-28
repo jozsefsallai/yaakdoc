@@ -18,5 +18,10 @@ export {
   withBase,
   writeSite,
 } from "./node/site";
-export { type ResolvedTheme, ThemeError, themeFromDefinition } from "./node/theme";
+export {
+  type ResolvedTheme,
+  ThemeError,
+  themeFromDefinition,
+  themePackageCandidates,
+} from "./node/theme";
 export { VERSION } from "./node/version";

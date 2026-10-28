@@ -9,6 +9,7 @@ import {
   publicAsset,
   resolveContext,
   themeFromDefinition,
+  themePackageCandidates,
   VERSION,
   withBase,
   writeSite,
@@ -16,7 +17,7 @@ import {
 import { assets, files } from "../generated/kiseki-client";
 import { render } from "../generated/kiseki-server.mjs";
 
-export { VERSION };
+export { themePackageCandidates, VERSION };
 
 /** Theme specs the engine has built in. */
 const BUILT_IN_THEMES = new Set(["kiseki", "@yaakdoc/theme-kiseki"]);

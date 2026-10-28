@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -29,17 +29,23 @@ describe("built-in engine", () => {
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), "yaakdoc-plugin-test-"));
 
+    // Markdown pages (search is on by default, so the search index is compared too).
+    const pagesDir = join(dir, "pages");
+    await mkdir(join(pagesDir, "guides"), { recursive: true });
+    await writeFile(join(pagesDir, "index.md"), "---\ntitle: Introduction\n---\n\nStart here.\n");
+    await writeFile(join(pagesDir, "guides", "auth.md"), "# Authentication\n\n## Tokens\n");
+
     const exportData = JSON.parse(await readFile(FIXTURE, "utf8"));
 
     await engine.buildSite({
       exportData,
       cwd: dir,
-      overrides: { ...overrides, outDir: join(dir, "plugin") },
+      overrides: { ...overrides, pagesDir, outDir: join(dir, "plugin") },
     });
 
     await build({
       cwd: dir,
-      overrides: { ...overrides, export: FIXTURE.pathname, outDir: join(dir, "cli") },
+      overrides: { ...overrides, pagesDir, export: FIXTURE.pathname, outDir: join(dir, "cli") },
     });
   });
 
@@ -49,6 +55,9 @@ describe("built-in engine", () => {
     const list = await files(cli);
 
     expect(await files(plugin)).toEqual(list);
+    expect(list).toEqual(
+      expect.arrayContaining(["guides/auth/index.html", "_yaakdoc/search.json"]),
+    );
 
     for (const file of list.filter((name) => /\.(html|md|txt|json)$/.test(name))) {
       const [a, b] = await Promise.all([
