@@ -1,3 +1,4 @@
+import { normalizeBase } from "@yaakdoc/core";
 import { z } from "zod";
 
 const color = z
@@ -133,7 +134,7 @@ export const configSchema = z
     base: z
       .string()
       .default("/")
-      .transform((value) => `/${value.replace(/^\/+|\/+$/g, "")}/`.replace(/^\/\/$/, "/"))
+      .transform(normalizeBase)
       .meta({ description: "Base path the site is served from, e.g. `/docs/`." }),
     outDir: z
       .string()

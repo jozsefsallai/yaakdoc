@@ -1,5 +1,12 @@
-import type { Server } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
+
+/** A Connect/Express-style middleware. */
+export type Middleware = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: (error?: unknown) => void,
+) => void;
 
 export const CONTENT_TYPES: Record<string, string> = {
   ".md": "text/markdown; charset=utf-8",
@@ -44,5 +51,18 @@ export function listen(server: Server, port: number, host: string | boolean): Pr
     };
 
     tryListen(port);
+  });
+}
+
+/** A port that's free right now (the OS picks it). */
+export function freePort(): Promise<number> {
+  return new Promise((resolvePort, reject) => {
+    const server = createServer();
+
+    server.once("error", reject);
+    server.listen(0, "localhost", () => {
+      const { port } = server.address() as AddressInfo;
+      server.close(() => resolvePort(port));
+    });
   });
 }

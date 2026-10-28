@@ -18,7 +18,6 @@ export async function createViteConfig(
 ): Promise<InlineConfig> {
   const context = getContext();
   const themePlugins = (await context.theme.definition.vitePlugins?.()) ?? [];
-  const publicDir = join(context.root, "public");
 
   // Don't create node_modules in a project that has none (e.g. `npx yaakdoc` next to an export).
   const cacheDir = existsSync(join(context.root, "node_modules"))
@@ -37,7 +36,7 @@ export async function createViteConfig(
     mode,
     logLevel: extra.logLevel ?? "warn",
     clearScreen: false,
-    publicDir: existsSync(publicDir) ? publicDir : false,
+    publicDir: context.publicDir,
     cacheDir,
     plugins: [yaakdocPlugin(getContext, extra.onSsrUpdate), ...themePlugins],
     resolve: { alias: styleAliases(context) },
@@ -61,6 +60,8 @@ export async function createViteConfig(
       },
     },
     server: {
+      // When yaakdoc runs inside a host app, the project root is the app's; skip its build output.
+      watch: { ignored: ["**/.next/**", "**/.svelte-kit/**", "**/.astro/**", "**/.output/**"] },
       fs: {
         allow: [
           searchForWorkspaceRoot(context.root),

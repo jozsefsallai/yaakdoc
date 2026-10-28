@@ -33,7 +33,7 @@ export {
 } from "./responses";
 export { type SanitizeOptions, sanitizeExport } from "./sanitize";
 export * from "./schema";
-export { absoluteUrl, createUniqueSlugger, slugify } from "./slug";
+export { absoluteUrl, createUniqueSlugger, normalizeBase, slugify } from "./slug";
 export {
   createSecretMatcher,
   formatTemplate,

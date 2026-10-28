@@ -75,6 +75,24 @@ describe("loadConfig", () => {
     });
   });
 
+  it("skips the config file with configFile: false", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "yaakdoc-config-"));
+    await writeFile(join(dir, "yaakdoc.config.json"), JSON.stringify({ pages: "per-request" }));
+
+    const loaded = await loadConfig({
+      cwd: dir,
+      configFile: false,
+      overrides: { export: "./api.json", base: "docs" },
+    });
+
+    expect(loaded.configFile).toBeNull();
+    expect(loaded.config).toMatchObject({
+      pages: "single",
+      base: "/docs/",
+      export: join(dir, "api.json"),
+    });
+  });
+
   it("fails when an explicit config file is missing", async () => {
     const dir = await mkdtemp(join(tmpdir(), "yaakdoc-config-"));
     await expect(loadConfig({ cwd: dir, configFile: "nope.json" })).rejects.toThrow(ConfigError);

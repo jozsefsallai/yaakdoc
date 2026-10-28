@@ -29,6 +29,11 @@ export function createUniqueSlugger(reserved: Iterable<string> = []) {
   };
 }
 
+/** Normalizes a base path to the `/path/` form (`"docs"`, `"/docs"` → `"/docs/"`, `""` → `"/"`). */
+export function normalizeBase(path: string): string {
+  return `/${path.replace(/^\/+|\/+$/g, "")}/`.replace(/^\/\/$/, "/");
+}
+
 /**
  * Converts a site path (which includes the base, e.g. `/docs/products/`) into an absolute URL
  * using the public site URL (which corresponds to the base, e.g. `https://acme.dev/docs`).

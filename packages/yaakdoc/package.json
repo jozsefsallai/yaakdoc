@@ -19,6 +19,16 @@
       "types": "./dist/static.d.ts",
       "default": "./dist/static.js"
     },
+    "./vite": {
+      "@yaakdoc/source": "./src/vite.ts",
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./integration": {
+      "@yaakdoc/source": "./src/integration.ts",
+      "types": "./dist/integration.d.ts",
+      "default": "./dist/integration.js"
+    },
     "./config.schema.json": "./config.schema.json",
     "./package.json": "./package.json"
   },

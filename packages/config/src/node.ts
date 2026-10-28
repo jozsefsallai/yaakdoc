@@ -7,8 +7,8 @@ import type { ResolvedConfig, YaakdocConfig } from "./schema";
 export type LoadConfigOptions = {
   /** Directory to look for `yaakdoc.config.*` in. Defaults to `process.cwd()`. */
   cwd?: string;
-  /** Explicit config file path (relative to `cwd`). */
-  configFile?: string;
+  /** Explicit config file path (relative to `cwd`), or `false` to not load a config file at all. */
+  configFile?: string | false;
   /** Values that take precedence over the config file (e.g. CLI flags). */
   overrides?: YaakdocConfig;
 };
@@ -28,32 +28,9 @@ export type LoadedConfig = {
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<LoadedConfig> {
   const cwd = resolve(options.cwd ?? process.cwd());
 
-  let loaded: Awaited<ReturnType<typeof loadC12Config<YaakdocConfig>>>;
+  const loaded = options.configFile === false ? {} : await loadConfigFile(cwd, options.configFile);
 
-  try {
-    loaded = await loadC12Config<YaakdocConfig>({
-      cwd,
-      name: "yaakdoc",
-      configFile: options.configFile?.replace(/\.(json|jsonc|json5|ts|js|mjs|cjs|mts|cts)$/, ""),
-      rcFile: false,
-      globalRc: false,
-      dotenv: false,
-      packageJson: false,
-      configFileRequired: Boolean(options.configFile),
-      merger: (...configs) =>
-        configs
-          .filter(Boolean)
-          .reverse()
-          .reduce<Record<string, unknown>>(
-            (acc, config) => mergeConfig(acc, config as Record<string, unknown>),
-            {},
-          ) as YaakdocConfig,
-    });
-  } catch (error) {
-    throw new ConfigError(`Could not load config: ${(error as Error).message}`);
-  }
-
-  const configFile = (loaded as { _configFile?: string })._configFile ?? null;
+  const configFile = loaded._configFile ?? null;
   const merged = mergeConfig(
     (loaded.config ?? {}) as Record<string, unknown>,
     (options.overrides ?? {}) as Record<string, unknown>,
@@ -67,6 +44,34 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<Loade
     configFile,
     root,
   };
+}
+
+async function loadConfigFile(
+  cwd: string,
+  configFile: string | undefined,
+): Promise<{ config?: YaakdocConfig | null; _configFile?: string }> {
+  try {
+    return await loadC12Config<YaakdocConfig>({
+      cwd,
+      name: "yaakdoc",
+      configFile: configFile?.replace(/\.(json|jsonc|json5|ts|js|mjs|cjs|mts|cts)$/, ""),
+      rcFile: false,
+      globalRc: false,
+      dotenv: false,
+      packageJson: false,
+      configFileRequired: Boolean(configFile),
+      merger: (...configs) =>
+        configs
+          .filter(Boolean)
+          .reverse()
+          .reduce<Record<string, unknown>>(
+            (acc, config) => mergeConfig(acc, config as Record<string, unknown>),
+            {},
+          ) as YaakdocConfig,
+    });
+  } catch (error) {
+    throw new ConfigError(`Could not load config: ${(error as Error).message}`);
+  }
 }
 
 const isLocalPath = (value: string) =>

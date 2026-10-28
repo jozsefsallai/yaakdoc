@@ -3,11 +3,11 @@ import { createServer, type Server } from "node:http";
 import { extname, join, resolve } from "node:path";
 import { loadConfig } from "@yaakdoc/config/node";
 import sirv from "sirv";
-import { CONTENT_TYPES, listen, serverUrl } from "./server";
+import { CONTENT_TYPES, listen, type Middleware, serverUrl } from "./server";
 
 export type PreviewOptions = {
   cwd?: string;
-  configFile?: string;
+  configFile?: string | false;
   outDir?: string;
   port?: number;
   host?: string | boolean;
@@ -20,7 +20,7 @@ export async function preview(
 ): Promise<{ url: string; server: Server; close: () => Promise<void> }> {
   const { config } = await loadConfig({
     cwd: options.cwd ?? process.cwd(),
-    ...(options.configFile ? { configFile: options.configFile } : {}),
+    ...(options.configFile !== undefined ? { configFile: options.configFile } : {}),
   });
 
   const outDir = options.outDir
@@ -31,6 +31,39 @@ export async function preview(
     throw new Error(`No build found in ${outDir}. Run \`yaakdoc build\` first.`);
   }
 
+  const base = config.base;
+  const serveSite = createStaticMiddleware({ outDir, base });
+
+  const server = createServer((req, res) => {
+    serveSite(req, res, () => {
+      res.writeHead(302, { Location: base });
+      res.end();
+    });
+  });
+
+  const host = options.host ?? config.server.host;
+  const port = await listen(server, options.port ?? config.server.port, host);
+  const url = serverUrl(host, port, base);
+
+  if (options.open) {
+    (await import("./open")).default(url);
+  }
+
+  return { url, server, close: () => new Promise((done) => server.close(() => done())) };
+}
+
+export type StaticMiddlewareOptions = {
+  /** The built site. */
+  outDir: string;
+  /** Base path the site was built for, e.g. `/docs/`. */
+  base: string;
+};
+
+/**
+ * Serves a built site under its base path, like a static host would (`index.html` for directories,
+ * `404.html` for unknown pages). Calls `next()` for URLs outside the base.
+ */
+export function createStaticMiddleware({ outDir, base }: StaticMiddlewareOptions): Middleware {
   const serve = sirv(outDir, {
     dev: true,
     etag: true,
@@ -45,20 +78,25 @@ export async function preview(
   });
 
   const notFoundFile = join(outDir, "404.html");
-  const base = config.base;
 
-  const server = createServer((req, res) => {
+  return (req, res, next) => {
     const url = req.url ?? "/";
+    const pathname = url.split(/[?#]/)[0] ?? "/";
 
-    if (!url.startsWith(base) && base !== "/") {
+    if (base !== "/" && `${pathname}/` === base) {
       res.writeHead(302, { Location: base });
       res.end();
       return;
     }
 
-    req.url = base === "/" ? url : url.slice(base.length - 1);
+    if (!pathname.startsWith(base)) {
+      return next();
+    }
+
+    req.url = url.slice(base.length - 1);
 
     serve(req, res, () => {
+      req.url = url;
       res.statusCode = 404;
 
       if (existsSync(notFoundFile)) {
@@ -68,15 +106,5 @@ export async function preview(
         res.end("Not found");
       }
     });
-  });
-
-  const host = options.host ?? config.server.host;
-  const port = await listen(server, options.port ?? config.server.port, host);
-  const url = serverUrl(host, port, base);
-
-  if (options.open) {
-    (await import("./open")).default(url);
-  }
-
-  return { url, server, close: () => new Promise((done) => server.close(() => done())) };
+  };
 }

@@ -66,6 +66,58 @@ npx yaakdoc build --overrides '{"branding":{"title":"Staging API"},"runInYaak":f
 
 When no export is passed (as an argument or `export` in the config), yaakdoc uses `yaakdoc.json` or, failing that, `yaak.json` from the current directory.
 
+## Inside an existing app
+
+The docs can also live at a path (e.g. `/docs`) of an app you already have. Each integration takes the docs' `path`, the yaakdoc `config` inline, so no `yaakdoc.config.*` file is needed, and the location of the `export`.
+
+**Next.js** with [`@yaakdoc/next`](packages/next):
+
+```ts
+// next.config.ts
+import { createNextYaakdoc } from "@yaakdoc/next";
+
+const withYaakdoc = createNextYaakdoc({
+  path: "/docs",
+  export: "./yaak.json",
+  config: {
+    branding: {
+      title: "Acme API",
+    },
+  },
+});
+
+export default withYaakdoc(nextConfig);
+```
+
+- **`next dev`** proxies the docs to a yaakdoc dev server, with live reload.
+- **`next build`** prerenders them into `public/docs`. Add that folder to `.gitignore`.
+
+**Vite-based apps** (Vite, React Router, SvelteKit, Astro, ...) with `yaakdoc/vite`:
+
+```ts
+// vite.config.ts
+import yaakdoc from "yaakdoc/vite";
+
+export default defineConfig({
+  plugins: [
+    yaakdoc({
+      path: "/docs",
+      export: "./yaak.json",
+    }),
+  ],
+});
+```
+
+**Node servers** (Express, Connect, Fastify, Nitro, ...) with `yaakdocMiddleware`:
+
+```ts
+import { yaakdocMiddleware } from "yaakdoc";
+
+app.use(await yaakdocMiddleware({ path: "/docs", export: "./yaak.json" }));
+```
+
+The [yaakdoc package README](packages/yaakdoc#inside-an-existing-app) lists every option.
+
 ## Configuration
 
 Everything is optional. `yaakdoc.config.json` (`.jsonc`, `.ts` and `.js` also work) looks like this:
@@ -211,13 +263,14 @@ The quickest way to customize is `npx yaakdoc eject`. The ejected theme's depend
 
 | Package | Description |
 | --- | --- |
-| [`yaakdoc`](packages/yaakdoc) | CLI, Node API (`createDevServer`, `build`, `preview`, `eject`, `init`) and the Vite-based engine. |
+| [`yaakdoc`](packages/yaakdoc) | CLI, Node API (`createDevServer`, `build`, `preview`, `eject`, `init`), the Vite-based engine, the `yaakdoc/vite` plugin and `yaakdocMiddleware`. |
 | [`@yaakdoc/core`](packages/core) | Parses Yaak exports (all schema versions), normalizes them into a documentation model, resolves templates and variables. |
 | [`@yaakdoc/config`](packages/config) | The config schema (Zod), `defineConfig`, loader and JSON schema. |
 | [`@yaakdoc/snippets`](packages/snippets) | Code example generators and `defineSnippet`. |
 | [`@yaakdoc/markdown`](packages/markdown) | Markdown rendering of requests and folders, `llms.txt` and `llms-full.txt`. |
 | [`@yaakdoc/react`](packages/react) | Unstyled components, hooks, component overrides, the island runtime and the theme contract. |
 | [`@yaakdoc/theme-kiseki`](packages/theme-kiseki) | The default theme. |
+| [`@yaakdoc/next`](packages/next) | Serves the docs from a Next.js app (`createNextYaakdoc`). |
 | [`@yaakdoc/yaakdoc`](packages/yaak-plugin) | The Yaak plugin (published to Yaak's plugin registry, not npm). |
 
 ## How it works
@@ -242,6 +295,7 @@ pnpm check-types
 pnpm lint             # biome
 pnpm --filter demo dev        # run the demo docs (apps/demo)
 pnpm --filter demo test:e2e   # Playwright end-to-end tests
+pnpm --filter next-demo dev   # the demo docs inside a Next.js app (apps/next-demo)
 ```
 
 Releases are managed with [Changesets](https://github.com/changesets/changesets): run `pnpm changeset`, then `pnpm version-packages` and `pnpm release`.

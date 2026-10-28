@@ -1,0 +1,72 @@
+{
+  "name": "@yaakdoc/next",
+  "version": "0.2.0",
+  "description": "Serve yaakdoc API documentation from a Next.js app, e.g. at /docs.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@yaakdoc/source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "yaak",
+    "yaakdoc",
+    "nextjs",
+    "next",
+    "api",
+    "documentation",
+    "docs"
+  ],
+  "author": "József Sallai @jozsefsallai",
+  "license": "MIT",
+  "files": [
+    "/dist",
+    "/README.md",
+    "/LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch --no-clean",
+    "test": "vitest run",
+    "check-types": "tsc",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format . --write",
+    "prepack": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jozsefsallai/yaakdoc.git",
+    "directory": "packages/next"
+  },
+  "bugs": {
+    "url": "https://github.com/jozsefsallai/yaakdoc/issues"
+  },
+  "homepage": "https://github.com/jozsefsallai/yaakdoc/tree/master/packages/next#readme",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "next": ">=14"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "next": "16.4.1"
+  },
+  "dependencies": {
+    "yaakdoc": "workspace:^"
+  }
+}

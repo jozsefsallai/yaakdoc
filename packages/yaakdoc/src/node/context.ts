@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { basename, extname, resolve } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import type { ResolvedConfig, YaakdocConfig } from "@yaakdoc/config";
 import { loadConfig } from "@yaakdoc/config/node";
 import {
@@ -32,10 +32,16 @@ import { VERSION } from "./version";
 export type YaakdocOptions = {
   /** Project directory (default: `process.cwd()`). */
   cwd?: string;
-  /** Explicit config file. */
-  configFile?: string;
+  /** Explicit config file, or `false` to not load one (configure with `overrides` only). */
+  configFile?: string | false;
   /** Config overrides (e.g. from CLI flags). Takes precedence over the config file. */
   overrides?: YaakdocConfig;
+  /**
+   * Folder whose files are copied to the site root as-is (default: `public/` in the project
+   * directory, if it exists). `false` disables it, e.g. when the project is a host app whose own
+   * `public/` folder isn't meant for the docs.
+   */
+  publicDir?: string | false;
   /** The Yaak export itself, instead of reading it from `export` or auto-detecting it. */
   exportData?: unknown;
   /** Replaces theme loading, e.g. for an engine that bundles its theme (the Yaak plugin). */
@@ -58,6 +64,8 @@ export type Context = {
   root: string;
   configFile: string | null;
   config: ResolvedConfig;
+  /** Absolute path of the public folder, or false when there is none. */
+  publicDir: string | false;
   /** Path of the export, or null when it was passed as `exportData`. */
   exportPath: string | null;
   source: YaakDocument;
@@ -80,7 +88,7 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
 
   const { config, configFile, root } = await loadConfig({
     cwd,
-    ...(options.configFile ? { configFile: options.configFile } : {}),
+    ...(options.configFile !== undefined ? { configFile: options.configFile } : {}),
     ...(options.overrides ? { overrides: options.overrides } : {}),
   });
 
@@ -184,6 +192,7 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     root,
     configFile,
     config,
+    publicDir: resolvePublicDir(options.publicDir, cwd, root),
     exportPath,
     source,
     theme,
@@ -199,6 +208,15 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
       ...assets.values(),
     ],
   };
+}
+
+function resolvePublicDir(publicDir: string | false | undefined, cwd: string, root: string) {
+  if (publicDir === false) {
+    return false;
+  }
+
+  const dir = publicDir === undefined ? join(root, "public") : resolve(cwd, publicDir);
+  return existsSync(dir) ? dir : false;
 }
 
 /** The export restricted to what the docs show, safe to publish for "Run in Yaak". */
