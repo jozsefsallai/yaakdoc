@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
-import { normalize, prepareDocument, selectEnvironment } from "@yaakdoc/core";
+import { createPageDoc, normalize, prepareDocument, selectEnvironment } from "@yaakdoc/core";
 import { builtinSnippets, generateExamples } from "@yaakdoc/snippets";
 import { describe, expect, it } from "vitest";
-import { indexToMarkdown, llmsFullTxt, llmsTxt, requestToMarkdown } from "../src/index";
+import {
+  indexToMarkdown,
+  llmsFullTxt,
+  llmsTxt,
+  pageToMarkdown,
+  requestToMarkdown,
+} from "../src/index";
 
 const ws = normalize(
   JSON.parse(
@@ -63,5 +69,48 @@ describe("request markdown", () => {
     expect(full).not.toContain("eyJ0eXAi");
     expect(full).toContain("{{api_token}}");
     expect(indexToMarkdown(doc, options)).toContain("| `api_token` | `<redacted>` |");
+  });
+});
+
+describe("custom pages", async () => {
+  const withPages = await prepareDocument({
+    workspace: ws,
+    environment: selectEnvironment(ws),
+    pages: "single",
+    base: "/",
+    apiPath: "reference",
+    customPages: [
+      createPageDoc({
+        path: "index.md",
+        body: "Call `${[ base_url ]}` with ${[ api_token ]}.",
+        data: { title: "Introduction", description: "Start here." },
+      }),
+      createPageDoc({ path: "guides/auth.md", body: "## Tokens\n\nGet one." }),
+      createPageDoc({ path: "secret.md", body: "Hidden.", data: { hidden: true } }),
+    ],
+    variables: { resolve: true, hide: ["token", "password"] },
+    renderMarkdown: (md) => md,
+    highlight: (code) => code,
+    examples: () => [],
+  });
+
+  it("renders a page with resolved variables and redacted secrets", () => {
+    expect(pageToMarkdown(withPages.pages.index!, options)).toBe(
+      "# Introduction\n\n> Start here.\n\nCall `https://api.acme.dev/v1` with {{api_token}}.\n",
+    );
+  });
+
+  it("lists visible pages in llms.txt and llms-full.txt", () => {
+    const text = llmsTxt(withPages, options);
+
+    expect(text).toContain(
+      "## Docs\n\n- [Introduction](https://docs.acme.dev/index.md): Start here.\n\n## Guides\n\n- [Auth](https://docs.acme.dev/guides/auth.md): Get one.",
+    );
+    expect(text).toContain("(https://docs.acme.dev/reference/products/get-a-product.md)");
+    expect(text).not.toContain("Hidden");
+
+    const full = llmsFullTxt(withPages, options);
+    expect(full).toContain("## Auth\n\n## Tokens\n\nGet one.");
+    expect(llmsFullTxt(withPages, { ...options, pages: false })).not.toContain("Get one.");
   });
 });

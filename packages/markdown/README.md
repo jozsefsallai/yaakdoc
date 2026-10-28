@@ -7,8 +7,9 @@ Generates Markdown and [llms.txt](https://llmstxt.org) from a yaakdoc `PreparedD
 | `requestToMarkdown(request, options)` | One request: method and URL, description, auth, parameters, headers, body, code examples. |
 | `folderToMarkdown(document, folder, options)` | A folder's description and links to its contents. |
 | `indexToMarkdown(document, options)` | Overview, authentication, variables and the table of contents. |
-| `llmsTxt(document, options)` | `llms.txt`: H1 title, `>` summary, an H2 section per top-level folder, link lists. |
-| `llmsFullTxt(document, options)` | The whole documentation in one Markdown file. |
+| `pageToMarkdown(page, options)` | A custom page: title, description and body, with variables resolved for the default environment. |
+| `llmsTxt(document, options)` | `llms.txt`: H1 title, `>` summary, H2 sections for the custom pages (by tab and group), then one per top-level folder, link lists. |
+| `llmsFullTxt(document, options)` | The whole documentation in one Markdown file. Pass `pages: false` for the API reference only. |
 
 `options` has these fields:
 

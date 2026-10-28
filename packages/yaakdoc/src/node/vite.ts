@@ -6,7 +6,7 @@ import { escapeRegExp } from "@yaakdoc/core";
 import { type InlineConfig, searchForWorkspaceRoot } from "vite";
 import type { Context } from "./context";
 import { nodeModulesRoot, yaakdocPlugin } from "./plugin";
-import { ENGINE_DIR, resolveFrom } from "./resolve";
+import { ENGINE_DIR, resolvePackageDir } from "./resolve";
 
 export type ViteMode = "development" | "production";
 
@@ -76,11 +76,26 @@ export async function createViteConfig(
 }
 
 /**
+ * Whether `name` is installed in a `node_modules` folder in `dir` or above. Stricter than
+ * resolving it, which may fall back to the resolver's own location.
+ */
+function installedFrom(name: string, dir: string): boolean {
+  for (let current = dir; ; current = dirname(current)) {
+    if (existsSync(join(current, "node_modules", name, "package.json"))) {
+      return true;
+    }
+
+    if (current === dirname(current)) {
+      return false;
+    }
+  }
+}
+
+/**
  * CSS `@import "pkg"` is resolved by Vite's CSS resolver (aliases only, no plugins). For CSS packages
  * an ejected theme doesn't have installed (e.g. `tailwindcss`), alias them to yaakdoc's copy.
  */
 function styleAliases(context: Context) {
-  const themeAnchor = join(context.theme.root, "package.json");
   const aliases: Array<{ find: RegExp; replacement: string }> = [];
   const seen = new Set<string>();
 
@@ -98,15 +113,19 @@ function styleAliases(context: Context) {
 
       seen.add(name);
 
-      if (resolveFrom(`${name}/package.json`, themeAnchor)) {
+      if (installedFrom(name, context.theme.root)) {
         continue;
       }
 
-      const pkgJson = resolveFrom(`${name}/package.json`, fallback);
+      // `resolvePackageDir`: some packages (e.g. Fontsource) don't export their package.json.
 
-      if (!pkgJson) {
+      const packageDir = resolvePackageDir(name, fallback);
+
+      if (!packageDir) {
         continue;
       }
+
+      const pkgJson = join(packageDir, "package.json");
 
       const pkg = JSON.parse(readFileSync(pkgJson, "utf8")) as {
         style?: string;
@@ -115,10 +134,14 @@ function styleAliases(context: Context) {
 
       const root = pkg.exports?.["."];
 
+      // Stylesheet packages: a `style` condition, a CSS default export (e.g. Fontsource), `style`.
+      const conditions = typeof root === "object" && root ? (root as Record<string, unknown>) : {};
       const style =
-        typeof root === "object" && root && "style" in root
-          ? (root as { style: string }).style
-          : pkg.style;
+        typeof conditions.style === "string"
+          ? conditions.style
+          : typeof conditions.default === "string" && conditions.default.endsWith(".css")
+            ? conditions.default
+            : pkg.style;
 
       if (typeof style === "string") {
         aliases.push({

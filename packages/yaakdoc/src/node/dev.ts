@@ -5,7 +5,7 @@ import {
   type Server,
   type ServerResponse,
 } from "node:http";
-import { extname, resolve } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { consola } from "consola";
 import colors from "picocolors";
 import {
@@ -21,6 +21,7 @@ import {
   resolveContext,
   type YaakdocOptions,
 } from "./context";
+import { cssUrls, findFontPreloads } from "./fonts";
 import { styleEntries, VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
 import { CONTENT_TYPES, listen, type Middleware, serverUrl } from "./server";
 import type { RenderEntry } from "./site";
@@ -148,6 +149,11 @@ export async function createDevMiddleware(
       }),
     );
 
+    const fontPreloads = findFontPreloads(
+      cssUrls(inlineStyles.map((style) => style.css)),
+      context.theme.preloadFonts,
+    );
+
     const html = await render({
       document: context.document,
       site: context.site,
@@ -157,6 +163,7 @@ export async function createDevMiddleware(
         inlineStyles,
         scripts: [`${context.config.base}@id/__x00__${VIRTUAL_CLIENT}`],
         modulePreloads: [],
+        ...(fontPreloads.length ? { fontPreloads } : {}),
       },
     });
 
@@ -206,6 +213,12 @@ export async function createDevMiddleware(
           return next();
         }
 
+        if (route?.redirect) {
+          res.writeHead(302, { Location: route.redirect });
+          res.end();
+          return;
+        }
+
         if (route || isHtmlRequest(req, pathname)) {
           const html = await render(route ?? context.notFound, req.url ?? "/");
           res.statusCode = route ? 200 : 404;
@@ -229,12 +242,17 @@ export async function createDevMiddleware(
 
   if (options.watch !== false) {
     const watched = new Set(context.watchFiles.map((file) => resolve(file)));
-    vite.watcher.add([...watched]);
+    vite.watcher.add([...watched, ...context.watchDirs]);
+
+    /** Markdown files in a watched directory (pages), including newly added ones. */
+    const isWatchedPage = (file: string) =>
+      /\.(md|markdown)$/i.test(file) &&
+      context.watchDirs.some((dir) => resolve(file).startsWith(`${resolve(dir)}${sep}`));
 
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const onChange = (file: string) => {
-      if (!watched.has(resolve(file))) {
+      if (!watched.has(resolve(file)) && !isWatchedPage(file)) {
         return;
       }
 
@@ -261,6 +279,8 @@ export async function createDevMiddleware(
             }
           }
 
+          vite.watcher.add(next.watchDirs);
+
           // Theme options / branding may affect CSS-in-SSR; invalidate the SSR entry.
           const mod = ssr.moduleGraph.getModuleById(`\0${VIRTUAL_SERVER}`);
           if (mod) {
@@ -279,6 +299,12 @@ export async function createDevMiddleware(
 
     vite.watcher.on("change", onChange);
     vite.watcher.on("add", onChange);
+    vite.watcher.on("unlink", (file) => {
+      if (isWatchedPage(file)) {
+        watched.delete(resolve(file));
+        onChange(file);
+      }
+    });
   }
 
   const base = context.config.base;

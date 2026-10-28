@@ -1,6 +1,35 @@
 {
   "$schema": "./node_modules/yaakdoc/config.schema.json",
   "export": "./yaak.json",
+  "pagesDir": "./docs",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": ["index", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/authentication", "guides/pagination"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "square-terminal",
+        "api": true
+      },
+      {
+        "tab": "Changelog",
+        "icon": "history",
+        "pages": ["changelog"]
+      }
+    ]
+  },
   "branding": {
     "title": "Acme Store API",
     "description": "Manage products, orders and customers of an Acme storefront.",
@@ -8,16 +37,26 @@
     "favicon": "./assets/logo.svg",
     "colors": {
       "primary": "#0f766e",
-      "dark": { "primary": "#5eead4" }
+      "dark": {
+        "primary": "#5eead4"
+      }
     },
     "links": [
-      { "label": "Status", "href": "https://status.example.com" },
-      { "label": "Support", "href": "mailto:api@example.com" }
+      {
+        "label": "Status",
+        "href": "https://status.example.com"
+      },
+      {
+        "label": "Support",
+        "href": "mailto:api@example.com"
+      }
     ],
     "footer": "© Acme Inc. Questions? [Contact the API team](mailto:api@example.com)."
   },
   "environment": "Production",
   "environments": "public",
   "runInYaak": true,
-  "themeOptions": { "navOpenDepth": 4 }
+  "themeOptions": {
+    "navOpenDepth": 4
+  }
 }

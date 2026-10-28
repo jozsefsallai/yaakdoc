@@ -2,8 +2,10 @@ import { readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Assets } from "@yaakdoc/react";
+import { glob } from "tinyglobby";
 import { type Manifest, build as viteBuild } from "vite";
 import { type Context, resolveContext, type YaakdocOptions } from "./context";
+import { findFontPreloads } from "./fonts";
 import { VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
 import { assertSafeOutDir, type RenderEntry, withBase, writeSite } from "./site";
 import { createViteConfig } from "./vite";
@@ -109,7 +111,13 @@ export async function bundleTheme(
 
   await rm(join(outDir, ".vite"), { recursive: true, force: true });
 
-  return { assets: assetsFromManifest(manifest), ssrEntry: join(ssrOutDir, "entry-server.mjs") };
+  const fonts = await glob(["_yaakdoc/**/*.{woff,woff2}"], { cwd: outDir });
+  const fontPreloads = findFontPreloads(fonts, context.theme.preloadFonts);
+
+  return {
+    assets: { ...assetsFromManifest(manifest), ...(fontPreloads.length ? { fontPreloads } : {}) },
+    ssrEntry: join(ssrOutDir, "entry-server.mjs"),
+  };
 }
 
 /** Client assets of the build, relative to the output directory. */

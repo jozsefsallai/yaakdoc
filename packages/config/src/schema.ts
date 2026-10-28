@@ -96,6 +96,66 @@ export const headTagSchema = z.object({
   content: z.string().optional(),
 });
 
+const icon = z.string().meta({ description: "Icon hint for themes (e.g. a Lucide icon name)." });
+
+const pagePath = z.string().meta({
+  description:
+    "Path of a page, relative to `pagesDir`, without the extension (e.g. `guides/auth`).",
+});
+
+const apiEntry = z
+  .object({ api: z.literal(true) })
+  .meta({ description: "Where the Yaak folders and requests (the API reference) appear." });
+
+export const navigationGroupSchema = z
+  .object({
+    group: z.string().meta({ description: "Title of the group." }),
+    icon: icon.optional(),
+    expanded: z
+      .boolean()
+      .optional()
+      .meta({ description: "Whether a nested group starts expanded (default: true)." }),
+    get pages(): z.ZodOptional<z.ZodArray<typeof navigationItemSchema>> {
+      return z.array(navigationItemSchema).optional();
+    },
+    api: z
+      .literal(true)
+      .optional()
+      .meta({ description: "Add the Yaak folders and requests after the group's pages." }),
+  })
+  .meta({ id: "NavigationGroup", description: "A titled group of pages (groups can be nested)." });
+
+export const navigationItemSchema: z.ZodUnion<
+  [typeof pagePath, typeof navigationGroupSchema, typeof apiEntry]
+> = z.union([pagePath, navigationGroupSchema, apiEntry]);
+
+export const navigationTabSchema = z
+  .object({
+    tab: z.string().meta({ description: "Title of the tab." }),
+    icon: icon.optional(),
+    pages: z.array(navigationItemSchema).optional(),
+    groups: z.array(navigationGroupSchema).optional(),
+    api: z
+      .literal(true)
+      .optional()
+      .meta({ description: "Add the Yaak folders and requests after the tab's pages and groups." }),
+  })
+  .meta({ description: "A top-level section with its own sidebar navigation." });
+
+export const navigationSchema = z
+  .object({
+    tabs: z.array(navigationTabSchema).optional(),
+    groups: z.array(navigationGroupSchema).optional(),
+    pages: z.array(navigationItemSchema).optional(),
+  })
+  .refine((nav) => !nav.tabs || (!nav.groups && !nav.pages), {
+    message: "Use either `tabs`, or `groups`/`pages` at the top level of the navigation.",
+  })
+  .meta({
+    description:
+      'Navigation of the pages and the API reference, with optional tabs and groups. Place the Yaak folders and requests with `{ "api": true }` (or `api: true` on a tab or group); otherwise they\'re added at the end. Generated from the pages directory when omitted.',
+  });
+
 export const configSchema = z
   .object({
     $schema: z.string().optional(),
@@ -128,6 +188,23 @@ export const configSchema = z
         description:
           'Environments readers can switch between: `"public"` (all shared environments) or a list of ids/names. Adds an environment switcher; `environment` is the default selection.',
       }),
+    pagesDir: z.string().optional().meta({
+      description:
+        "Directory of Markdown pages (`.md`, with optional front matter). Subdirectories become groups in the generated navigation.",
+    }),
+    navigation: navigationSchema.optional(),
+    apiPath: z
+      .string()
+      .optional()
+      .transform((path) => path?.replace(/^\/+|\/+$/g, ""))
+      .meta({
+        description:
+          'Where the API reference (overview, folders and requests) is served, relative to `base`. Defaults to the site root, or `"reference"` when the pages directory has an `index.md`.',
+      }),
+    search: z
+      .boolean()
+      .default(true)
+      .meta({ description: "Generate a search index and show the search dialog." }),
     pages: z.enum(["single", "per-request"]).default("single").meta({
       description: "`single`: one page with anchors. `per-request`: a page per request and folder.",
     }),
@@ -239,3 +316,4 @@ export type ResolvedConfig = z.output<typeof configSchema>;
 export type Branding = ResolvedConfig["branding"];
 export type HeadTag = z.output<typeof headTagSchema>;
 export type Logo = z.output<typeof logoSchema>;
+export type NavigationConfig = z.output<typeof navigationSchema>;

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useDocument } from "./context";
 import { colorModeScript } from "./islands/color-mode";
 import { environmentCss, environmentScript } from "./islands/environment";
+import { platformCss, platformScript } from "./islands/search";
 import { BrandingStyles } from "./primitives/site";
 import { toAbsoluteUrl } from "./site-url";
 import type { Assets, PageData, SiteData, ThemeRuntime } from "./types";
@@ -49,6 +50,13 @@ export function Document({ site, page, assets, ThemeHead, children }: DocumentPr
 
         <script dangerouslySetInnerHTML={{ __html: colorModeScript(site.defaultColorMode) }} />
 
+        {site.searchUrl ? (
+          <>
+            <script dangerouslySetInnerHTML={{ __html: platformScript }} />
+            <style data-yd="platform" dangerouslySetInnerHTML={{ __html: platformCss }} />
+          </>
+        ) : null}
+
         {environmentIds.length > 1 ? (
           <>
             <script dangerouslySetInnerHTML={{ __html: environmentScript(environmentIds) }} />
@@ -68,6 +76,18 @@ export function Document({ site, page, assets, ThemeHead, children }: DocumentPr
         {site.llms.txtUrl ? (
           <link rel="alternate" type="text/plain" href={site.llms.txtUrl} title="llms.txt" />
         ) : null}
+        {(assets.fontPreloads ?? [])
+          .filter((font) => !site.fonts[font.role])
+          .map((font) => (
+            <link
+              key={font.href}
+              rel="preload"
+              href={font.href}
+              as="font"
+              type={font.href.endsWith(".woff") ? "font/woff" : "font/woff2"}
+              crossOrigin=""
+            />
+          ))}
         {assets.modulePreloads.map((href) => (
           <link key={href} rel="modulepreload" href={href} />
         ))}

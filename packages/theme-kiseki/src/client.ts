@@ -1,5 +1,3 @@
-import "@fontsource-variable/geist";
-import "@fontsource-variable/geist-mono";
 import { builtinIslands } from "@yaakdoc/react/islands";
 import {
   CopyCode,
@@ -8,6 +6,8 @@ import {
   MobileNavToggle,
   PageActions,
   RunInYaakButton,
+  SearchButton,
+  SearchCommand,
   ThemeToggle,
 } from "@/components/islands";
 
@@ -21,4 +21,6 @@ export default [
   MobileNavToggle,
   EnvironmentMenu,
   RunInYaakButton,
+  SearchButton,
+  SearchCommand,
 ];

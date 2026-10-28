@@ -222,6 +222,88 @@ export type PreparedFolder = FolderDoc &
     summary: string;
   };
 
+/* -------------------------------------------------------------------------------------------------
+ * Custom pages and navigation.
+ * -----------------------------------------------------------------------------------------------*/
+
+/** A Markdown page written by the user (outside of the Yaak export). */
+export type PageDoc = {
+  /** Path relative to the pages directory, without extension, e.g. `guides/authentication`. */
+  id: string;
+  /** URL slug relative to the base, e.g. `guides/authentication` (`""` for the home page). */
+  slug: string;
+  title: string;
+  /** Shorter title for the navigation, if set. */
+  sidebarTitle: string | null;
+  description: string;
+  /** Icon hint for themes. */
+  icon: string | null;
+  /** Sort order in the automatic navigation. */
+  order: number | null;
+  /** Hidden pages are built, but left out of the automatic navigation and search. */
+  hidden: boolean;
+  /** Markdown source without front matter. May contain Yaak templates (`${[ base_url ]}`). */
+  body: string;
+  /** Absolute path of the source file, when loaded from disk. */
+  file: string | null;
+};
+
+/** The Markdown of a page for one environment (variables resolved). */
+export type PageVariant = {
+  environmentId: string | null;
+  markdown: string;
+};
+
+export type PreparedPage = PageDoc &
+  PreparedLinks & {
+    summary: string;
+    /** Body with variables resolved for the default environment (secrets left as placeholders). */
+    markdown: string;
+    /**
+     * Rendered body. Parts that depend on the environment are rendered once per selectable
+     * environment, wrapped in `<div data-yd-env="<id>">` (all but the default `hidden`).
+     */
+    html: string;
+  };
+
+export type NavigationItem =
+  | { type: "page"; id: string }
+  | {
+      type: "group";
+      title: string;
+      icon: string | null;
+      /** Whether the group starts expanded (themes may ignore it for top-level groups). */
+      expanded: boolean;
+      items: NavigationItem[];
+    }
+  /** The folders and requests of the Yaak workspace (`document.tree`). */
+  | { type: "api" };
+
+export type NavigationTab = {
+  /** Unique, slug-like id. */
+  id: string;
+  /** `null` for the implicit tab of a navigation without tabs. */
+  title: string | null;
+  icon: string | null;
+  /** First page of the tab. */
+  href: string;
+  items: NavigationItem[];
+};
+
+/** Always contains at least one tab. */
+export type Navigation = { tabs: NavigationTab[] };
+
+export type SearchEntry = {
+  title: string;
+  description: string;
+  href: string;
+  kind: "page" | "folder" | "request";
+  /** Method label of requests (`GET`, `gRPC`, `WS`...). */
+  method?: string;
+  /** Where the entry lives, e.g. `Guides › Getting started` or `Products › Images`. */
+  section: string;
+};
+
 export type PreparedDocument = {
   yaakVersion: string;
   exportedAt: string | null;
@@ -244,4 +326,9 @@ export type PreparedDocument = {
   variables: KeyValue[];
   /** Displayed variables per selectable environment (default first). */
   variableSets: Array<{ environmentId: string | null; variables: KeyValue[] }>;
+  /** Custom Markdown pages, keyed by id. */
+  pages: Record<string, PreparedPage>;
+  navigation: Navigation;
+  /** Path of the API reference (overview, folders and requests), e.g. `/` or `/reference/`. */
+  referenceBase: string;
 };

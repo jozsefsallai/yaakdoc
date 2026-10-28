@@ -46,6 +46,8 @@ export type SiteData = {
     fullTxtUrl: string | null;
   };
   showVariables: boolean;
+  /** URL of the search index (`SearchEntry[]` as JSON), when search is enabled. */
+  searchUrl: string | null;
   /** "Run in Yaak" button, when enabled. */
   runInYaak: {
     name: string;
@@ -58,11 +60,12 @@ export type SiteData = {
   generator: string;
 };
 
-export type PageKind = "index" | "folder" | "request" | "not-found";
+/** `index` is the API reference overview; `page` a custom Markdown page. */
+export type PageKind = "index" | "page" | "folder" | "request" | "not-found";
 
 export type PageData = {
   kind: PageKind;
-  /** Folder or request id for `folder` / `request` pages. */
+  /** Page, folder or request id for `page` / `folder` / `request` pages. */
   id: string | null;
   /** Route path, e.g. `/` or `/docs/products/get-a-product/`. */
   path: string;
@@ -79,7 +82,11 @@ export type Assets = {
   /** Inline styles (dev mode). `id` is used for HMR (`data-vite-dev-id`). */
   inlineStyles: Array<{ id: string; css: string }>;
   modulePreloads: string[];
+  /** Font files to preload (`<link rel="preload" as="font">`), with the role they play. */
+  fontPreloads?: FontPreload[];
 };
+
+export type FontPreload = { href: string; role: "sans" | "mono" };
 
 export type LayoutProps = { page: PageData };
 

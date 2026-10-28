@@ -14,6 +14,8 @@ export type ResolvedTheme = {
   entry: string;
   client: string | null;
   styles: string[];
+  /** Font files to preload, by role (see `ThemeDefinition.preloadFonts`). */
+  preloadFonts: NonNullable<ThemeDefinition["preloadFonts"]>;
   /** Validated theme options. */
   options: Record<string, unknown>;
   /** Package name, when the theme comes from npm. */
@@ -155,6 +157,7 @@ export function themeFromDefinition(
     entry: abs(definition.entry),
     client: definition.client ? abs(definition.client) : null,
     styles: (definition.styles ?? []).map(abs),
+    preloadFonts: definition.preloadFonts ?? {},
     options: themeOptions,
     packageName: options.packageName ?? null,
     fallbackImporters: options.fallbackImporters ?? [],

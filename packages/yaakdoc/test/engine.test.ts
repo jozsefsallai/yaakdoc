@@ -48,6 +48,20 @@ describe("build (zero config, single page)", () => {
     expect(html).toContain('data-island="kiseki:page-actions"');
   });
 
+  it("preloads the theme's fonts and doesn't swap them", async () => {
+    expect(html).toMatch(
+      /<link rel="preload" href="\/_yaakdoc\/geist-latin-wght-normal-[\w-]+\.woff2" as="font" type="font\/woff2" crossorigin=""\/>/,
+    );
+
+    expect(html).toMatch(/<link rel="preload" href="\/_yaakdoc\/geist-mono-latin-wght-normal-/);
+
+    const css = html.match(/href="\/(_yaakdoc\/client-[\w-]+\.css)"/)![1]!;
+    const styles = await readFile(join(dir, "dist", css), "utf8");
+
+    expect(styles).toContain("font-display:optional");
+    expect(styles).not.toContain("font-display:swap");
+  });
+
   it("writes LLM-friendly outputs", async () => {
     const llms = await readFile(join(dir, "dist", "llms.txt"), "utf8");
     expect(llms.startsWith("# Acme Store API\n")).toBe(true);

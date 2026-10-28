@@ -1,8 +1,13 @@
 export { methodLabel } from "@yaakdoc/core";
 export {
+  type PageLink,
+  useActiveTab,
   useDocument,
   useFolder,
+  useNavigation,
   usePage,
+  usePageDoc,
+  usePageNeighbors,
   useRequest,
   useSite,
   useThemeOptions,
@@ -49,8 +54,18 @@ export {
 export { EnvironmentSelect, EnvironmentVariants } from "./primitives/environment";
 export { clampHeadingLevel, Heading, type HeadingLevel } from "./primitives/heading";
 export { copyActionLabel, PageActions } from "./primitives/llm";
-export { Breadcrumbs, NavTree, type NavTreeProps } from "./primitives/nav";
+export {
+  Breadcrumbs,
+  NavIcon,
+  Navigation,
+  type NavigationProps,
+  NavTabs,
+  NavTree,
+  type NavTreeProps,
+} from "./primitives/nav";
+export { PageDoc, type PageDocProps, PageNav } from "./primitives/page";
 export { RequestBody, RequestDoc, type RequestDocProps } from "./primitives/request";
+export { Search } from "./primitives/search";
 export {
   BrandingStyles,
   brandingCss,

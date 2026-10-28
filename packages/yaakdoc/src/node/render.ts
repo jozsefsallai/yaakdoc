@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
+import { createUniqueSlugger, type PageVariant, slugify } from "@yaakdoc/core";
 import type { Snippet } from "@yaakdoc/snippets";
 import { builtinSnippets } from "@yaakdoc/snippets";
 import { createJiti } from "jiti";
@@ -73,10 +74,111 @@ const GRAPHQL_INJECTION = {
   ],
 } as unknown as LanguageRegistration;
 
+const variantElement = (variant: PageVariant, index: number, children: HastNode[]): HastNode => ({
+  type: "element",
+  tagName: "div",
+  properties: { dataYdEnv: variant.environmentId ?? "", hidden: index > 0 },
+  children,
+});
+
+/**
+ * Merges the rendered trees of a page's environment variants: top-level blocks that are the same
+ * everywhere appear once, the others once per environment (so headings and their ids stay unique
+ * unless they contain variables).
+ */
+function mergeVariants(
+  trees: HastNode[],
+  variants: readonly PageVariant[],
+  stringify: (children: HastNode[]) => string,
+): HastNode[] {
+  const [first, ...rest] = trees.map((tree) => tree.children ?? []);
+
+  if (!first) {
+    return [];
+  }
+
+  if (rest.length === 0) {
+    return first;
+  }
+
+  if (rest.some((children) => children.length !== first.length)) {
+    return trees.map((tree, index) => variantElement(variants[index]!, index, tree.children ?? []));
+  }
+
+  return first.flatMap((node, index) => {
+    const html = stringify([node]);
+
+    if (rest.every((children) => stringify([children[index]!]) === html)) {
+      return [node];
+    }
+
+    return trees.map((tree, variant) =>
+      variantElement(variants[variant]!, variant, [tree.children![index]!]),
+    );
+  });
+}
+
+/** Resolves URLs in a custom page; returning `null` keeps the original. */
+export type PageUrlResolvers = {
+  /** `href` of links, e.g. `./quickstart.md#install` → `/quickstart/#install`. */
+  link?: (href: string) => string | null;
+  /** `src` of images, e.g. `./diagram.png` → `/_yaakdoc/diagram-1234abcd.png`. */
+  asset?: (src: string) => string | null;
+};
+
 export type Renderer = {
   markdown: (source: string) => Promise<string>;
+  page: (variants: readonly PageVariant[], resolvers?: PageUrlResolvers) => Promise<string>;
   highlight: (code: string, language: string) => Promise<string>;
 };
+
+type HastNode = {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+};
+
+const textContent = (node: HastNode): string =>
+  node.type === "text" ? (node.value ?? "") : (node.children ?? []).map(textContent).join("");
+
+const isRelative = (url: string) => !/^([a-z][a-z\d+.-]*:|\/\/|#|\/)/i.test(url);
+
+/**
+ * Rehype plugin for custom pages (runs after sanitizing): gives headings unique ids and resolves
+ * relative links and images with the resolvers passed in `file.data.resolvers`.
+ */
+function rehypePageUrls() {
+  return (tree: HastNode, file: { data: object }) => {
+    const { link, asset } = (file.data as { resolvers?: PageUrlResolvers }).resolvers ?? {};
+    const unique = createUniqueSlugger();
+
+    const visit = (node: HastNode) => {
+      const props = node.properties;
+
+      if (props && node.tagName && /^h[1-6]$/.test(node.tagName) && !props.id) {
+        props.id = unique(slugify(textContent(node)));
+      }
+
+      if (props && node.tagName === "a" && typeof props.href === "string" && link) {
+        if (isRelative(props.href)) {
+          props.href = link(props.href) ?? props.href;
+        }
+      }
+
+      if (props && node.tagName === "img" && typeof props.src === "string" && asset) {
+        if (isRelative(props.src)) {
+          props.src = asset(props.src) ?? props.src;
+        }
+      }
+
+      node.children?.forEach(visit);
+    };
+
+    visit(tree);
+  };
+}
 
 const highlighters = new Map<string, Promise<Highlighter>>();
 
@@ -139,20 +241,44 @@ export async function createRenderer(themes: { light: string; dark: string }): P
   const highlighter = await getHighlighter(themes);
   const shikiOptions = { themes, defaultColor: false as const };
 
+  const shiki = {
+    ...shikiOptions,
+    fallbackLanguage: "text",
+    lazy: true,
+  } as const;
+
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeSanitize, sanitizeSchema)
-    .use(rehypeShikiFromHighlighter, highlighter, {
-      ...shikiOptions,
-      fallbackLanguage: "text",
-      lazy: true,
-    })
+    .use(rehypeShikiFromHighlighter, highlighter, shiki)
+    .use(rehypeStringify);
+
+  const pageProcessor = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypePageUrls)
+    .use(rehypeShikiFromHighlighter, highlighter, shiki)
     .use(rehypeStringify);
 
   return {
     markdown: async (source) => String(await processor.process(source)),
+    page: async (variants, resolvers = {}) => {
+      const trees = await Promise.all(
+        variants.map(async ({ markdown }) => {
+          const file = { value: markdown, data: { resolvers } };
+          return (await pageProcessor.run(pageProcessor.parse(file), file)) as HastNode;
+        }),
+      );
+
+      const stringify = (children: HastNode[]) =>
+        pageProcessor.stringify({ type: "root", children } as never);
+
+      return stringify(mergeVariants(trees, variants, stringify));
+    },
     highlight: async (code, language) =>
       highlighter.codeToHtml(code, {
         ...shikiOptions,

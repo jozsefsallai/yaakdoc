@@ -5,6 +5,7 @@ import { EnvironmentSwitcher } from "./environment";
 import { OpenInLink } from "./llm";
 import { NavFilter, NavToggle, ScrollSpy } from "./nav";
 import { RunInYaakLink } from "./run-in-yaak";
+import { SearchDialog, SearchTrigger } from "./search";
 import { TabList } from "./tabs";
 
 export { createIsland, type IslandComponent } from "../island";
@@ -47,6 +48,21 @@ export {
   useRunInYaakHref,
 } from "./run-in-yaak";
 export {
+  openSearch,
+  platformCss,
+  platformScript,
+  SearchDialog,
+  type SearchDialogProps,
+  type SearchEntry,
+  SearchShortcut,
+  SearchTrigger,
+  type SearchTriggerProps,
+  searchEntries,
+  useSearch,
+  useSearchDialog,
+  useSearchShortcutLabel,
+} from "./search";
+export {
   TAB_STORAGE_KEY,
   TabList,
   type TabListProps,
@@ -69,4 +85,6 @@ export const builtinIslands: ReadonlyArray<IslandComponent<any>> = [
   ScrollSpy,
   OpenInLink,
   RunInYaakLink,
+  SearchTrigger,
+  SearchDialog,
 ];

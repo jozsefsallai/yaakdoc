@@ -1,13 +1,17 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { basename, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, posix, resolve } from "node:path";
 import type { ResolvedConfig, YaakdocConfig } from "@yaakdoc/config";
 import { loadConfig } from "@yaakdoc/config/node";
 import {
+  buildSearchIndex,
   findWorkspace,
   isUrl,
   normalize,
+  type PageDoc,
   type PreparedDocument,
+  pageId,
+  pageLinks,
   prepareDocument,
   sanitizeExport,
   selectEnvironment,
@@ -21,10 +25,12 @@ import {
   indexToMarkdown,
   llmsFullTxt,
   llmsTxt,
+  pageToMarkdown,
   requestToMarkdown,
 } from "@yaakdoc/markdown";
 import type { PageData, SiteData, SiteLogo } from "@yaakdoc/react";
 import { generateExamples } from "@yaakdoc/snippets";
+import { loadPages } from "./pages";
 import { createRenderer, loadSnippets } from "./render";
 import { type ResolvedTheme, resolveTheme } from "./theme";
 import { VERSION } from "./version";
@@ -57,6 +63,8 @@ export type Route = {
   /** Output file relative to outDir, e.g. `products/index.html`. */
   file: string;
   page: PageData;
+  /** Set for routes that only redirect (e.g. the root when it has no page of its own). */
+  redirect?: string;
 };
 
 export type Context = {
@@ -80,6 +88,8 @@ export type Context = {
   assets: Map<string, string>;
   /** Files that trigger a full rebuild of the context when changed. */
   watchFiles: string[];
+  /** Directories whose Markdown files trigger a rebuild when added, changed or removed. */
+  watchDirs: string[];
 };
 
 /** Loads config, export and theme, and prepares everything needed to render the site. */
@@ -112,6 +122,9 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
         ? environments[0]
         : selectEnvironment(workspace, config.environment);
 
+  const pages = config.pagesDir ? await loadPagesDir(config.pagesDir) : [];
+  const apiPath = config.apiPath ?? (pages.some((page) => page.id === "index") ? "reference" : "");
+
   const theme = await (options.resolveTheme ?? resolveTheme)(config.theme, {
     root,
     themeOptions: config.themeOptions,
@@ -119,22 +132,27 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
   const renderer = await createRenderer(theme.highlight);
   const snippets = await loadSnippets(config.snippets, root);
 
+  const assets = new Map<string, string>();
+  const asset = (path: string | undefined) => publicAsset(path, config.base, assets);
+
   const document = await prepareDocument({
     workspace,
     environment,
     environments,
     pages: config.pages,
     base: config.base,
+    apiPath,
+    customPages: pages,
+    ...(config.navigation ? { navigation: config.navigation } : {}),
     variables: config.variables,
     filter: config.filter,
     renderMarkdown: renderer.markdown,
+    renderPage: (variants, page) =>
+      renderer.page(variants, pageUrlResolvers(page, pages, config.base, asset)),
     highlight: renderer.highlight,
     examples: (request) => generateExamples(request, snippets),
     meta: { yaakVersion: source.yaakVersion, exportedAt: source.exportedAt },
   });
-
-  const assets = new Map<string, string>();
-  const asset = (path: string | undefined) => publicAsset(path, config.base, assets);
 
   const site = await createSiteData(config, document, theme, asset, renderer.markdown);
 
@@ -152,11 +170,15 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
   if (config.llms.enabled) {
     // The Markdown twin mirrors the page: in single-page mode the index page contains everything.
     textFiles.set(
-      `${config.base}index.md`,
+      `${document.referenceBase}index.md`,
       config.pages === "single"
-        ? llmsFullTxt(document, markdownOptions)
+        ? llmsFullTxt(document, { ...markdownOptions, pages: false })
         : indexToMarkdown(document, markdownOptions),
     );
+
+    for (const page of Object.values(document.pages)) {
+      textFiles.set(page.markdownUrl, pageToMarkdown(page, markdownOptions));
+    }
 
     for (const folder of Object.values(document.folders)) {
       textFiles.set(folder.markdownUrl, folderToMarkdown(document, folder, markdownOptions));
@@ -177,6 +199,10 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     if (config.llms.full) {
       textFiles.set(`${config.base}llms-full.txt`, llmsFullTxt(document, markdownOptions));
     }
+  }
+
+  if (site.searchUrl) {
+    textFiles.set(site.searchUrl, JSON.stringify(buildSearchIndex(document)));
   }
 
   // Publish a sanitized export for "Run in Yaak", unless the config points to one hosted elsewhere.
@@ -205,8 +231,59 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     watchFiles: [
       ...(exportPath ? [exportPath] : []),
       ...(configFile ? [configFile] : []),
+      ...pages.flatMap((page) => (page.file ? [page.file] : [])),
       ...assets.values(),
     ],
+    watchDirs: config.pagesDir ? [config.pagesDir] : [],
+  };
+}
+
+async function loadPagesDir(dir: string): Promise<PageDoc[]> {
+  if (!existsSync(dir)) {
+    throw new Error(`The pages directory ${dir} (\`pagesDir\`) doesn't exist.`);
+  }
+
+  return loadPages(dir);
+}
+
+/**
+ * Resolves relative links to other pages (`../quickstart.md#install`) to their URLs, and relative
+ * images to site assets.
+ */
+function pageUrlResolvers(
+  page: PageDoc,
+  pages: readonly PageDoc[],
+  base: string,
+  asset: (path: string) => string | null,
+) {
+  const split = (url: string) => {
+    const index = url.search(/[?#]/);
+    return index === -1 ? [url, ""] : [url.slice(0, index), url.slice(index)];
+  };
+
+  return {
+    link: (href: string) => {
+      const [path = "", suffix = ""] = split(href);
+
+      if (!/\.(md|markdown)$/i.test(path)) {
+        return null;
+      }
+
+      const id = pageId(posix.normalize(posix.join(posix.dirname(page.id), decodeURI(path))));
+      const target = pages.find((candidate) => candidate.id === id);
+
+      return target ? `${pageLinks(base, target.slug).href}${suffix}` : null;
+    },
+    asset: (src: string) => {
+      const [path = ""] = split(src);
+
+      if (!page.file || !path) {
+        return null;
+      }
+
+      const file = resolve(dirname(page.file), decodeURI(path));
+      return existsSync(file) ? asset(file) : null;
+    },
   };
 }
 
@@ -322,6 +399,7 @@ async function createSiteData(
       fullTxtUrl: config.llms.enabled && config.llms.full ? `${config.base}llms-full.txt` : null,
     },
     showVariables: config.variables.show,
+    searchUrl: config.search ? `${config.base}_yaakdoc/search.json` : null,
     runInYaak: config.runInYaak
       ? {
           name: (typeof config.runInYaak === "object" && config.runInYaak.name) || title,
@@ -344,26 +422,64 @@ function createRoutes(
 
   const llms = site.llms.enabled;
 
+  /** Output file of a route path, e.g. `/docs/products/` → `products/index.html`. */
+  const fileOf = (path: string) => `${path.slice(base.length)}index.html`;
+
+  const reference = document.referenceBase;
+
   const routes: Route[] = [
     {
+      path: reference,
+      file: fileOf(reference),
+      page: {
+        kind: "index",
+        id: null,
+        path: reference,
+        title: reference === base ? "" : "API Reference",
+        description: site.description,
+        markdownUrl: llms ? `${reference}index.md` : null,
+      },
+    },
+  ];
+
+  for (const page of Object.values(document.pages)) {
+    routes.push({
+      path: page.href,
+      file: fileOf(page.href),
+      page: {
+        kind: "page",
+        id: page.id,
+        path: page.href,
+        title: page.href === base ? "" : page.title,
+        description: page.summary,
+        markdownUrl: llms ? page.markdownUrl : null,
+      },
+    });
+  }
+
+  if (!routes.some((route) => route.path === base)) {
+    const target = document.navigation.tabs[0]?.href ?? reference;
+
+    routes.push({
       path: base,
       file: "index.html",
+      redirect: target,
       page: {
         kind: "index",
         id: null,
         path: base,
         title: "",
         description: site.description,
-        markdownUrl: llms ? `${base}index.md` : null,
+        markdownUrl: null,
       },
-    },
-  ];
+    });
+  }
 
   if (site.pages === "per-request") {
     for (const folder of Object.values(document.folders)) {
       routes.push({
         path: folder.href,
-        file: `${folder.slug}/index.html`,
+        file: fileOf(folder.href),
         page: {
           kind: "folder",
           id: folder.id,
@@ -378,7 +494,7 @@ function createRoutes(
     for (const request of Object.values(document.requests)) {
       routes.push({
         path: request.href,
-        file: `${request.slug}/index.html`,
+        file: fileOf(request.href),
         page: {
           kind: "request",
           id: request.id,

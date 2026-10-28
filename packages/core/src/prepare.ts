@@ -1,4 +1,6 @@
 import { globToRegExp } from "./glob";
+import { type NavigationInput, resolveNavigation } from "./navigation";
+import { pageLinks } from "./pages";
 import {
   createResolver,
   createVariableMap,
@@ -15,8 +17,11 @@ import type {
   Header,
   HttpBody,
   KeyValue,
+  PageDoc,
+  PageVariant,
   PreparedDocument,
   PreparedFolder,
+  PreparedPage,
   PreparedRequest,
   RequestDoc,
   TreeNode,
@@ -35,10 +40,26 @@ export type PrepareOptions = {
   pages: PagesMode;
   /** Normalized base path (leading and trailing slash), e.g. `/` or `/docs/`. */
   base: string;
+  /**
+   * Path of the API reference (overview, folders and requests) relative to `base`, e.g.
+   * `reference`. Defaults to `""` (the site root).
+   */
+  apiPath?: string;
+  /** Custom Markdown pages. */
+  customPages?: readonly PageDoc[];
+  /** Navigation of the pages and the API reference (generated from the pages when omitted). */
+  navigation?: NavigationInput;
   variables: { resolve: boolean; hide: readonly string[] };
   filter?: { include?: readonly string[]; exclude?: readonly string[] };
   /** Markdown → HTML (sanitized). */
   renderMarkdown: (markdown: string) => string | Promise<string>;
+  /**
+   * Renders a custom page: one variant per selectable environment (default first), or a single one
+   * when the page is the same everywhere. Differing parts must be wrapped in
+   * `<div data-yd-env="<id>">`, all but the first `hidden`. Defaults to rendering each variant with
+   * `renderMarkdown` and wrapping it whole.
+   */
+  renderPage?: (variants: PageVariant[], page: PageDoc) => string | Promise<string>;
   /** Code → highlighted HTML. */
   highlight: (code: string, language: string) => string | Promise<string>;
   /** Generates code examples for a resolved request. */
@@ -71,9 +92,12 @@ export async function prepareDocument(options: PrepareOptions): Promise<Prepared
   const folders: Record<string, PreparedFolder> = {};
   const requests: Record<string, PreparedRequest> = {};
 
+  const apiPath = (options.apiPath ?? "").replace(/^\/+|\/+$/g, "");
+  const referenceBase = apiPath ? `${base}${apiPath}/` : base;
+
   const links = (slug: string, anchor: string) => ({
-    href: options.pages === "single" ? `${base}#${anchor}` : `${base}${slug}/`,
-    markdownUrl: `${base}${slug}.md`,
+    href: options.pages === "single" ? `${referenceBase}#${anchor}` : `${referenceBase}${slug}/`,
+    markdownUrl: `${referenceBase}${slug}.md`,
   });
 
   for (const { node } of walkTree(tree)) {
@@ -155,6 +179,16 @@ export async function prepareDocument(options: PrepareOptions): Promise<Prepared
     } as PreparedRequest;
   }
 
+  const pages = await preparePages(options, selectable, {
+    base,
+    apiPath,
+    reserved: referenceBase === base ? reservedSlugs(folders, requests) : new Map(),
+  });
+
+  const navigation = resolveNavigation(options.navigation, options.customPages ?? [], {
+    href: (target) => (target.type === "api" ? referenceBase : pages[target.id]!.href),
+  });
+
   const workspaceDescription = formatTemplate(workspace.description);
 
   return {
@@ -181,7 +215,111 @@ export async function prepareDocument(options: PrepareOptions): Promise<Prepared
       environmentId: env?.id ?? null,
       variables: displayVariables(workspace, env, isSecret, options.variables.resolve),
     })),
+    pages,
+    navigation,
+    referenceBase,
   };
+}
+
+/** Slugs taken by the API reference when it shares the site root with the pages. */
+function reservedSlugs(
+  folders: Record<string, PreparedFolder>,
+  requests: Record<string, PreparedRequest>,
+): Map<string, string> {
+  const reserved = new Map<string, string>([["", "the API overview"]]);
+
+  for (const folder of Object.values(folders)) {
+    reserved.set(folder.slug, `the folder "${folder.name}"`);
+  }
+
+  for (const request of Object.values(requests)) {
+    reserved.set(request.slug, `the request "${request.name}"`);
+  }
+
+  return reserved;
+}
+
+/**
+ * Prepares the custom pages: links, and the body rendered once per environment (variables
+ * resolved, secrets left as placeholders). Pages that render the same everywhere get one variant.
+ */
+async function preparePages(
+  options: PrepareOptions,
+  selectable: Array<EnvironmentDoc | null>,
+  { base, apiPath, reserved }: { base: string; apiPath: string; reserved: Map<string, string> },
+): Promise<Record<string, PreparedPage>> {
+  const render =
+    options.renderPage ??
+    (async (variants: PageVariant[]) => {
+      if (variants.length === 1) {
+        return options.renderMarkdown(variants[0]!.markdown);
+      }
+
+      const parts = await Promise.all(
+        variants.map(async (variant, index) => {
+          const id = (variant.environmentId ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+          const html = await options.renderMarkdown(variant.markdown);
+
+          return `<div data-yd-env="${id}"${index > 0 ? " hidden" : ""}>${html}</div>`;
+        }),
+      );
+
+      return parts.join("");
+    });
+
+  const resolvers = selectable.map((env) => ({
+    environmentId: env?.id ?? null,
+    resolve: createResolver({
+      variables: createVariableMap(options.workspace, env),
+      hide: options.variables.hide,
+      resolve: options.variables.resolve,
+    }),
+  }));
+
+  const pages: Record<string, PreparedPage> = {};
+  const slugs = new Map<string, string>();
+
+  for (const page of options.customPages ?? []) {
+    const taken = reserved.get(page.slug) ?? slugs.get(page.slug);
+
+    if (taken !== undefined) {
+      throw new Error(
+        `The page "${page.id}" has the same URL as ${taken}. Rename the page, or move the API reference with \`apiPath\`.`,
+      );
+    }
+
+    if (apiPath && (page.slug === apiPath || page.slug.startsWith(`${apiPath}/`))) {
+      throw new Error(
+        `The page "${page.id}" is inside the API reference path "/${apiPath}/". Rename the page or change \`apiPath\`.`,
+      );
+    }
+
+    slugs.set(page.slug, `the page "${page.id}"`);
+
+    const sources: PageVariant[] = resolvers.map(({ environmentId, resolve }) => ({
+      environmentId,
+      markdown: resolve(page.body),
+    }));
+
+    const distinct = new Set(sources.map((source) => source.markdown));
+    const html = await render(distinct.size === 1 ? sources.slice(0, 1) : sources, page);
+
+    const resolveDefault = resolvers[0]!.resolve;
+    const markdown = sources[0]!.markdown;
+    const description = resolveDefault(page.description);
+
+    pages[page.id] = {
+      ...page,
+      title: resolveDefault(page.title),
+      description,
+      summary: description || summarize(markdown),
+      markdown,
+      html,
+      ...pageLinks(base, page.slug),
+    };
+  }
+
+  return pages;
 }
 
 const toRef = (env: EnvironmentDoc) => ({ id: env.id, name: env.name, color: env.color });

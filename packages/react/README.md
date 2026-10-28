@@ -28,6 +28,12 @@ export default defineTheme({
   client: "./src/client.ts",
   styles: ["./src/styles.css"],
 
+  // Font files (from your styles) to preload, so the first paint doesn't use a fallback font.
+  // A role is skipped when the user sets `branding.fonts.sans` / `branding.fonts.mono`.
+  preloadFonts: {
+    sans: ["inter-latin-wght-normal.woff2"]
+  },
+
   highlight: {
     light: "github-light",
     dark: "github-dark",
@@ -47,6 +53,8 @@ export default defineTheme({
 ```
 
 Theme source is processed by Vite, so TSX works without a build step. A theme package can ship its source as-is.
+
+Load fonts from `styles` rather than from the client entry: CSS imported by the client entry is only applied once its script runs (in dev), so text first renders in a fallback font. To avoid a visible switch when the font arrives, preload the fonts with `preloadFonts` and declare them with `font-display: optional`.
 
 ## The layout
 
@@ -83,10 +91,13 @@ export default theme;
 
 | Hook | Returns |
 | --- | --- |
-| `useDocument()` | The `PreparedDocument`: `tree`, `requests`, `folders`, `workspace`, `environment`, `variables`. |
+| `useDocument()` | The `PreparedDocument`: `tree`, `requests`, `folders`, `workspace`, `environment`, `variables`, `pages`, `navigation`, `referenceBase`. |
 | `useSite()` | Site data: title, description, logo, colors, links, `llms` settings, `base`, `pages`, ... |
-| `usePage()` | The current page (`kind`, `id`, `path`, `markdownUrl`, ...). |
-| `useRequest(id)` / `useFolder(id)` | A single prepared request or folder. |
+| `usePage()` | The current page (`kind`, `id`, `path`, `markdownUrl`, ...). `kind` is `page` (custom page), `index` (API overview), `folder`, `request` or `not-found`. |
+| `useRequest(id)` / `useFolder(id)` / `usePageDoc(id)` | A single prepared request, folder or custom page. |
+| `useNavigation()` | The navigation: `tabs`, each with `items` (pages, groups and `{ type: "api" }`, the folders and requests). |
+| `useActiveTab()` | The tab of the current page (the API reference's tab for the overview, folders and requests). |
+| `usePageNeighbors(id)` | Previous and next entries around a page, in navigation order. |
 | `useThemeOptions<T>()` | Your validated `themeOptions`. |
 
 A prepared request already contains everything a theme needs:
@@ -97,15 +108,19 @@ A prepared request already contains everything a theme needs:
 - `bodyHtml`, `examples[].html` and `responses[]` (Shiki-highlighted example responses with `status`, `label`, `language`)
 - headers, params and auth, each with `inheritedFrom` information
 
+A prepared custom page has `title`, `description`, `sidebarTitle`, `icon`, `href`, `markdownUrl`, `summary` and `html`. In `html`, the blocks that use variables come once per environment, wrapped in `[data-yd-env]` like other environment variants, so the environment switcher works on pages without any extra code.
+
 ## Components
 
 All components are unstyled. They render semantic markup with stable `data-yd="..."` attributes and accept `className`:
 
 - **Page structure:** `Content`, `Overview`, `TreeContent`, `FolderDoc`, `ChildLinks`, `NotFound`, `Heading`
+- **Custom pages:** `PageDoc`, `PageNav` (previous/next links)
 - **Requests:** `RequestDoc`, `RequestBody`, `MethodBadge`, `RequestUrl`, `AuthInfo`, `KeyValueTable`, `Variables`
 - **Code and Markdown:** `CodeBlock`, `CodeExamples`, `ResponseExamples`, `Markdown`, `Html`
 - **Environments:** `EnvironmentVariants`, `EnvironmentSelect`
-- **Navigation:** `NavTree`, `Breadcrumbs`
+- **Navigation:** `Navigation` (a tab's groups, pages and the API reference), `NavTabs`, `NavTree` (the API reference alone), `NavIcon` (renders nothing; override it to show icons), `Breadcrumbs`
+- **Search:** `Search` (a `SearchTrigger` and a `SearchDialog`)
 - **Site chrome:** `Logo`, `SiteLinks`, `Footer`, `PageActions`, `RunInYaak`, `BrandingStyles`
 
 A few attributes are useful when styling with plain CSS:
@@ -131,7 +146,7 @@ const theme: ThemeRuntime = {
 
 Use `overridable(name, Component)` to make your own components overridable.
 
-`<Content />` decides what each page shows (everything, a folder, a request or the 404 page). A theme can keep that logic and only restyle the parts. Kiseki, for example, renders `<Content />` and overrides `Overview`, `FolderDoc`, `RequestDoc`, `ChildLinks` and `NotFound`.
+`<Content />` decides what each page shows (a custom page, the API reference, a folder, a request or the 404 page). A theme can keep that logic and only restyle the parts. Kiseki, for example, renders `<Content />` and overrides `Overview`, `FolderDoc`, `RequestDoc`, `ChildLinks`, `PageDoc`, `PageNav`, `NavIcon` and `NotFound`.
 
 ### Helpers
 
@@ -209,8 +224,17 @@ Islands are rendered as isolated roots on the server too, so `useId()` (and libr
 - `ScrollSpy`
 - `OpenInLink`
 - `RunInYaakLink`
+- `SearchTrigger` and `SearchDialog` (a native `<dialog>`), opened with Cmd+K / Ctrl+K or `/`
 
 **Headless hooks** for building your own: `useColorMode`, `useCopy`, `useTabs`, `useNavToggle`, `useScrollSpy`, `useEnvironment`, `useRunInYaakHref`, plus `openInUrl()` and `runInYaakUrl()` for "Open in ChatGPT/Claude" links.
+
+**Search:** `site.searchUrl` is the URL of the search index (`SearchEntry[]`: `title`, `description`, `href`, `kind`, `method`, `section`), or `null` when search is off. Pass it to a search island as a prop; the index is fetched when the dialog first opens.
+
+- `useSearchDialog()` returns `{ open, setOpen, restoreFocus }`. It opens on `openSearch()` and the keyboard shortcuts, and `restoreFocus()` returns focus without scrolling.
+- `useSearch(url, { enabled })` returns `{ query, setQuery, results, active, setActive, onKeyDown, loading, error }`. `onKeyDown` handles ↑, ↓ and Enter.
+- `searchEntries(entries, query)` is the ranking: every term must match, and titles rank above sections and descriptions.
+- `<SearchShortcut />` renders `Cmd+K` on Apple platforms and `Ctrl K` elsewhere. Both are rendered, and a head script (`platformScript`, added by yaakdoc when search is on) shows the right one before first paint, so the label doesn't change when hydrating.
+- `useSearchShortcutLabel()` returns the same label as a string (for `title` attributes). It's `Cmd+K` until hydrated.
 
 ## Environments
 
@@ -219,6 +243,7 @@ When the config lists several `environments`, environment-dependent data is prep
 - `request.variants` holds `resolvedUrl` and `examples` for each environment.
 - `document.variableSets` holds the variables table for each environment.
 - `document.environments` lists the options, default first.
+- `page.html` of custom pages contains the variants of the blocks that use variables.
 
 Render the variants with `<EnvironmentVariants variants={...}>{(variant) => ...}</EnvironmentVariants>`, and add a switcher with `<EnvironmentSelect />` (or build your own with `useEnvironment`). yaakdoc adds a small head script and CSS so that a remembered choice shows up before first paint.
 

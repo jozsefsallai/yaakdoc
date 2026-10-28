@@ -6,6 +6,7 @@ import { AuthInfo, KeyValueTable, Markdown } from "./basic";
 import { EnvironmentSelect, EnvironmentVariants } from "./environment";
 import { clampHeadingLevel, Heading } from "./heading";
 import { copyActionLabel, PageActions } from "./llm";
+import { PageDoc } from "./page";
 import { RequestDoc } from "./request";
 import { RunInYaak } from "./site";
 
@@ -152,8 +153,8 @@ export const Variables = overridable(
 );
 
 /**
- * The main content for the current page: everything (single-page mode), a folder, a request, or a
- * not-found message. Themes can use this or compose the pieces themselves.
+ * The main content for the current page: a custom page, the API reference (everything in
+ * single-page mode), a folder, a request, or a not-found message. Themes can use this or compose the pieces themselves.
  */
 export const Content = overridable(
   "Content",
@@ -164,7 +165,9 @@ export const Content = overridable(
 
     let content: ReactNode;
 
-    if (page.kind === "request" && page.id && document.requests[page.id]) {
+    if (page.kind === "page" && page.id && document.pages[page.id]) {
+      content = <PageDoc id={page.id} />;
+    } else if (page.kind === "request" && page.id && document.requests[page.id]) {
       content = <RequestDoc request={document.requests[page.id]!} level={1} />;
     } else if (page.kind === "folder" && page.id) {
       content = <FolderDoc id={page.id} level={1} nested={false} />;

@@ -48,3 +48,14 @@ for (const request of Object.values(workspace.requests)) {
 ## Preparing documents
 
 `prepareDocument()` builds the `PreparedDocument` that themes render: links, display values (with secrets redacted), summaries and the include/exclude filters. You inject the renderers (Markdown, syntax highlighting) and the code example generator, which keeps this package light and environment-agnostic.
+
+## Custom pages and navigation
+
+- **`createPageDoc({ path, data, body })`** creates a page from its front matter (`data`) and Markdown. Reading files is up to you; the `yaakdoc` engine does it for `pagesDir`.
+- **`prepareDocument({ customPages, navigation, apiPath, renderPage })`** prepares the pages:
+  - `${[ variables ]}` are resolved once per selectable environment, and secrets become `{{placeholders}}`;
+  - `renderPage` receives the variants (only one when the page is the same everywhere);
+  - URLs that collide with the API reference are rejected.
+- **`resolveNavigation(input, pages, { href })`** turns a navigation config (`tabs`, `groups`, `pages`, `{ api: true }`) into tabs of items. Without one, the navigation is generated from the directories. The API reference is always included.
+- **`walkNavigation`, `flattenNavigation` and `findNavigationTab`** iterate the navigation and find the tab of a page.
+- **`buildSearchIndex(document)`** returns the titles and descriptions of pages, folders and requests, for search.

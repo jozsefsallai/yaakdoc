@@ -106,6 +106,9 @@ export function resolveConfigPaths(
   return {
     ...config,
     ...(config.export ? { export: from(config.export, overrides.export !== undefined) } : {}),
+    ...(config.pagesDir
+      ? { pagesDir: from(config.pagesDir, overrides.pagesDir !== undefined) }
+      : {}),
     outDir: from(config.outDir, overrides.outDir !== undefined),
     theme: isLocalPath(config.theme)
       ? from(config.theme, overrides.theme !== undefined)

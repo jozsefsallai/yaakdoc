@@ -23,6 +23,9 @@ export function withBase(assets: Assets, base: string): Assets {
     scripts: assets.scripts.map(prefix),
     inlineStyles: assets.inlineStyles,
     modulePreloads: assets.modulePreloads.map(prefix),
+    ...(assets.fontPreloads
+      ? { fontPreloads: assets.fontPreloads.map((font) => ({ ...font, href: prefix(font.href) })) }
+      : {}),
   };
 }
 
@@ -68,6 +71,11 @@ export async function writeSite(
 
   // 1. Prerender every route.
   for (const route of [...context.routes, context.notFound]) {
+    if (route.redirect) {
+      await write(route.file, redirectHtml(route.redirect));
+      continue;
+    }
+
     await write(
       route.file,
       await render({ document: context.document, site: context.site, page: route.page, assets }),
@@ -100,10 +108,18 @@ export async function writeSite(
 const stripBase = (url: string, base: string) =>
   url.startsWith(base) ? url.slice(base.length) : url.replace(/^\//, "");
 
+/** A page that sends readers (and crawlers) to `target`. */
+export function redirectHtml(target: string): string {
+  const url = JSON.stringify(target).slice(1, -1).replace(/</g, "\\u003c");
+  const attr = target.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting…</title><meta http-equiv="refresh" content="0; url=${attr}"><link rel="canonical" href="${attr}"><script>location.replace("${url}"+location.hash)</script></head><body><a href="${attr}">Continue</a></body></html>\n`;
+}
+
 function sitemap(context: Context): string {
-  const urls = context.routes.map((route) =>
-    absoluteUrl(context.site.url!, context.config.base, route.path),
-  );
+  const urls = context.routes
+    .filter((route) => !route.redirect)
+    .map((route) => absoluteUrl(context.site.url!, context.config.base, route.path));
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
     .map((url) => `  <url><loc>${url}</loc></url>`)

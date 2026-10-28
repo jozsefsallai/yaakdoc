@@ -134,6 +134,12 @@ Everything is optional. `yaakdoc.config.json` (`.jsonc`, `.ts` and `.js` also wo
   "environment": "Production", // used to resolve variables in examples; false = none
   "environments": "public", // adds an environment switcher: "public" or a list of names/ids
   "pages": "single", // "single" (one page, anchors) | "per-request"
+  "pagesDir": "./docs", // Markdown pages, see "Custom pages" below
+  "navigation": {
+    "tabs": []
+  }, // tabs, groups and pages, see "Custom pages" below
+  "apiPath": "reference", // where the API reference lives (default: "" or "reference")
+  "search": true, // search index and Cmd+K search
   "base": "/", // e.g. "/docs/" when hosted in a subfolder
   "outDir": "dist",
   "server": {
@@ -208,6 +214,121 @@ The full reference is the JSON schema at [`config.schema.json`](https://unpkg.co
 - **`public/`.** Files in a `public/` folder next to the config are copied to the site root as-is.
 - **Branding colors.** These are exposed to themes as CSS custom properties (`--yd-color-primary`, `--yd-font-sans`, ...).
 
+## Custom pages
+
+Besides the API reference generated from Yaak, a site can have pages written in Markdown: guides, a quickstart, a changelog... what have you! Point `pagesDir` to a directory of `.md` files (subdirectories are also supported):
+
+```text
+docs/
+├── index.md          → /
+├── quickstart.md     → /quickstart/
+└── guides/
+    ├── authentication.md → /guides/authentication/
+    └── token-flow.svg
+```
+
+Pages start with optional YAML front matter:
+
+```md
+---
+title: Authentication
+description: Get an access token and keep it fresh.
+sidebarTitle: Auth
+icon: key-round
+---
+
+Send the token to `${[ base_url ]}` in the `Authorization` header.
+See the [quickstart](../quickstart.md#1-get-a-token).
+
+![The token flow](./token-flow.svg)
+```
+
+| Field | Description |
+| --- | --- |
+| `title` | Page title. Defaults to the first `# Heading` (which is then not repeated in the body), then the file name. |
+| `description` | Shown under the title, in search and in `llms.txt`. |
+| `sidebarTitle` | Shorter title for the navigation. |
+| `icon` | Icon hint for themes. The default theme uses [Lucide](https://lucide.dev/icons) names, e.g. `book-open`. |
+| `order` | Sort order in the generated navigation. |
+| `hidden` | Built, but left out of the generated navigation and search. |
+
+- **Variables.** Use Yaak's template syntax, `${[ base_url ]}`, anywhere in a page, code blocks included. Values come from the selected environment, and the parts of a page that use variables switch with the environment switcher. Secrets follow the same rules as everywhere else: they show up as `{{name}}` placeholders.
+- **Links and images.** Relative links to other pages (`./quickstart.md#install`) point to their URLs, and relative images are copied into the site. Headings get ids, so you can link to them.
+- **Raw HTML** is sanitized, as in descriptions.
+
+### Navigation
+
+Without a `navigation`, it's generated from the directory: pages sorted by `order` and then by title (`index.md` first), each subdirectory as a group, and the API reference at the end. To arrange it yourself, use tabs, groups and pages (all optional). Pages are paths relative to `pagesDir`, without the extension. `{ "api": true }`, or `"api": true` on a tab or group, places the folders and requests from Yaak:
+
+```jsonc
+{
+  "pagesDir": "./docs",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": ["index", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/authentication", "guides/pagination"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "square-terminal",
+        "api": true
+      },
+      {
+        "tab": "Changelog",
+        "pages": ["changelog"]
+      }
+    ]
+  }
+}
+```
+
+Without tabs, use `groups` and `pages` at the top level. Groups can be nested:
+
+```json
+{
+  "navigation": {
+    "pages": ["index", "quickstart"],
+    "groups": [
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/authentication",
+          {
+            "group": "Advanced",
+            "pages": ["guides/webhooks"]
+          }
+        ]
+      },
+      {
+        "group": "API Reference",
+        "api": true
+      }
+    ]
+  }
+}
+```
+
+If the navigation doesn't place the API reference, it's added at the end (as a last tab when there are tabs).
+
+### Where the API reference lives
+
+Sites without pages are unchanged: the reference is the home page. When `pagesDir` has an `index.md`, that page becomes the home page and the reference moves to `/reference/`, so requests and folders live under it (e.g. `/reference/#products-get-a-product`, or `/reference/products/get-a-product/` with `"pages": "per-request"`). Set `apiPath` to choose another path, or `""` to keep the reference at the root. If nothing lives at the root, it redirects to the first page of the navigation.
+
+### Search
+
+Every site has a search index (`<base>_yaakdoc/search.json`) of the titles and descriptions of pages, folders and requests. In the default theme, you can also press Cmd+K / Ctrl+K or `/`, or use the search button in the sidebar. Set `"search": false` to turn it off.
+
 ## Example responses
 
 Document responses by adding `response` code blocks to a request's description in Yaak. Add an HTTP status code to show several responses (success, errors, ...):
@@ -233,9 +354,9 @@ Retrieve a single product by its id.
 
 When `llms.enabled` is on (the default), every site includes:
 
-- `/llms.txt`, following the [llms.txt](https://llmstxt.org) format, with links to every endpoint's Markdown.
+- `/llms.txt`, following the [llms.txt](https://llmstxt.org) format, with links to the Markdown of every page and endpoint.
 - `/llms-full.txt`, the complete documentation in a single Markdown file.
-- A Markdown version of every page: append `.md` to a request or folder path, e.g. `/products/get-a-product.md`. The dev server also returns Markdown for requests with `Accept: text/markdown`.
+- A Markdown version of every page: append `.md` to a page, request or folder path, e.g. `/quickstart.md` or `/products/get-a-product.md`. Variables in pages are resolved for the default environment. The dev server also returns Markdown for requests with `Accept: text/markdown`.
 - A `<link rel="alternate" type="text/markdown">` tag on every page, and "Copy page" and "Open in ChatGPT/Claude" actions in the default theme.
 
 ## Themes

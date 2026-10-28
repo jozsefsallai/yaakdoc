@@ -1,5 +1,27 @@
 export { globToRegExp } from "./glob";
+export {
+  type FlatNavigationEntry,
+  findNavigationTab,
+  flattenNavigation,
+  NavigationError,
+  type NavigationInput,
+  type NavigationInputGroup,
+  type NavigationInputItem,
+  type NavigationInputTab,
+  type NavigationTarget,
+  type ResolveNavigationOptions,
+  resolveNavigation,
+  walkNavigation,
+} from "./navigation";
 export { isYaakExport, normalize, parseYaakExport, YaakExportError } from "./normalize";
+export {
+  createPageDoc,
+  type PageSource,
+  pageId,
+  pageLinks,
+  pageSlug,
+  titleFromPath,
+} from "./pages";
 export {
   filterTree,
   type PagesMode,
@@ -33,6 +55,7 @@ export {
 } from "./responses";
 export { type SanitizeOptions, sanitizeExport } from "./sanitize";
 export * from "./schema";
+export { buildSearchIndex } from "./search";
 export { absoluteUrl, createUniqueSlugger, normalizeBase, slugify } from "./slug";
 export {
   createSecretMatcher,

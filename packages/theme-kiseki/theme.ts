@@ -18,12 +18,16 @@ export default defineTheme({
   name: "kiseki",
   entry: "./src/entry.tsx",
   client: "./src/client.ts",
-  styles: ["./src/styles.css"],
+  styles: ["./src/fonts.css", "./src/styles.css"],
+  preloadFonts: {
+    sans: ["geist-latin-wght-normal.woff2"],
+    mono: ["geist-mono-latin-wght-normal.woff2"],
+  },
   highlight: { light: "github-light", dark: "github-dark-dimmed" },
   options: kisekiOptions,
   vitePlugins: async () => {
     const { default: tailwindcss } = await import("@tailwindcss/vite");
-    return [tailwindcss()];
+    return [tailwindcss(), fontDisplay()];
   },
   eject: {
     files: ["theme.ts", "src/**", "components.json", "tsconfig.json", "README.md"],
@@ -42,3 +46,22 @@ export default defineTheme({
     ],
   },
 });
+
+/**
+ * Fontsource declares its fonts with `font-display: swap`, which paints text in a fallback font
+ * first and switches when Geist arrives. With `optional` (and the preloads above), browsers wait
+ * briefly for the font instead, and keep the fallback for that page if it's slow: no switch.
+ * Runs after Vite's CSS plugin, on `src/fonts.css` with its imports inlined.
+ */
+function fontDisplay() {
+  return {
+    name: "kiseki:font-display",
+    transform(code: string, id: string) {
+      if (!/[\\/]src[\\/]fonts\.css(\?|$)/.test(id)) {
+        return null;
+      }
+
+      return { code: code.replace(/font-display:\s*swap/g, "font-display: optional"), map: null };
+    },
+  };
+}

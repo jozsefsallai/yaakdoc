@@ -1,4 +1,4 @@
-import { cp, mkdtemp } from "node:fs/promises";
+import { cp, mkdtemp, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -7,7 +7,7 @@ import { createServer as createViteServer, type ViteDevServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDevServer, type YaakdocMiddleware, yaakdocMiddleware } from "../src/index";
 import { yaakdoc } from "../src/vite";
-import { FIXTURE_EXPORT, hostApp } from "./helpers";
+import { FIXTURE_EXPORT, hostApp, pagesProject } from "./helpers";
 
 // Runs in its own file (worker): React's development build is loaded here, the production build in
 // the build tests.
@@ -48,6 +48,50 @@ describe("dev server", () => {
     const response = await fetch(`${server.url}nope/`, { headers: { accept: "text/html" } });
     expect(response.status).toBe(404);
     expect(await response.text()).toContain("doesn’t exist");
+  });
+});
+
+describe("dev server with custom pages", () => {
+  let server: Awaited<ReturnType<typeof createDevServer>>;
+  let dir: string;
+  let reloaded: () => void = () => {};
+
+  beforeAll(async () => {
+    dir = await pagesProject();
+    server = await createDevServer({ cwd: dir, port: 0, onReload: () => reloaded() });
+  });
+
+  afterAll(() => server?.close());
+
+  const html = (path: string) =>
+    fetch(`${server.url}${path}`, { headers: { accept: "text/html" } });
+
+  it("serves pages, the reference and the search index", async () => {
+    const home = await html("");
+
+    expect(home.status).toBe(200);
+    expect(await home.text()).toContain("https://staging.api.acme.dev/v1");
+
+    expect(await (await html("reference/")).text()).toContain("Upload an image");
+    expect(await (await fetch(`${server.url}_yaakdoc/search.json`)).json()).toContainEqual(
+      expect.objectContaining({ title: "Authentication", href: "/guides/auth/" }),
+    );
+  });
+
+  it("picks up new pages", async () => {
+    expect((await html("changelog/")).status).toBe(404);
+
+    const done = new Promise<void>((resolve) => {
+      reloaded = resolve;
+    });
+
+    await writeFile(join(dir, "docs", "changelog.md"), "# Changelog\n\nNew things.\n");
+    await done;
+
+    const response = await html("changelog/");
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain("New things.");
   });
 });
 

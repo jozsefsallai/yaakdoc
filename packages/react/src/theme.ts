@@ -21,6 +21,13 @@ export type ThemeDefinition = {
   client?: string;
   /** CSS entry files (relative to the manifest), loaded in order. */
   styles?: string[];
+  /**
+   * Font files to preload, by the role they play, so text doesn't render in a fallback font first.
+   * Use file names of fonts referenced by the theme's styles (e.g.
+   * `geist-latin-wght-normal.woff2`; hashed build names match too). A role is skipped when the
+   * user replaces its font with `branding.fonts.sans` / `branding.fonts.mono`.
+   */
+  preloadFonts?: { sans?: string[]; mono?: string[] };
   /** Vite plugins the theme needs (e.g. Tailwind). */
   // biome-ignore lint/suspicious/noExplicitAny: avoid depending on Vite types here
   vitePlugins?: () => any[] | Promise<any[]>;

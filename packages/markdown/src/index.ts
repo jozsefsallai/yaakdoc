@@ -3,6 +3,7 @@ import type {
   KeyValue,
   PreparedDocument,
   PreparedFolder,
+  PreparedPage,
   PreparedRequest,
   TreeNode,
 } from "@yaakdoc/core";
@@ -10,6 +11,7 @@ import {
   absoluteUrl,
   authLabel,
   findFolderNode,
+  flattenNavigation,
   formFieldValue,
   grpcMethodPath,
   languageForContentType,
@@ -247,6 +249,51 @@ export function folderToMarkdown(
   return `${parts.join("\n\n")}\n`;
 }
 
+/**
+ * Markdown for a custom page: its title, description and body (variables resolved for the default
+ * environment). `level` is the heading level of the title.
+ */
+export function pageToMarkdown(page: PreparedPage, _options: MarkdownOptions, level = 1): string {
+  const parts = [heading(level, page.title)];
+
+  if (page.description) {
+    parts.push(`> ${page.description.replace(/\n/g, " ")}`);
+  }
+
+  if (page.markdown.trim()) {
+    parts.push(page.markdown.trim());
+  }
+
+  return `${parts.join("\n\n")}\n`;
+}
+
+/** Visible pages in navigation order, grouped by their tab and top-level group. */
+function pageSections(document: PreparedDocument): Array<{ title: string; pages: PreparedPage[] }> {
+  const sections: Array<{ title: string; pages: PreparedPage[] }> = [];
+  const seen = new Set<string>();
+
+  for (const { target, tab, groups } of flattenNavigation(document.navigation)) {
+    const page = target.type === "page" ? document.pages[target.id] : undefined;
+
+    if (!page || page.hidden || seen.has(page.id)) {
+      continue;
+    }
+
+    seen.add(page.id);
+
+    const title = [tab.title, groups[0]].filter(Boolean).join(" › ") || "Docs";
+    const last = sections.at(-1);
+
+    if (last?.title === title) {
+      last.pages.push(page);
+    } else {
+      sections.push({ title, pages: [page] });
+    }
+  }
+
+  return sections;
+}
+
 /** Markdown for the docs home: overview, environment and table of contents. */
 export function indexToMarkdown(document: PreparedDocument, options: MarkdownOptions): string {
   const parts = [heading(1, options.title)];
@@ -288,10 +335,26 @@ export function llmsTxt(
     lines.push(`> ${options.description}`, "");
   }
 
+  const sections = pageSections(document);
+
   lines.push(
-    `This is the API reference generated from a Yaak workspace. Every page is available as Markdown by appending \`.md\` to its URL.`,
+    sections.length > 0
+      ? `This is the documentation of the API, including a reference generated from a Yaak workspace. Every page is available as Markdown by appending \`.md\` to its URL.`
+      : `This is the API reference generated from a Yaak workspace. Every page is available as Markdown by appending \`.md\` to its URL.`,
     "",
   );
+
+  for (const section of sections) {
+    lines.push(heading(2, section.title), "");
+
+    for (const page of section.pages) {
+      lines.push(
+        `- [${page.title}](${url(page.markdownUrl, options)})${page.summary ? `: ${page.summary}` : ""}`,
+      );
+    }
+
+    lines.push("");
+  }
 
   const rootRequests = document.tree.filter((node) => node.type === "request");
 
@@ -334,9 +397,23 @@ export function llmsTxt(
     .trimEnd()}\n`;
 }
 
-/** `llms-full.txt`: the complete documentation as a single Markdown file. */
-export function llmsFullTxt(document: PreparedDocument, options: MarkdownOptions): string {
+/**
+ * `llms-full.txt`: the complete documentation as a single Markdown file. Set `pages: false` for
+ * the API reference only (e.g. the Markdown twin of the single-page reference).
+ */
+export function llmsFullTxt(
+  document: PreparedDocument,
+  options: MarkdownOptions & { pages?: boolean },
+): string {
   const parts = [indexToMarkdown(document, options)];
+
+  if (options.pages !== false) {
+    for (const section of pageSections(document)) {
+      for (const page of section.pages) {
+        parts.push(pageToMarkdown(page, options, 2));
+      }
+    }
+  }
 
   for (const { node, depth } of walkTree(document.tree)) {
     const level = Math.min(depth + 2, 4);

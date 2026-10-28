@@ -268,7 +268,7 @@ export function RequestSection({
       data-yd-section
       data-yd="request"
       className={cn(
-        "scroll-mt-16 border-t py-12 first:border-t-0",
+        "scroll-mt-(--header-offset) border-t py-12 first:border-t-0",
         side && "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)] xl:gap-10",
       )}
     >
@@ -365,7 +365,7 @@ export function RequestSection({
 
       {side ? (
         <div className="mt-8 min-w-0 xl:mt-0">
-          <div className="flex flex-col gap-4 xl:sticky xl:top-20">
+          <div className="flex flex-col gap-4 xl:sticky xl:top-[calc(var(--header-height)+1.5rem)]">
             <CodePanel request={request} />
             <ResponsePanel request={request} />
           </div>

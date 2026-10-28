@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 120" font-family="system-ui, sans-serif" font-size="15">
+  <title>Log in, call the API, refresh the token</title>
+  <rect width="640" height="120" rx="12" fill="#f0fdfa"/>
+  <g fill="#ffffff" stroke="#0f766e" stroke-width="1.5">
+    <rect x="24" y="36" width="160" height="48" rx="8"/>
+    <rect x="240" y="36" width="160" height="48" rx="8"/>
+    <rect x="456" y="36" width="160" height="48" rx="8"/>
+  </g>
+  <g fill="#134e4a" text-anchor="middle">
+    <text x="104" y="65">POST /auth/login</text>
+    <text x="320" y="65">Call the API</text>
+    <text x="536" y="65">POST /auth/refresh</text>
+  </g>
+  <g stroke="#0f766e" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M184 60h48"/>
+    <path d="M400 60h48"/>
+  </g>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0l10 5-10 5z" fill="#0f766e"/>
+    </marker>
+  </defs>
+</svg>

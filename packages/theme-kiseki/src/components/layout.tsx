@@ -8,9 +8,11 @@ import {
   type LayoutProps,
   Logo,
   Markdown,
-  NavTree,
+  Navigation,
+  NavTabs,
   TreeContent,
   useDocument,
+  useNavigation,
   usePage,
   useSite,
   useThemeOptions,
@@ -18,7 +20,15 @@ import {
 import { NavFilter, ScrollSpy } from "@yaakdoc/react/islands";
 import { cn } from "@/lib/utils";
 import type { KisekiOptions } from "../../theme";
-import { EnvironmentDot, EnvironmentMenu, MobileNavToggle, ThemeToggle } from "./islands";
+import {
+  EnvironmentDot,
+  EnvironmentMenu,
+  MobileNavToggle,
+  SearchButton,
+  SearchCommand,
+  ThemeToggle,
+} from "./islands";
+import { PageNav, PageSection } from "./page";
 import { CopyPage, KeyValueTable, RunInYaak } from "./parts";
 import { RequestSection } from "./request";
 
@@ -38,6 +48,7 @@ function Brand({ className }: { className?: string }) {
 
 function Sidebar() {
   const options = useThemeOptions<KisekiOptions>();
+  const site = useSite();
   return (
     <aside
       id={SIDEBAR_ID}
@@ -49,15 +60,19 @@ function Sidebar() {
       </div>
 
       <div className="px-3 pb-3">
-        <NavFilter
-          target={`#${SIDEBAR_ID} [data-yd=nav]`}
-          placeholder="Filter requests"
-          className="h-8 w-full rounded-md border bg-background px-2.5 text-[0.8125rem] shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden"
-        />
+        {site.searchUrl ? (
+          <SearchButton />
+        ) : (
+          <NavFilter
+            target={`#${SIDEBAR_ID} [data-yd=navigation]`}
+            placeholder="Filter"
+            className="h-8 w-full rounded-md border bg-background px-2.5 text-[0.8125rem] shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden"
+          />
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-8 [scrollbar-width:thin]">
-        <NavTree className="kiseki-nav" openDepth={options.navOpenDepth} />
+        <Navigation className="kiseki-nav" openDepth={options.navOpenDepth} />
       </div>
     </aside>
   );
@@ -68,42 +83,56 @@ function TopBar() {
   const document = useDocument();
   const options = useThemeOptions<KisekiOptions>();
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-6">
-      <MobileNavToggle target={`#${SIDEBAR_ID}`} />
+    <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+      <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
+        <MobileNavToggle target={`#${SIDEBAR_ID}`} />
 
-      <Brand className="lg:hidden" />
+        <Brand className="lg:hidden" />
 
-      <div className="ml-auto flex items-center gap-1">
-        <RunInYaak className="mr-2 hidden sm:block" />
+        {/* Wide screens: tabs in the header row, underlining over its bottom border. */}
+        <NavTabs className="kiseki-tabs hidden h-full min-w-0 translate-y-px lg:block" />
 
-        {options.showEnvironment && document.environments.length > 1 ? (
-          <EnvironmentMenu
-            environments={document.environments}
-            defaultId={document.environments[0]!.id}
-          />
-        ) : options.showEnvironment && document.environment ? (
-          <span
-            className="mr-2 hidden items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground sm:inline-flex"
-            title="Environment used for examples"
-          >
-            <EnvironmentDot color={document.environment.color} />
-            {document.environment.name}
-          </span>
-        ) : null}
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <RunInYaak className="mr-2 hidden sm:block" />
 
-        {site.links.map((link) => (
-          <a
-            key={link.href}
-            href={link.href}
-            className="hidden rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:block"
-            {...(/^https?:/.test(link.href) ? { target: "_blank", rel: "noopener" } : {})}
-          >
-            {link.label}
-          </a>
-        ))}
+          {options.showEnvironment && document.environments.length > 1 ? (
+            <EnvironmentMenu
+              environments={document.environments}
+              defaultId={document.environments[0]!.id}
+            />
+          ) : options.showEnvironment && document.environment ? (
+            <span
+              className="mr-2 hidden items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground sm:inline-flex"
+              title="Environment used for examples"
+            >
+              <EnvironmentDot color={document.environment.color} />
+              {document.environment.name}
+            </span>
+          ) : null}
 
-        {site.colorModeToggle ? <ThemeToggle /> : null}
+          {site.links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="hidden rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:block"
+              {...(/^https?:/.test(link.href) ? { target: "_blank", rel: "noopener" } : {})}
+            >
+              {link.label}
+            </a>
+          ))}
+
+          {site.searchUrl ? (
+            <span className="lg:hidden">
+              <SearchButton variant="icon" />
+            </span>
+          ) : null}
+
+          {site.colorModeToggle ? <ThemeToggle /> : null}
+        </div>
       </div>
+
+      {/* Small screens: the header row is full, so tabs get a row of their own. */}
+      <NavTabs className="kiseki-tabs h-11 translate-y-px px-4 sm:px-6 lg:hidden" />
     </header>
   );
 }
@@ -183,7 +212,7 @@ function FolderSection({
   const node = findFolderNode(document.tree, id);
 
   return (
-    <section id={folder.anchor} data-yd-section className="scroll-mt-16">
+    <section id={folder.anchor} data-yd-section className="scroll-mt-(--header-offset)">
       <div
         className={cn(
           level === 1 ? "pt-12" : "pt-14",
@@ -276,6 +305,8 @@ function NotFound() {
  */
 export const contentComponents = {
   Overview,
+  PageDoc: PageSection,
+  PageNav,
   FolderDoc: FolderSection,
   RequestDoc: RequestSection,
   ChildLinks,
@@ -315,11 +346,22 @@ function SiteFooter() {
 
 export function Layout({ page }: LayoutProps) {
   const options = useThemeOptions<KisekiOptions>();
+  const site = useSite();
+  const { tabs } = useNavigation();
 
   return (
     <div
-      className="min-h-dvh"
-      style={{ "--sidebar-width": options.sidebarWidth } as React.CSSProperties}
+      className={cn(
+        "min-h-dvh [--header-height:3.5rem]",
+        // Tabs take a second header row on small screens.
+        tabs.length > 1 && "max-lg:[--header-height:6.25rem]",
+      )}
+      style={
+        {
+          "--sidebar-width": options.sidebarWidth,
+          "--header-offset": "calc(var(--header-height) + 0.5rem)",
+        } as React.CSSProperties
+      }
     >
       <a
         href="#content"
@@ -340,6 +382,8 @@ export function Layout({ page }: LayoutProps) {
       </div>
 
       {page.kind === "index" ? <ScrollSpy target={`#${SIDEBAR_ID}`} /> : null}
+
+      {site.searchUrl ? <SearchCommand url={site.searchUrl} /> : null}
     </div>
   );
 }

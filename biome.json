@@ -57,6 +57,8 @@
         "packages/core/**",
         "packages/snippets/test/**",
         "packages/markdown/test/**",
+        "packages/react/test/**",
+        "packages/yaakdoc/test/**",
         "packages/yaak-plugin/test/**"
       ],
       "linter": {
