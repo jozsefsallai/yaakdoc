@@ -1,5 +1,13 @@
 # @yaakdoc/next
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [6d74c70]
+- Updated dependencies [6d74c70]
+  - yaakdoc@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

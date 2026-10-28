@@ -1,5 +1,12 @@
 # @yaakdoc/yaakdoc
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [6d74c70]
+  - @yaakdoc/config@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes
