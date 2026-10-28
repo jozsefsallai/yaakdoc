@@ -1,6 +1,6 @@
 {
   "name": "yaakdoc",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Static, themable, and LLM-friendly API documentation generated from Yaak exports.",
   "type": "module",
   "main": "./dist/index.js",
