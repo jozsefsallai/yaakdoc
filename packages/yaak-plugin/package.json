@@ -1,7 +1,7 @@
 {
   "name": "@yaakdoc/yaakdoc",
   "displayName": "yaakdoc",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Build static, LLM-friendly API docs from your Yaak workspace with yaakdoc.",
   "keywords": [

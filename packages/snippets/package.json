@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/snippets",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Code example generators (cURL, fetch, Python, Go, grpcurl, wscat) for yaakdoc.",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/react",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Unstyled, composable React components and the island runtime for yaakdoc themes.",
   "type": "module",
   "main": "./dist/index.js",

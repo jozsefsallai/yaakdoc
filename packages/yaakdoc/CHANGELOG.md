@@ -1,5 +1,17 @@
 # yaakdoc
 
+## 0.5.1
+
+### Patch Changes
+
+- 87e2a7f: Fix `@/` imports in themes on Windows. Vite's module ids use forward slashes there, so the check for whether an import came from inside the theme never matched, and themes like `yaakdoc-theme-winxp` failed to build.
+- @yaakdoc/config@0.5.1
+  - @yaakdoc/core@0.5.1
+  - @yaakdoc/markdown@0.5.1
+  - @yaakdoc/react@0.5.1
+  - @yaakdoc/snippets@0.5.1
+  - @yaakdoc/theme-kiseki@0.5.1
+
 ## 0.5.0
 
 ### Patch Changes

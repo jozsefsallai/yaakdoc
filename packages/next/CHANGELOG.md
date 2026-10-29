@@ -1,5 +1,12 @@
 # @yaakdoc/next
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [87e2a7f]
+  - yaakdoc@0.5.1
+
 ## 0.5.0
 
 ### Patch Changes
