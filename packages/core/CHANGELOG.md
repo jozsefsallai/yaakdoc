@@ -1,5 +1,11 @@
 # @yaakdoc/core
 
+## 0.5.2
+
+### Patch Changes
+
+- cc8debd: The documentation moved to https://yaakdoc.dev. Package READMEs and homepages now link to it, and Kiseki declares its theme metadata (the `yaakdoc` field in `package.json`).
+
 ## 0.5.1
 
 No changes in this release.

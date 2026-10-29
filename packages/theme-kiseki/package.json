@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/theme-kiseki",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Kiseki - the default yaakdoc theme. Uses Tailwind CSS v4 + shadcn/ui, support light & dark modes.",
   "type": "module",
   "exports": {

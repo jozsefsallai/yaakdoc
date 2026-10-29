@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/markdown",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Markdown, llms.txt and llms-full.txt generation for yaakdoc.",
   "type": "module",
   "main": "./dist/index.js",
