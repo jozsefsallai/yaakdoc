@@ -1,0 +1,96 @@
+---
+title: CLI
+description: Every yaakdoc command and flag.
+icon: Terminal
+---
+
+```bash
+npx yaakdoc [command] [options]
+```
+
+| Command | Description |
+| --- | --- |
+| `yaakdoc [export]` | Same as `yaakdoc dev`. |
+| [`yaakdoc dev [export]`](#dev) | Starts the dev server. |
+| [`yaakdoc build [export]`](#build) | Builds the static site. |
+| [`yaakdoc preview`](#preview) | Serves the built site locally. |
+| [`yaakdoc init`](#init) | Creates a `yaakdoc.config.json`. |
+| [`yaakdoc eject`](#eject) | Copies the theme into your project. |
+
+## Shared options
+
+`dev` and `build` take the path of the Yaak export as an argument, and these options. Flags take precedence over the config file.
+
+| Flag | Description |
+| --- | --- |
+| `--config`, `-c` | Path to the config file. |
+| `--theme`, `-t` | Theme name, package or local path. |
+| `--pages` | `single` or `per-request`. |
+| `--base` | Base path the site is served from, e.g. `/docs/`. |
+| `--environment`, `-e` | Environment used to resolve variables. |
+| `--workspace`, `-w` | Workspace to document (id or name). |
+| `--overrides` | Config values merged over the config file. See [below](#overrides). |
+
+When no export is passed (as an argument or `export` in the config), yaakdoc uses `yaakdoc.json`, then `yaak.json`, from the current directory.
+
+## dev
+
+Starts the dev server, with server rendering, live reload and HMR. It reloads when the export or the config changes.
+
+| Flag | Description |
+| --- | --- |
+| `--port`, `-p` | Port. Default: `4000`. |
+| `--host` | Host to listen on. Use `--host 0.0.0.0` to expose it on your network. |
+| `--open`, `-o` | Open the browser. |
+| `--no-watch` | Don't watch the export and config for changes. |
+
+## build
+
+Builds the static site.
+
+| Flag | Description |
+| --- | --- |
+| `--out-dir`, `-o` | Output directory. Default: `dist`. |
+
+## preview
+
+Serves the built site locally, to check it before deploying.
+
+| Flag | Description |
+| --- | --- |
+| `--out-dir` | Directory to serve. Default: `dist`. |
+| `--port`, `-p` | Port. Default: `4000`. |
+| `--host` | Host to listen on. |
+| `--open`, `-o` | Open the browser. |
+
+## init
+
+Asks a few questions and writes a `yaakdoc.config.json`. See [Project setup](/docs/project-setup#create-a-config-file).
+
+| Flag | Description |
+| --- | --- |
+| `--yes`, `-y` | Use defaults without prompting. |
+| `--force` | Overwrite an existing config. |
+
+## eject
+
+Copies the current theme into your project, and points the config at it. See [Ejecting](/docs/theming/ejecting).
+
+| Flag | Description |
+| --- | --- |
+| `--config`, `-c` | Path to the config file. |
+| `--out` | Destination directory. Default: `./theme`. |
+| `--force` | Overwrite a non-empty destination. |
+
+## Overrides
+
+`--overrides` sets any [config](/docs/reference/configuration) value from the command line. It takes inline JSON or the path of a JSON file:
+
+```bash
+npx yaakdoc build --overrides '{"branding":{"title":"Staging API"},"runInYaak":false}'
+npx yaakdoc build --overrides ./staging.json
+```
+
+- Overrides are deep-merged over the config file. Arrays are replaced, not merged.
+- Explicit flags, such as `--theme`, still win over overrides.
+- Paths in overrides are relative to the current directory.

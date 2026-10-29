@@ -1,0 +1,116 @@
+---
+title: Project setup
+description: Install yaakdoc in a project, add a config file and keep the export in version control.
+icon: FolderCog
+---
+
+`npx yaakdoc` works without any setup. For docs that live in a repository and build in CI, install yaakdoc as a dependency and add a config file.
+
+## Install
+
+```npm
+npm i -D yaakdoc
+```
+
+Then add scripts to `package.json`:
+
+```json title="package.json"
+{
+  "scripts": {
+    "docs:dev": "yaakdoc",
+    "docs:build": "yaakdoc build",
+    "docs:preview": "yaakdoc preview"
+  }
+}
+```
+
+## Create a config file
+
+```bash
+npx yaakdoc init
+```
+
+`init` asks for a site title, a primary color, the [page layout](#page-layout) and whether to generate LLM output, then writes `yaakdoc.config.json`. Pass `--yes` to skip the questions, and `--force` to overwrite an existing file.
+
+```json title="yaakdoc.config.json"
+{
+  "$schema": "./node_modules/yaakdoc/config.schema.json",
+  "export": "./yaak.json",
+  "branding": {
+    "title": "Acme API",
+    "colors": {
+      "primary": "#0f766e"
+    }
+  },
+  "pages": "single"
+}
+```
+
+The `$schema` line gives you autocomplete and validation in editors such as VS Code. When yaakdoc isn't installed locally, `init` points it at the schema on unpkg instead.
+
+Everything in the config is optional. See the [configuration reference](/docs/reference/configuration) for every option.
+
+### Config file formats
+
+yaakdoc looks for `yaakdoc.config.json` in the current directory. `.jsonc`, `.ts` and `.js` work too. In TypeScript or JavaScript, use `defineConfig` for types:
+
+```ts title="yaakdoc.config.ts"
+import { defineConfig } from "yaakdoc";
+
+export default defineConfig({
+  branding: {
+    title: "Acme API",
+  },
+  pages: "per-request",
+});
+```
+
+Relative paths in the config (the export, `pagesDir`, the logo, ...) are resolved from the config file's directory.
+
+## The export
+
+Unless you pass a path (as an argument or `export` in the config), yaakdoc uses `yaakdoc.json` from the current directory, then `yaak.json`. Nothing else is scanned.
+
+<Callout title="Commit the export">
+  The export is the source of your docs, so commit it along with the config. Re-export from Yaak
+  whenever the API changes. The [Yaak plugin](/docs/yaak-plugin)'s **Save as yaakdoc project...**
+  action writes both files for you. Before you commit it to a public repository, check it for
+  secrets: [the export isn't redacted](/docs/guides/environments#secrets), only the site is.
+</Callout>
+
+If the export contains several workspaces, choose one with `workspace` (its name or id):
+
+```json
+{
+  "workspace": "Acme Store API"
+}
+```
+
+<Callout type="error" title="Your export isn't redacted">
+  yaakdoc keeps secrets out of the site it builds, but the export itself (`yaak.json` or
+  `yaakdoc.json`) is untouched. It contains every environment, including private ones, and every
+  value stored in plain text: tokens, passwords and API keys in variables, headers and auth
+  settings. Before you commit it to a public repository, keep secrets out of the workspace (use
+  `secure(...)`, or leave the values empty), or keep the repository private.
+</Callout>
+
+## Page layout
+
+`pages` decides how the API reference is split into pages:
+
+- **`single`** (default): the whole reference on one page, with anchors for every folder and request. It works well for small and medium APIs.
+- **`per-request`**: a page for every folder and request. It's better for large APIs and keeps pages fast.
+
+## Static files
+
+Files in a `public/` folder next to the config are copied to the site root as they are. Use it for `robots.txt`, verification files or images that you link to from descriptions.
+
+## Overriding config from the command line
+
+CLI flags (`--theme`, `--pages`, `--base`, `--environment`, ...) take precedence over the config file. For any other value, use `--overrides` with inline JSON or a JSON file:
+
+```bash
+npx yaakdoc build --overrides '{"branding":{"title":"Staging API"},"runInYaak":false}'
+```
+
+See the [CLI reference](/docs/reference/cli).

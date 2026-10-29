@@ -1,0 +1,93 @@
+---
+title: Configuration
+description: Every option of yaakdoc.config.json.
+icon: Settings
+---
+
+Everything is optional. A config file is `yaakdoc.config.json` (`.jsonc`, `.ts` and `.js` work too) in the project directory. See [Project setup](/docs/project-setup#create-a-config-file).
+
+```json title="yaakdoc.config.json"
+{
+  "$schema": "./node_modules/yaakdoc/config.schema.json",
+  "branding": {
+    "title": "Acme API"
+  }
+}
+```
+
+The `$schema` gives you autocomplete and validation in your editor. The schema is published with the `yaakdoc` package, and on [unpkg](https://unpkg.com/yaakdoc/config.schema.json).
+
+<Callout>
+  The tables on this page are generated from the same schema that validates your config, so they're
+  always up to date.
+</Callout>
+
+## Top-level options
+
+<ConfigReference omit={["branding", "server", "llms", "variables", "filter", "runInYaak", "navigation", "head"]} />
+
+## branding
+
+See [Branding](/docs/guides/branding).
+
+<ConfigReference path="branding" />
+
+### branding.colors
+
+<ConfigReference path="branding.colors" />
+
+### branding.fonts
+
+<ConfigReference path="branding.fonts" />
+
+### branding.logo
+
+A path or URL, or an object:
+
+<ConfigReference path="branding.logo" />
+
+## navigation
+
+See [Navigation](/docs/guides/navigation).
+
+<ConfigReference path="navigation" />
+
+A `NavigationItem` is a page path (relative to `pagesDir`, without the extension), a `NavigationGroup`, or `{ "api": true }`. A tab has `tab`, `icon`, `pages`, `groups` and `api`. A `NavigationGroup` has:
+
+<ConfigReference path="navigation.groups" />
+
+## llms
+
+See [LLM-friendly output](/docs/guides/llms).
+
+<ConfigReference path="llms" />
+
+## variables
+
+See [Environments and variables](/docs/guides/environments).
+
+<ConfigReference path="variables" />
+
+## filter
+
+Glob patterns over request and folder slugs. See [Leaving requests out](/docs/guides/navigation#leaving-requests-out).
+
+<ConfigReference path="filter" />
+
+## runInYaak
+
+`true`, `false` or an object. See [Run in Yaak](/docs/guides/run-in-yaak).
+
+<ConfigReference path="runInYaak" />
+
+## server
+
+Options of the [dev server](/docs/reference/cli#dev) and `preview`.
+
+<ConfigReference path="server" />
+
+## head
+
+Extra tags injected into every page's `<head>`. See [Extra head tags](/docs/guides/branding#extra-head-tags).
+
+<ConfigReference path="head" />

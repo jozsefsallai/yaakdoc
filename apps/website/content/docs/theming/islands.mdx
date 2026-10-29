@@ -1,0 +1,66 @@
+---
+title: Islands
+description: Add interactivity to static pages with islands that hydrate on their own.
+icon: MousePointerClick
+---
+
+Pages are static HTML. The interactive parts are **islands**: components that are rendered on the server and hydrated individually on the client. Everything else ships no JavaScript.
+
+```tsx title="src/islands.tsx"
+import { createIsland, useCopy } from "@yaakdoc/react/islands";
+
+export const CopyLink = createIsland("my-theme:copy-link", ({ href }: { href: string }) => {
+  const { copied, copy } = useCopy();
+  return (
+    <button onClick={() => copy({ text: href })}>
+      {copied ? "Copied" : "Copy link"}
+    </button>
+  );
+});
+```
+
+Register your islands, along with the built-in ones, in the theme's client entry:
+
+```ts title="src/client.ts"
+import { builtinIslands } from "@yaakdoc/react/islands";
+import { CopyLink } from "./islands";
+
+export default [...builtinIslands, CopyLink];
+```
+
+## Rules
+
+- **Props must be JSON-serializable.** They're embedded in the HTML.
+- **Islands can't use the data hooks** (`useDocument`, `useSite`, ...), because they're hydrated in isolation. Pass data in through props.
+- **Keep props small.** Render big content (code panels, tables) as static HTML, and let the island control it. `TabList`, for example, only switches between server-rendered panels.
+
+Islands are rendered as isolated roots on the server too, so `useId()` (and libraries such as Radix UI that rely on it) produce matching ids when they hydrate.
+
+## Built-in islands
+
+| Island | Purpose |
+| --- | --- |
+| `ColorModeToggle` | Switches between light and dark mode. |
+| `CopyButton` | Copies text or the content of an element. |
+| `EnvironmentSwitcher` | Switches the [environment](/docs/guides/environments#environment-switcher). |
+| `TabList` | Controls server-rendered tab panels, and keeps the chosen language in sync across the page. |
+| `NavToggle` | Opens and closes the navigation on small screens. |
+| `NavFilter` | Filters the navigation. |
+| `ScrollSpy` | Highlights the section in view. |
+| `OpenInLink` | "Open in ChatGPT/Claude" links. |
+| `RunInYaakLink` | The [Run in Yaak](/docs/guides/run-in-yaak) button. |
+| `SearchTrigger`, `SearchDialog` | Search, in a native `<dialog>`, opened with <kbd>Cmd</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd> or <kbd>/</kbd>. |
+
+## Headless hooks
+
+To build your own versions of these, use the hooks: `useColorMode`, `useCopy`, `useTabs`, `useNavToggle`, `useScrollSpy`, `useEnvironment` and `useRunInYaakHref`, plus `openInUrl()` and `runInYaakUrl()` for "Open in ..." and Run in Yaak links.
+
+## Search
+
+`site.searchUrl` is the URL of the [search index](/docs/guides/search), or `null` when search is off. The index is a `SearchEntry[]` (`title`, `description`, `href`, `kind`, `method`, `section`). Pass the URL to your search island as a prop; the index is fetched when the dialog first opens.
+
+- `useSearchDialog()` returns `{ open, setOpen, restoreFocus }`. It opens on `openSearch()` and the keyboard shortcuts, and `restoreFocus()` returns focus without scrolling.
+- `useSearch(url, { enabled })` returns `{ query, setQuery, results, active, setActive, onKeyDown, loading, error }`. `onKeyDown` handles <kbd>↑</kbd>, <kbd>↓</kbd> and <kbd>Enter</kbd>.
+- `searchEntries(entries, query)` is the ranking: every term must match, and titles rank above sections and descriptions.
+- `<SearchShortcut />` renders <kbd>Cmd</kbd>+<kbd>K</kbd> on Apple platforms and <kbd>Ctrl</kbd>+<kbd>K</kbd> elsewhere. Both are rendered, and a head script shows the right one before first paint, so the label doesn't change when hydrating.
+- `useSearchShortcutLabel()` returns the same label as a string (for `title` attributes). It's `Cmd+K` until hydrated.

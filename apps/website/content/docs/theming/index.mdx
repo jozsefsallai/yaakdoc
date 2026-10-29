@@ -1,0 +1,50 @@
+---
+title: Using themes
+description: Pick a theme by short name, npm package or local path, and pass it options.
+icon: Paintbrush
+---
+
+A theme decides how your docs look: the layout, the components and the styles. yaakdoc ships with [Kiseki](/docs/theming/kiseki), and you can switch to another theme using your yaakdoc config:
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "kiseki",
+  "themeOptions": {
+    "codePanel": "inline"
+  }
+}
+```
+
+`themeOptions` are specific to each theme. The theme validates them and fills in defaults.
+
+## How themes are found
+
+`theme` accepts:
+
+- **A short name**, such as `winxp`. yaakdoc tries `@yaakdoc/theme-winxp`, then `yaakdoc-theme-winxp`, then `winxp`.
+- **A package name**, such as `yaakdoc-theme-winxp` or `@acme/docs-theme`.
+- **A local path**, such as `./theme`, e.g. an [ejected theme](/docs/theming/ejecting).
+
+Install npm themes next to your config:
+
+```npm
+npm i -D yaakdoc-theme-winxp
+```
+
+The [Yaak plugin](/docs/yaak-plugin#themes-from-npm) installs npm themes for you.
+
+The CLI's `--theme` (`-t`) flag overrides the config, so you can try a theme without editing anything:
+
+```bash
+npx yaakdoc --theme ./my-theme
+```
+
+## Customizing
+
+From the smallest change to the biggest:
+
+1. **[Branding](/docs/guides/branding):** colors, fonts, logo and links, through the config. Every theme supports these.
+2. **Theme options:** whatever the theme offers, such as Kiseki's [options](/docs/theming/kiseki#options).
+3. **[Custom CSS](/docs/guides/branding#custom-css):** small style tweaks on top of the theme.
+4. **[Ejecting](/docs/theming/ejecting):** copy the theme into your project and change anything.
+5. **[Your own theme](/docs/theming/authoring):** start from unstyled React components.

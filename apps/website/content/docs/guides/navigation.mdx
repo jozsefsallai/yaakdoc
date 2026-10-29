@@ -1,0 +1,109 @@
+---
+title: Navigation
+description: Arrange pages and the API reference into tabs, groups and nested groups.
+icon: PanelLeft
+---
+
+Without a `navigation`, it's generated from the [pages directory](/docs/guides/custom-pages):
+
+- Pages are sorted by `order`, then by title, with `index.md` first.
+- Each subdirectory becomes a group.
+- The API reference comes last.
+
+To arrange it yourself, use tabs, groups and pages. All of them are optional.
+
+- **Pages** are paths relative to `pagesDir`, without the extension (`guides/authentication`).
+- **`{ "api": true }`** places the folders and requests from Yaak. `"api": true` on a tab or group adds them after its pages.
+
+## Tabs
+
+Tabs are top-level sections, each with its own sidebar:
+
+```json title="yaakdoc.config.json"
+{
+  "pagesDir": "./docs",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": ["index", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/authentication", "guides/pagination"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "square-terminal",
+        "api": true
+      },
+      {
+        "tab": "Changelog",
+        "icon": "history",
+        "pages": ["changelog"]
+      }
+    ]
+  }
+}
+```
+
+## Groups and pages
+
+Without tabs, use `groups` and `pages` at the top level. Groups can be nested, and a nested group can start collapsed with `"expanded": false`:
+
+```json title="yaakdoc.config.json"
+{
+  "navigation": {
+    "pages": ["index", "quickstart"],
+    "groups": [
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/authentication",
+          {
+            "group": "Advanced",
+            "expanded": false,
+            "pages": ["guides/webhooks"]
+          }
+        ]
+      },
+      {
+        "group": "API Reference",
+        "api": true
+      }
+    ]
+  }
+}
+```
+
+Use either `tabs`, or `groups` and `pages`, at the top level, not both. If the navigation doesn't place the API reference, it's added at the end (as a last tab when there are tabs).
+
+## Where the API reference lives
+
+- **Sites without pages:** the reference is the home page.
+- **When `pagesDir` has an `index.md`:** that page becomes the home page, and the reference moves to `/reference/`. Requests and folders live under it, e.g. `/reference/#products-get-a-product`, or `/reference/products/get-a-product/` with `"pages": "per-request"`.
+
+Set `apiPath` to choose another path, or `""` to keep the reference at the root. If nothing lives at the root, it redirects to the first page of the navigation.
+
+## Leaving requests out
+
+`filter` takes glob patterns over request and folder slugs. Slugs are the hierarchical paths you see in per-request URLs, such as `products/get-a-product`:
+
+```json title="yaakdoc.config.json"
+{
+  "filter": {
+    "exclude": ["internal/**", "**/debug-*"]
+  }
+}
+```
+
+- **`include`**: only matching requests and folders are documented. Including a folder includes everything in it.
+- **`exclude`** wins over `include`. Excluding a folder removes everything in it.
+- Folders that end up empty are left out.
+- `*` matches within one path segment, and `**` matches across segments.

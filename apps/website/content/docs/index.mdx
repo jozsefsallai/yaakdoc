@@ -1,0 +1,65 @@
+---
+title: Introduction
+description: yaakdoc turns a Yaak workspace into a fast, themable and LLM-friendly API documentation site.
+icon: BookOpen
+---
+
+[Yaak](https://yaak.app) allows you to test and document your application's API: you can define requests, folders, environments, auth, and descriptions. **yaakdoc** turns that workspace into a documentation site, so you don't have to write the API reference twice.
+
+```bash
+npx yaakdoc
+```
+
+Run it next to a Yaak export and your docs are served at `http://localhost:4000`. `npx yaakdoc build` writes a static site that you can host anywhere.
+
+<Cards>
+  <Card title="Quickstart" href="/docs/quickstart">
+    From a Yaak export to a running docs site in a minute.
+  </Card>
+
+  <Card title="Yaak plugin" href="/docs/yaak-plugin">
+    Build the docs without leaving Yaak. No Node.js required.
+  </Card>
+
+  <Card title="Live demo" href="https://demo.yaakdoc.dev">
+    See a site built with the default theme.
+  </Card>
+</Cards>
+
+## What you get
+
+- **Rendered on the server.** Every page is prerendered HTML, so the docs are readable without JavaScript. Only small interactive **islands** (tabs, copy buttons, the color mode toggle, search) hydrate in the browser.
+- **Zero config.** The export is detected automatically, and the title, description and environment come from Yaak. Add a [`yaakdoc.config.json`](/docs/project-setup) only when you want to change something.
+- **Code examples.** Every request gets examples in cURL, JavaScript, Python, Go, grpcurl and wscat. The generators are [pluggable](/docs/reference/snippets).
+- **Environments without leaking secrets.** Readers can switch between environments, and variables defined with `secure(...)` or with secret-looking names are never inlined. See [Environments and variables](/docs/guides/environments).
+- **Custom pages.** Go beyond API docs. Write guides, a quickstart or a changelog in Markdown, next to the generated reference. See [Custom pages](/docs/guides/custom-pages).
+- **LLM-friendly.** `llms.txt`, `llms-full.txt`, and a Markdown version of every page, plus "Copy page" and "Open in ChatGPT/Claude" actions. See [LLM-friendly output](/docs/guides/llms).
+- **Themable.** The default theme, [Kiseki](/docs/theming/kiseki), uses Tailwind CSS v4 and shadcn/ui. You can restyle it with config, [eject](/docs/theming/ejecting) it, or [write your own theme](/docs/theming/authoring) using yaakdoc's unstyled React components.
+- **Fits into your app.** Serve the docs at `/docs` of a [Next.js](/docs/integrations/nextjs), [Vite](/docs/integrations/vite) or [Node](/docs/integrations/node-middleware) app.
+
+## Three ways to run it
+
+| | Best for | Needs |
+| --- | --- | --- |
+| [Yaak plugin](/docs/yaak-plugin) | Building the docs straight from Yaak | Yaak (+ Node.js if you want to use a different theme) |
+| [CLI](/docs/quickstart) | Local previews, CI, and static hosting | Node.js ≥ 20.19 |
+| [Integrations](/docs/integrations/nextjs) | Serving the docs from an app you already have | Next.js, a Vite-based framework or a Node server |
+
+## How it works
+
+```text
+yaak.json ─▶ normalize ─▶ prepareDocument ─▶ PreparedDocument ─┬─▶ theme (React SSR) ─▶ HTML
+                           + Markdown, Shiki,                   ├─▶ Markdown, llms.txt
+                           + code examples                      └─▶ islands ─▶ client JS
+```
+
+1. **Load.** yaakdoc reads the config (optional), the Yaak export and the theme.
+2. **Normalize.** The export, from any Yaak schema version, becomes one documentation model: a tree of folders and requests with inherited headers and auth, path and query parameters, and environments.
+3. **Prepare.** Variables are resolved (with secrets redacted), descriptions are rendered from Markdown, code is highlighted with Shiki, and code examples and example responses are generated.
+4. **Render.** The theme renders every page on the server with React. The islands hydrate on the client.
+5. **Write.** `build` writes the HTML, the Markdown files, `llms.txt`, a search index, the sitemap and, if enabled, a sanitized export for [Run in Yaak](/docs/guides/run-in-yaak).
+
+<Callout title="Not affiliated with Yaak">
+  yaakdoc is an independent project. It isn't affiliated with, endorsed by or sponsored by Yaak or
+  Mountain Loop.
+</Callout>

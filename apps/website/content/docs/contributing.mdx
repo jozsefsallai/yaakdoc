@@ -1,0 +1,63 @@
+---
+title: Contributing
+description: How yaakdoc is built, and how to work on it.
+icon: GitPullRequest
+---
+
+yaakdoc is open source under the MIT license, on [GitHub](https://github.com/jozsefsallai/yaakdoc). Issues and pull requests are welcome.
+
+## The repository
+
+A pnpm and Turborepo monorepo of small packages:
+
+| Path | Package |
+| --- | --- |
+| `packages/core` | `@yaakdoc/core`: normalization, templates and variables, `prepareDocument()` |
+| `packages/config` | `@yaakdoc/config`: the Zod config schema and loader |
+| `packages/snippets` | `@yaakdoc/snippets`: code example generators |
+| `packages/markdown` | `@yaakdoc/markdown`: Markdown pages and `llms.txt` |
+| `packages/react` | `@yaakdoc/react`: unstyled components, hooks, islands and the theme contract |
+| `packages/theme-kiseki` | `@yaakdoc/theme-kiseki`: the default theme |
+| `packages/yaakdoc` | `yaakdoc`: the CLI, the Vite-based engine and the integrations |
+| `packages/next` | `@yaakdoc/next`: the Next.js integration |
+| `packages/yaak-plugin` | The Yaak plugin |
+| `apps/demo` | The demo docs and the end-to-end tests |
+| `apps/next-demo` | The demo docs inside a Next.js app |
+| `apps/website` | This website |
+
+## How it works
+
+```text
+yaak.json ─▶ @yaakdoc/core ─▶ prepareDocument ─▶ PreparedDocument ─┬─▶ theme (React SSR via Vite) ─▶ HTML
+              normalize         + Shiki, Markdown,                  ├─▶ @yaakdoc/markdown ─▶ .md, llms.txt
+                                + snippets, routes                  └─▶ islands (hydrated) ─▶ client JS
+```
+
+- **Dev server.** Vite runs in middleware mode, and each request is server-rendered through Vite's SSR module runner. Theme and CSS changes hot-reload. Changes to the export or config rebuild the document and reload the page.
+- **Build.** Vite builds the client islands and CSS, then bundles the SSR entry. Every route is prerendered with `react-dom/static`, and the Markdown and `llms.txt` files are written alongside.
+- **Highlighting and Markdown.** Shiki and the descriptions' Markdown are rendered at build time, so highlighting ships no client JavaScript. Dual themes switch with CSS variables.
+
+## Development
+
+You need Node.js 20.19 or later and pnpm (the version is pinned in `package.json`).
+
+```bash
+pnpm install
+pnpm build                    # builds all packages
+pnpm test                     # vitest in every package
+pnpm check-types
+pnpm lint                     # biome
+pnpm --filter demo dev        # the demo docs (apps/demo)
+pnpm --filter demo test:e2e   # Playwright end-to-end tests
+pnpm --filter website dev     # this website, at http://localhost:4100
+```
+
+`AGENTS.md` in the repository has the conventions and the pitfalls learned the hard way. While it's normally meant for coding agents, you might find it useful yourself!
+
+## Documentation
+
+This site lives in `apps/website`, built with [Fumadocs](https://fumadocs.dev). Pages are MDX files in `apps/website/content/docs`. The [configuration reference](/docs/reference/configuration) is generated from the config schema, so new options show up there by themselves; describe them with `.meta({ description })` in the schema.
+
+## Releases
+
+Releases are managed with [Changesets](https://github.com/changesets/changesets): run `pnpm changeset` to describe a change, then `pnpm version-packages` and `pnpm release`.

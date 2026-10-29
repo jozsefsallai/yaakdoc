@@ -1,19 +1,6 @@
 # @yaakdoc/snippets
 
-Code example generators for [yaakdoc](https://github.com/jozsefsallai/yaakdoc#readme).
-
-| Id | Language | Request kinds |
-| --- | --- | --- |
-| `curl` | bash | HTTP |
-| `javascript` | JavaScript (`fetch`, `WebSocket`) | HTTP, WebSocket |
-| `python` | Python (`requests`) | HTTP |
-| `go` | Go (`net/http`) | HTTP |
-| `grpcurl` | bash | gRPC |
-| `wscat` | bash | WebSocket |
-
-The generators handle JSON, text, form, multipart, GraphQL and binary bodies, headers, path and query parameters, and authentication: basic, bearer, API key (header or query), plus placeholders for OAuth and JWT.
-
-## Custom snippets
+Code example generators for [yaakdoc](https://yaakdoc.dev): `curl`, `javascript`, `python`, `go`, `grpcurl` and `wscat`.
 
 ```ts
 // snippets/httpie.ts
@@ -38,7 +25,9 @@ export default defineSnippet({
 ```
 
 ```json
-{ "snippets": ["curl", "./snippets/httpie.ts", "python"] }
+{
+  "snippets": ["curl", "./snippets/httpie.ts", "python"]
+}
 ```
 
-The order of `snippets` is the order of the tabs. Use `generateExamples(resolvedRequest, snippets)` to generate examples programmatically.
+See [Code examples](https://yaakdoc.dev/docs/reference/snippets) for the built-in generators and what they support.

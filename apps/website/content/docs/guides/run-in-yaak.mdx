@@ -1,0 +1,39 @@
+---
+title: Run in Yaak
+description: Add a button that imports your API into Yaak, from a sanitized copy of the export.
+icon: Play
+---
+
+The "Run in Yaak" button lets readers import your API into [Yaak](https://yaak.app) in one click, with every request ready to send.
+
+```json title="yaakdoc.config.json"
+{
+  "runInYaak": true
+}
+```
+
+The button opens [Yaak's import link](https://yaak.app/button/new) with the URL of an export that yaakdoc publishes at `<base>/yaak.json`.
+
+## What the published export contains
+
+Your export may contain more than you'd like to share, so yaakdoc publishes a sanitized copy:
+
+- **Only what's documented:** the documented workspace, and the folders and requests that passed the [filter](/docs/guides/navigation#leaving-requests-out).
+- **No private environments.**
+- **No secrets.** Secret variables, headers and auth fields are blanked, and `secure(...)` values and the workspace's encryption key challenge are removed. Variable references such as `${[ api_token ]}` are kept, so the requests still work once readers add their own values.
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "runInYaak": {
+    "name": "Acme API",
+    "url": "https://api.acme.dev/openapi.json"
+  }
+}
+```
+
+- **`name`** is the name shown in Yaak when importing. It defaults to the site title.
+- **`url`** links to an export or spec hosted elsewhere. yaakdoc then doesn't publish its own.
+
+Set [`branding.url`](/docs/guides/branding#site-url) so the link is absolute in the HTML. Otherwise, it's made absolute in the browser.

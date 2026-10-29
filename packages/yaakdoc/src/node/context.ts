@@ -329,7 +329,7 @@ function shareableExport(
 }
 
 /**
- * Maps a local asset (logo, favicon) to a public URL under `<base>_yaakdoc/`, registering it in
+ * Maps a local asset (logo, favicon) to a public URL under `<base>/_yaakdoc/`, registering it in
  * `assets` so it's copied into the site. URLs and site-root paths that don't exist on disk (e.g.
  * `/logo.svg` served from `public/`) are kept as is.
  */

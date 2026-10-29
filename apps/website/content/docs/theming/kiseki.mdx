@@ -1,0 +1,49 @@
+---
+title: Kiseki
+description: The default theme, built with Tailwind CSS v4 and shadcn/ui.
+icon: Sparkles
+---
+
+**Kiseki** (奇跡, "miracle") is the default yaakdoc theme. It's built with [Tailwind CSS v4](https://tailwindcss.com) and [shadcn/ui](https://ui.shadcn.com) components (Radix UI and Lucide icons). It uses Geist fonts that are bundled locally, so it makes no external requests.
+
+[See it live](https://demo.yaakdoc.dev).
+
+- Light and dark mode, following the system setting until the reader picks one.
+- A sticky, dark code panel next to each request, with tabs per language and per response.
+- Navigation tabs, collapsible groups and Lucide icons.
+- Search with <kbd>Cmd</kbd>+<kbd>K</kbd>, and an environment switcher.
+- "Copy page", "View as Markdown" and "Open in ChatGPT/Claude" actions.
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "kiseki",
+  "themeOptions": {
+    "codePanel": "right",
+    "sidebarWidth": "18rem",
+    "navOpenDepth": 2,
+    "showEnvironment": true
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `codePanel` | `"right"` | `"right"` puts code examples in a sticky column on wide screens. `"inline"` puts them below each request. |
+| `sidebarWidth` | `"18rem"` | Any CSS length. |
+| `navOpenDepth` | `2` | Folder levels expanded in the navigation by default. Folders that contain the current page or section are always open. |
+| `showEnvironment` | `true` | Show the environment used for the examples in the header. |
+
+## Pages, tabs and search
+
+- **Tabs.** With several [navigation tabs](/docs/guides/navigation#tabs), they're shown under the header, and the sidebar shows the current tab.
+- **Groups.** Top-level groups are titled sections. Nested groups collapse.
+- **Icons.** `icon` on pages, groups and tabs takes a [Lucide](https://lucide.dev/icons) icon name, such as `book-open` or `key-round`.
+- **Search.** Press <kbd>Cmd</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd> or <kbd>/</kbd>, or use the search button in the sidebar. With `"search": false`, the sidebar shows a filter instead.
+
+## Customizing
+
+- **Colors and fonts.** Use [`branding.colors` and `branding.fonts`](/docs/guides/branding). They feed the shadcn-style tokens in Kiseki's `src/styles.css`.
+- **Small CSS tweaks.** Use [`branding.customCss`](/docs/guides/branding#custom-css).
+- **Everything else.** [Eject](/docs/theming/ejecting) the theme. Its shadcn config (`components.json`) is copied too, and `@/...` imports resolve to `theme/src`, so components copied from shadcn/ui work as they are.

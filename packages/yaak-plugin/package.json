@@ -32,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/jozsefsallai/yaakdoc/issues"
   },
-  "homepage": "https://github.com/jozsefsallai/yaakdoc/tree/master/packages/yaak-plugin#readme",
+  "homepage": "https://yaakdoc.dev/docs/yaak-plugin",
   "dependencies": {
     "@yaakapp/api": "^0.9.0",
     "@yaakdoc/config": "workspace:^"

@@ -294,7 +294,7 @@ export const configSchema = z
           }),
           url: z.string().optional().meta({
             description:
-              "URL of an export/spec hosted elsewhere. When omitted, yaakdoc publishes a sanitized export at `<base>yaak.json`.",
+              "URL of an export/spec hosted elsewhere. When omitted, yaakdoc publishes a sanitized export at `<base>/yaak.json`.",
           }),
         }),
       ])

@@ -1,0 +1,87 @@
+---
+title: Publishing a theme
+description: Share your theme on npm so others can use it.
+icon: Send
+---
+
+A theme is an npm package with a manifest. Publish it, and anyone can use it with `"theme": "<name>"`.
+
+## Naming
+
+Name the package `yaakdoc-theme-<name>`. Users can then refer to it by its short name:
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "rainbowdash"
+}
+```
+
+yaakdoc tries `@yaakdoc/theme-rainbowdash`, then `yaakdoc-theme-rainbowdash`, then `rainbowdash`. The `@yaakdoc/` scope is reserved for official themes. Scoped packages, such as `@acme/yaakdoc-theme`, work too, by their full name.
+
+## The package
+
+Point the package's main export at the manifest, and ship the source. Themes are processed by Vite when the docs are built, so TSX and CSS work without a build step:
+
+```json title="package.json"
+{
+  "name": "yaakdoc-theme-rainbowdash",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./theme.ts",
+    "./package.json": "./package.json"
+  },
+  "files": ["theme.ts", "src"],
+  "keywords": ["yaakdoc", "yaakdoc-theme"],
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@yaakdoc/react": "^0.5.0"
+  }
+}
+```
+
+- **Keywords.** Add `yaakdoc-theme`, so the theme can be found on npm.
+- **Dependencies.** List what your theme imports (e.g. `@yaakdoc/react`, Tailwind CSS) in `dependencies`. React is provided by yaakdoc.
+- **README.** Document your `themeOptions`, and add a screenshot.
+
+## Theme metadata
+
+Add a `yaakdoc` field to `package.json`:
+
+```json title="package.json"
+{
+  "yaakdoc": {
+    "displayName": "Rainbow Dash",
+    "description": "Your API docs just got 20% cooler!",
+    "preview": "https://raw.githubusercontent.com/acme/yaakdoc-theme-rainbowdash/main/preview.png",
+    "demo": "https://yaakdoc-rainbowdash-demo.example.com"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `displayName` | The theme's name, as people should see it. Defaults to the package name. |
+| `description` | One sentence about the theme. Defaults to the package's `description`. |
+| `preview` | URL of a screenshot (16:10, at least 1280x800). |
+| `demo` | URL of a live site built with the theme. |
+
+## Testing before you publish
+
+Use the theme by its path, from any project with a Yaak export:
+
+```bash
+npx yaakdoc --theme ../yaakdoc-theme-rainbowdash
+```
+
+Then test the packed package the way users will get it:
+
+```bash
+npm pack
+mkdir /tmp/try && cd /tmp/try
+npm i /path/to/yaakdoc-theme-rainbowdash-1.0.0.tgz yaakdoc
+npx yaakdoc --theme rainbowdash
+```

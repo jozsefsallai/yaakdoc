@@ -55,7 +55,7 @@
   "bugs": {
     "url": "https://github.com/jozsefsallai/yaakdoc/issues"
   },
-  "homepage": "https://github.com/jozsefsallai/yaakdoc/tree/master/packages/next#readme",
+  "homepage": "https://yaakdoc.dev/docs/integrations/nextjs",
   "engines": {
     "node": ">=20.19"
   },

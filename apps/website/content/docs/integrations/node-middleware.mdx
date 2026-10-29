@@ -1,0 +1,44 @@
+---
+title: Node middleware
+description: Serve the docs from Express, Connect, Fastify, Nitro or any server that takes Connect-style middleware.
+icon: Server
+---
+
+`yaakdocMiddleware` serves the docs from a Node server: Express, Connect, Fastify (with `@fastify/middie`), Nitro and others.
+
+```npm
+npm i yaakdoc
+```
+
+```ts title="server.ts"
+import express from "express";
+import { yaakdocMiddleware } from "yaakdoc";
+
+const app = express();
+
+app.use(await yaakdocMiddleware({ path: "/docs", export: "./yaak.json" }));
+
+app.listen(3000);
+```
+
+- **Development.** Unless `NODE_ENV` is `production` (or you pass `dev: false`), it serves the live dev server. HMR uses its own WebSocket port; pass `hmr: { server }` to share your HTTP server instead.
+- **Production.** It serves a built site from `config.outDir`. Build it ahead of time with `yaakdoc build --base /docs/`, or pass `build: true` to build when the middleware is created.
+- **Other requests.** Anything outside `path` is passed on with `next()`. `app.use("/docs", ...)` works too.
+
+The middleware has a `close()` method that stops the dev server.
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `path` | Where the docs are served. Default: `/docs`. It takes precedence over `config.base`. |
+| `config` | yaakdoc [config](/docs/reference/configuration), merged over `yaakdoc.config.*` if there is one. Paths are relative to `cwd`. |
+| `export` | Path of the Yaak export. Shorthand for `config.export`. By default, `yaakdoc.json`, then `yaak.json`, is looked up in `cwd`. |
+| `cwd` | Project directory. Default: `process.cwd()`. |
+| `configFile` | An explicit config file, or `false` to not look for one. |
+| `publicDir` | A folder copied to the docs' root as is. Default: none. |
+| `dev` | Serve the live dev server. Default: `true` unless `NODE_ENV` is `production`. |
+| `build` | Build the site when the middleware is created (production only). |
+| `hmr` | Vite HMR options, e.g. `{ server }` to share your HTTP server. |
+
+For the lower-level building blocks, see the [Node API](/docs/reference/node-api#integration-building-blocks).

@@ -68,7 +68,7 @@
   "bugs": {
     "url": "https://github.com/jozsefsallai/yaakdoc/issues"
   },
-  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "homepage": "https://yaakdoc.dev",
   "engines": {
     "node": ">=20.19"
   },

@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "custom-pages",
+    "navigation",
+    "environments",
+    "example-responses",
+    "branding",
+    "search",
+    "llms",
+    "run-in-yaak",
+    "deploying"
+  ]
+}

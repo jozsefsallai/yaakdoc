@@ -1,0 +1,51 @@
+---
+title: LLM-friendly output
+description: llms.txt, llms-full.txt and a Markdown version of every page, so agents can read your docs.
+icon: Bot
+---
+
+AI assistants and coding agents read docs too. yaakdoc gives them clean Markdown instead of HTML, and gives your readers one-click ways to hand your docs to an assistant.
+
+When `llms.enabled` is on (the default), every site includes:
+
+- **`/llms.txt`**, in the [llms.txt](https://llmstxt.org) format. It has the site's title and summary, then links to the Markdown of every page and endpoint, grouped by tab, group and folder.
+- **`/llms-full.txt`**, the complete documentation in a single Markdown file.
+- **A Markdown version of every page.** Append `.md` to a page, request or folder path, e.g. `/quickstart.md` or `/products/get-a-product.md`. Request pages include the method and URL, the description, auth, parameters, headers, the body, code examples and example responses.
+- **A `<link rel="alternate" type="text/markdown">` tag** on every page, so tools can find the Markdown.
+
+The dev server also returns Markdown for requests with an `Accept: text/markdown` header.
+
+Variables in pages are resolved for the default environment. Secrets are [already redacted](/docs/guides/environments#secrets), so they never appear in the output.
+
+<Callout title="Set the site URL">
+  Set [`branding.url`](/docs/guides/branding#site-url) so the links in `llms.txt` are absolute. Agents
+  that fetch `llms.txt` can then follow them.
+</Callout>
+
+## Page actions
+
+Kiseki adds actions to every page:
+
+- **Copy page** copies the page's Markdown. On headings, **Copy section** copies just that section.
+- **View as Markdown** opens the `.md` version.
+- **Open in ChatGPT** and **Open in Claude** start a conversation about the page.
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "llms": {
+    "enabled": true,
+    "full": true,
+    "copyButton": true,
+    "openIn": ["chatgpt", "claude", "perplexity"]
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `enabled` | `true` | Generate `llms.txt` and Markdown versions of pages. |
+| `full` | `true` | Also generate `llms-full.txt`. |
+| `copyButton` | `true` | Show the "Copy page" actions. |
+| `openIn` | `["chatgpt", "claude"]` | The "Open in..." links. `perplexity` is also available. |

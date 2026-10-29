@@ -1,0 +1,92 @@
+---
+title: Environments and variables
+description: Resolve variables in examples, let readers switch environments, and keep secrets out of the docs.
+icon: Variable
+---
+
+Yaak requests use variables, such as `${[ base_url ]}/products/${[ product_id ]}`. yaakdoc resolves them so readers see real URLs and runnable examples, and it makes sure secrets never end up in the output.
+
+## The default environment
+
+`environment` picks the environment (by name or id) used to resolve variables:
+
+```json title="yaakdoc.config.json"
+{
+  "environment": "Production"
+}
+```
+
+- By default, the first shared (non-private) sub environment is used.
+- `false` uses only the base environment, with no sub environment.
+- Folder environments apply to the requests in their folder, as they do in Yaak.
+
+## Environment switcher
+
+`environments` lets readers switch between environments without a reload:
+
+```json title="yaakdoc.config.json"
+{
+  "environment": "Production",
+  "environments": "public"
+}
+```
+
+- `"public"` offers every shared environment. A list of names or ids offers just those.
+- `environment` is the default selection.
+- The URLs, code examples, the variables table and the variables in [custom pages](/docs/guides/custom-pages) are prerendered for each environment, so switching is instant and works with the static site.
+- The reader's choice is remembered.
+
+## Variables table
+
+By default, the overview shows a table of the environment's variables. Turn it off with:
+
+```json title="yaakdoc.config.json"
+{
+  "variables": {
+    "show": false
+  }
+}
+```
+
+To show `{{placeholders}}` instead of values in examples, set `"resolve": false`.
+
+## Secrets
+
+yaakdoc never inlines a variable that:
+
+- **is defined with a template function**, such as `secure(...)`, or
+- **has a name that matches `variables.hide`**.
+
+These show up as `{{name}}` placeholders in URLs and examples, and as `<redacted>` in the variables table.
+
+The default `hide` patterns are `token`, `secret`, `password`, `passwd`, `apikey`, `api_key`, `private`, `credential` and `auth`. Matching is a substring match that ignores case and separators, so `api_key` also hides `apiKey` and `X-API-KEY`. Setting `hide` replaces the defaults, so include them if you still want them:
+
+```json title="yaakdoc.config.json"
+{
+  "variables": {
+    "hide": ["token", "secret", "password", "apikey", "api_key", "auth", "signing"]
+  }
+}
+```
+
+<Callout type="warn" title="Private environments">
+  Private environments are only used when you select one explicitly with `environment`. They're
+  never offered by `"environments": "public"`, and they're never included in the export that
+  [Run in Yaak](/docs/guides/run-in-yaak) publishes.
+</Callout>
+
+<Callout type="error" title="Your export isn't redacted">
+  yaakdoc keeps secrets out of the site it builds, but the export itself (`yaak.json` or
+  `yaakdoc.json`) is untouched. It contains every environment, including private ones, and every
+  value stored in plain text: tokens, passwords and API keys in variables, headers and auth
+  settings. Before you commit it to a public repository, keep secrets out of the workspace (use
+  `secure(...)`, or leave the values empty), or keep the repository private.
+</Callout>
+
+## Choosing from the command line
+
+`--environment` (`-e`) overrides the config, which is handy for building the docs once per environment:
+
+```bash
+npx yaakdoc build -e Staging --base /staging/ --out-dir dist/staging
+```

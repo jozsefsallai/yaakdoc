@@ -1,0 +1,112 @@
+---
+title: Branding
+description: Set the title, logo, colors, fonts, links, footer and custom CSS of your docs.
+icon: Palette
+---
+
+All branding lives under `branding` in the config. Every field is optional. The title and description default to the workspace's name and description.
+
+```json title="yaakdoc.config.json"
+{
+  "branding": {
+    "title": "Acme API",
+    "description": "Manage your Acme store.",
+    "url": "https://docs.acme.dev",
+    "logo": {
+      "light": "./logo.svg",
+      "dark": "./logo-dark.svg"
+    },
+    "favicon": "./favicon.svg",
+    "colors": {
+      "primary": "#0f766e",
+      "dark": {
+        "primary": "#5eead4"
+      }
+    },
+    "fonts": {
+      "sans": "\"Inter\", sans-serif",
+      "stylesheet": "https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap"
+    },
+    "links": [
+      {
+        "label": "Status",
+        "href": "https://status.acme.dev"
+      }
+    ],
+    "footer": "© Acme Inc. [Contact us](mailto:api@acme.dev)",
+    "defaultColorMode": "system",
+    "colorModeToggle": true,
+    "customCss": "./brand.css"
+  }
+}
+```
+
+## Site URL
+
+Set `url` to the public URL of the deployed docs. It enables:
+
+- canonical URLs,
+- `sitemap.xml`,
+- absolute links in `llms.txt`,
+- an absolute "Run in Yaak" link in the HTML.
+
+## Logo and favicon
+
+`logo` is a path or URL, or an object with `light` and `dark` variants, `alt`, `href` (where clicking it leads), `width` and `height`. Local files are copied into the site.
+
+## Colors
+
+`primary` and `accent` take any CSS color: `#7c3aed`, `oklch(0.6 0.2 290)` or `rebeccapurple`. Under `light` and `dark` you can set `primary`, `accent`, `background` and `foreground` for one color mode only.
+
+Themes receive these as CSS custom properties (`--yd-color-primary`, `--yd-font-sans`, ...). See [Branding tokens](/docs/theming/authoring#branding-tokens).
+
+## Fonts
+
+`sans` and `mono` are CSS `font-family` values. `stylesheet` loads them, e.g. from Google Fonts.
+
+## Header links and footer
+
+`links` adds links to the header. `icon` is a hint for themes, such as `github`, `discord`, `x` or `website`. `footer` is Markdown.
+
+## Color mode
+
+`defaultColorMode` is `system` (the default), `light` or `dark`. `colorModeToggle: false` hides the toggle.
+
+## Custom CSS
+
+`customCss` is a CSS file loaded after the theme's styles, for small tweaks. With Kiseki, you can restyle its shadcn-style tokens:
+
+```css title="brand.css"
+:root {
+  --radius: 0.25rem;
+}
+```
+
+For bigger changes, you can [eject the theme](/docs/theming/ejecting).
+
+## Extra head tags
+
+`head` adds tags to every page's `<head>`, such as analytics or verification meta tags:
+
+```json title="yaakdoc.config.json"
+{
+  "head": [
+    {
+      "tag": "script",
+      "attrs": {
+        "src": "https://plausible.io/js/script.js",
+        "defer": true
+      }
+    },
+    {
+      "tag": "meta",
+      "attrs": {
+        "name": "google-site-verification",
+        "content": "..."
+      }
+    }
+  ]
+}
+```
+
+`tag` is `script`, `link`, `meta` or `style`. `content` sets the inner text of a `script` or `style`.

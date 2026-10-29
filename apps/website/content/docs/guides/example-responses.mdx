@@ -1,0 +1,29 @@
+---
+title: Example responses
+description: Document what a request returns, with tabs for each status code.
+icon: Reply
+---
+
+Add `response` code blocks to a request's description in Yaak. Put an HTTP status code after it to show several responses (success, errors, ...):
+
+````md title="Request description in Yaak"
+Retrieve a single product by its id.
+
+```response:200
+{
+  "id": "prod_123",
+  "name": "Running shoes"
+}
+```
+
+```response:404
+{
+  "error": "not_found"
+}
+```
+````
+
+- **Shown as tabs.** Response blocks are removed from the description and shown as tabbed, syntax-highlighted examples labeled by status (`200 OK`, `404 Not Found`). They're also included in the Markdown and `llms.txt` output.
+- **No status code.** A plain `response` block is labeled "Response".
+- **Language.** JSON, XML and HTML are detected automatically. To set the language yourself, add it after the status, e.g. `response:200 yaml`.
+- **Empty bodies.** An empty block, such as `response:204`, shows "No response body".

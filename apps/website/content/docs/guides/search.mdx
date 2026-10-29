@@ -1,0 +1,23 @@
+---
+title: Search
+description: A static search index of every page, folder and request, with a Cmd+K dialog.
+icon: Search
+---
+
+Every site gets a search index at `<base>/_yaakdoc/search.json`, built from the titles and descriptions of pages, folders and requests. Search runs entirely in the browser, so it works on any static host.
+
+In Kiseki, press <kbd>Cmd</kbd>+<kbd>K</kbd> (<kbd>Ctrl</kbd>+<kbd>K</kbd> on Windows and Linux) or <kbd>/</kbd>, or use the search button in the sidebar. The index is downloaded the first time the dialog opens.
+
+Every search term must match. Titles rank above sections and descriptions.
+
+To turn search off:
+
+```json title="yaakdoc.config.json"
+{
+  "search": false
+}
+```
+
+Without search, Kiseki shows a filter above the sidebar navigation instead.
+
+Theme authors can build their own search UI with the [search hooks](/docs/theming/islands#search).

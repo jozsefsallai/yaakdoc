@@ -15,6 +15,12 @@
     "tailwindcss",
     "shadcn"
   ],
+  "yaakdoc": {
+    "displayName": "Kiseki",
+    "description": "The default theme. Tailwind CSS v4 and shadcn/ui, light and dark mode, a sticky code panel, search and tabs.",
+    "preview": "https://raw.githubusercontent.com/jozsefsallai/yaakdoc/master/apps/website/public/screenshots/kiseki-light.webp",
+    "demo": "https://demo.yaakdoc.dev"
+  },
   "author": "József Sallai @jozsefsallai",
   "license": "MIT",
   "files": [
@@ -39,7 +45,7 @@
   "bugs": {
     "url": "https://github.com/jozsefsallai/yaakdoc/issues"
   },
-  "homepage": "https://github.com/jozsefsallai/yaakdoc#readme",
+  "homepage": "https://yaakdoc.dev/docs/theming/kiseki",
   "engines": {
     "node": ">=20.19"
   },

@@ -1,0 +1,48 @@
+---
+title: Vite
+description: Serve the docs from a Vite-based app (Vite, React Router, SvelteKit, Astro, ...) with yaakdoc/vite.
+icon: Zap
+---
+
+The `yaakdoc/vite` plugin adds the docs to any app built with Vite: plain Vite, React Router, SvelteKit, Astro and others.
+
+```npm
+npm i -D yaakdoc
+```
+
+```ts title="vite.config.ts"
+import { defineConfig } from "vite";
+import yaakdoc from "yaakdoc/vite";
+
+export default defineConfig({
+  plugins: [
+    yaakdoc({
+      path: "/docs",
+      export: "./api/yaak.json",
+      config: {
+        branding: {
+          title: "Acme API"
+        }
+      },
+    }),
+  ],
+});
+```
+
+- **Dev.** `vite dev` serves the live docs: server-rendered, with HMR, and a reload when the export changes.
+- **Build.** `vite build` prerenders the docs and adds them to the app's client output (e.g. `dist/docs/`), so they're deployed with the app.
+
+yaakdoc runs its own Vite instance, so your app's Vite config and plugins don't affect the docs.
+
+## Options
+
+The plugin takes the same options as every integration. `cwd` defaults to the Vite root.
+
+| Option | Description |
+| --- | --- |
+| `path` | Where the docs are served. Default: `/docs`. It takes precedence over `config.base`. |
+| `config` | yaakdoc [config](/docs/reference/configuration), merged over `yaakdoc.config.*` if there is one. Paths are relative to `cwd`. |
+| `export` | Path of the Yaak export. Shorthand for `config.export`. By default, `yaakdoc.json`, then `yaak.json`, is looked up in `cwd`. |
+| `cwd` | Project directory. Default: the Vite root. |
+| `configFile` | An explicit config file, or `false` to not look for one. |
+| `publicDir` | A folder copied to the docs' root as is. Default: none, because the app's `public/` folder isn't meant for the docs. |

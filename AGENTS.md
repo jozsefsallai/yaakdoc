@@ -20,6 +20,7 @@ yaakdoc generates static, themable, LLM-friendly API documentation sites from [Y
 | `packages/tsconfig` | `@repo/tsconfig` | Shared tsconfigs (private). |
 | `apps/demo` | `demo` | Demo docs (`yaak.json`, `yaakdoc.config.json`) and the Playwright e2e tests. |
 | `apps/next-demo` | `next-demo` | A Next.js app serving the demo docs at `/docs` with `@yaakdoc/next`, and its Playwright e2e tests. |
+| `apps/website` | `website` | The website (https://yaakdoc.dev): the landing page and the documentation. Next.js + Fumadocs; MDX pages in `content/docs`. |
 
 Package dependencies: config, snippets and markdown depend on core; react depends on core and config; theme-kiseki depends on react; yaakdoc depends on all of them; next depends on yaakdoc; the Yaak plugin bundles config and, through its prebuild, yaakdoc/static and Kiseki. Keep `@yaakdoc/core` free of the other packages, and don't add dependency cycles.
 
@@ -66,7 +67,7 @@ Key files:
 - **TypeScript:** strict, `moduleResolution: Bundler`, no `.ts` extensions in relative imports. Packages build with tsdown (`fixedExtension: false`, so the output is `.js`/`.d.ts`).
 - **Exports:** `package.json` exports include an `"@yaakdoc/source"` condition that points at `src/`. tsconfig uses it so type-checking doesn't need a build. Keep it in sync when adding entry points.
 - **Package format:** public packages follow the `package.json` layout already in place (author, `files` with a leading `/`, `repository.directory`, `prepack`, MIT, and a `LICENSE` file in each package). Package READMEs must use **absolute** GitHub links (`https://github.com/jozsefsallai/yaakdoc...`), because relative links break on npm.
-- **Docs:** user-facing changes need README updates. Use the root README for config and CLI, and the package READMEs for APIs; the React README doubles as the theme authoring guide. The config's JSON schema is generated from the Zod schema (`packages/yaakdoc/scripts/generate-schema.js`); never edit it by hand.
+- **Docs:** user-facing changes need docs updates in `apps/website/content/docs` (MDX; sidebar order in each folder's `meta.json`). READMEs stay short: install, a minimal example and absolute links to the matching docs page. The config's JSON schema is generated from the Zod schema (`packages/yaakdoc/scripts/generate-schema.js`); never edit it by hand. The website's [configuration reference](apps/website/content/docs/reference/configuration.mdx) is generated from it too (`<ConfigReference />`), so describe new options with `.meta({ description })` in the schema instead of in the docs.
 - **Releases:** use Changesets (`pnpm changeset`). All public packages are versioned together (`fixed` in `.changeset/config.json`).
 
 ## Testing notes
@@ -94,4 +95,5 @@ Key files:
 - **Mounting in other apps:** all integrations go through `MountOptions`/`mountOptions()` (`src/node/mount.ts`). The mount path always wins over `config.base`, and `publicDir` defaults to `false`, because the project's `public/` belongs to the host app (in Next.js it even contains the output, `public/docs`). Vite strips the base from `req.url` before yaakdoc's dev handler runs, so routes are matched on `req.originalUrl`. Vite's dev `transformIndexHtml` also prefixes the base onto absolute URLs that already contain it, so the dev server only takes Vite's injected tags from an empty document.
 - **Next.js:** Next loads `next.config` in several processes and compiles `next.config.ts` to CommonJS. So `@yaakdoc/next` forks `yaakdoc`'s `dist/worker.js` (through `yaakdoc/integration`, which must not import Vite), and it guards the dev server and the build with `YAAKDOC_NEXT_*` environment variables that child processes inherit. Next's rewrite proxy doesn't forward WebSockets, so the worker's dev server sets `hmrClientPort` to its own port. The worker exits when its parent disconnects.
 - **Vite plugin:** Vite calls `buildStart` in dev too. The docs build must only run when `config.command === "build"`, in the client environment, because it sets `NODE_ENV=production` while it runs and would load React's production build into the dev server.
+- **Website code blocks:** Shiki fails the website build on unknown languages (e.g. `gitignore`); use `text` for those.
 - **Background processes:** when stopping servers you started, don't use `pkill -f <pattern>`; the pattern can match your own shell. Look up the PID and kill that.

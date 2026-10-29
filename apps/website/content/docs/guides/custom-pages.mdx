@@ -1,0 +1,68 @@
+---
+title: Custom pages
+description: Write guides, a quickstart or a changelog in Markdown, next to the generated API reference.
+icon: FileText
+---
+
+Besides the API reference generated from Yaak, a site can have pages written in Markdown. Point `pagesDir` at a directory of `.md` files:
+
+```json title="yaakdoc.config.json"
+{
+  "pagesDir": "./docs"
+}
+```
+
+Each file becomes a page, and subdirectories work too:
+
+```text
+docs/
+├── index.md              → /
+├── quickstart.md         → /quickstart/
+└── guides/
+    ├── authentication.md → /guides/authentication/
+    └── token-flow.svg
+```
+
+When there's an `index.md`, it becomes the home page and the API reference moves to `/reference/`. See [Where the API reference lives](/docs/guides/navigation#where-the-api-reference-lives).
+
+## Front matter
+
+Pages start with optional YAML front matter:
+
+```md title="docs/guides/authentication.md"
+---
+title: Authentication
+description: Get an access token and keep it fresh.
+sidebarTitle: Auth
+icon: key-round
+---
+
+Send the token to `${[ base_url ]}` in the `Authorization` header.
+See the [quickstart](../quickstart.md#1-get-a-token).
+
+![The token flow](./token-flow.svg)
+```
+
+| Field | Description |
+| --- | --- |
+| `title` | Page title. Defaults to the first `# Heading` (which is then not repeated in the body), then the file name. |
+| `description` | Shown under the title, in search and in `llms.txt`. |
+| `sidebarTitle` | A shorter title for the navigation. |
+| `icon` | Icon hint for themes. Kiseki uses [Lucide](https://lucide.dev/icons) names, such as `book-open`. |
+| `order` | Sort order in the generated navigation. |
+| `hidden` | The page is built, but left out of the generated navigation and search. |
+
+## Variables
+
+Use Yaak's template syntax, `${[ base_url ]}`, anywhere in a page, code blocks included. Values come from the selected environment. With an [environment switcher](/docs/guides/environments#environment-switcher), the parts of a page that use variables switch along with the rest of the site.
+
+Secrets follow the same rules as everywhere else: they appear as `{{name}}` placeholders, never as values.
+
+## Links and images
+
+- **Links.** Relative links to other pages, such as `./quickstart.md#install`, point to those pages' URLs.
+- **Images.** Relative images are copied into the site.
+- **Headings** get ids, so you can link to them.
+- **Raw HTML** is sanitized, as it is in descriptions.
+
+Every page also gets a [Markdown version](/docs/guides/llms) for LLMs.

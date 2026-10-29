@@ -1,0 +1,68 @@
+---
+title: Code examples
+description: The built-in code example generators, and how to write your own.
+icon: FileCode
+---
+
+Every request gets code examples. `snippets` chooses the generators and their order (the order of the tabs):
+
+```json title="yaakdoc.config.json"
+{
+  "snippets": ["curl", "javascript", "python", "go", "grpcurl", "wscat"]
+}
+```
+
+## Built-in generators
+
+| Id | Language | Request kinds |
+| --- | --- | --- |
+| `curl` | bash | HTTP |
+| `javascript` | JavaScript (`fetch`, `WebSocket`) | HTTP, WebSocket |
+| `python` | Python (`requests`) | HTTP |
+| `go` | Go (`net/http`) | HTTP |
+| `grpcurl` | bash | gRPC |
+| `wscat` | bash | WebSocket |
+
+Each generator only applies to the request kinds it supports. The generators handle JSON, text, form, multipart, GraphQL and binary bodies, headers, path and query parameters, and authentication: basic, bearer and API key (header or query), plus placeholders for OAuth and JWT.
+
+Variables in examples are resolved for the selected environment, and secrets stay `{{placeholders}}`. See [Environments and variables](/docs/guides/environments).
+
+## Custom generators
+
+A generator is a module that default-exports `defineSnippet(...)`:
+
+```ts title="snippets/httpie.ts"
+import { applyAuth } from "@yaakdoc/core";
+import { defineSnippet } from "@yaakdoc/snippets";
+
+export default defineSnippet({
+  id: "httpie",
+  label: "HTTPie",
+  language: "bash",
+  supports: ["http"],
+  generate(request) {
+    if (request.kind !== "http") {
+      return "";
+    }
+
+    const req = applyAuth(request);
+
+    return [`http ${req.method} '${req.url}'`, ...req.headers.map((h) => `'${h.name}:${h.value}'`)].join(
+      " \\\n  ",
+    );
+  },
+});
+```
+
+Add its path to `snippets`, wherever you want its tab:
+
+```json title="yaakdoc.config.json"
+{
+  "snippets": ["curl", "./snippets/httpie.ts", "python"]
+}
+```
+
+- `language` is the Shiki language used for highlighting.
+- `generate` receives the resolved request, with variables already resolved and secrets as placeholders. `applyAuth` from `@yaakdoc/core` turns its authentication into headers and query parameters.
+
+To generate examples from code, use `generateExamples(resolvedRequest, snippets)` from `@yaakdoc/snippets`.

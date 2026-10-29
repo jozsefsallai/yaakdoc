@@ -1,0 +1,72 @@
+---
+title: Quickstart
+description: Turn a Yaak export into a documentation site with the yaakdoc CLI.
+icon: Rocket
+---
+
+You need [Node.js](https://nodejs.org) 20.19 or later. Prefer to stay in Yaak? Use the [Yaak plugin](/docs/yaak-plugin) instead.
+
+<Steps>
+<Step>
+
+### Export your workspace
+
+In Yaak, open **Settings** (the cog in the top right corner) → **Export Data**, select your workspace, and save the export as `yaak.json` in an empty folder.
+
+</Step>
+
+<Step>
+
+### Start the dev server
+
+In the same folder, run:
+
+```bash
+npx yaakdoc
+```
+
+Open `http://localhost:4000`. The page reloads whenever you save a new export, so you can keep editing requests and descriptions in Yaak and watch the docs update.
+
+</Step>
+
+<Step>
+
+### Build the static site
+
+```bash
+npx yaakdoc build
+```
+
+The site is written to `dist/`. It's plain HTML, CSS and a little JavaScript, ready for any static host. See [Deploying](/docs/guides/deploying).
+
+</Step>
+</Steps>
+
+## Write good docs in Yaak
+
+yaakdoc documents what's in your workspace, so the best docs start in Yaak:
+
+- **Descriptions are Markdown.** Add descriptions to the workspace, folders and requests. The workspace description becomes the overview page.
+- **Folders become sections.** Requests are grouped and sorted the way they are in Yaak.
+- **Use variables.** URLs like `${[ base_url ]}/products` are resolved for the selected environment, so readers see real, copyable URLs. Secrets stay out. See [Environments and variables](/docs/guides/environments).
+- **Document responses.** Add `response:200` code blocks to a request's description. See [Example responses](/docs/guides/example-responses).
+
+## Next steps
+
+<Cards>
+  <Card title="Set up a project" href="/docs/project-setup">
+    Install yaakdoc locally and add a config file with editor autocomplete.
+  </Card>
+
+  <Card title="Brand it" href="/docs/guides/branding">
+    Title, logo, colors, fonts, links and footer.
+  </Card>
+
+  <Card title="Add pages" href="/docs/guides/custom-pages">
+    Guides, a quickstart or a changelog in Markdown.
+  </Card>
+
+  <Card title="Deploy" href="/docs/guides/deploying">
+    Vercel, Netlify, GitHub Pages, Cloudflare Pages and more.
+  </Card>
+</Cards>

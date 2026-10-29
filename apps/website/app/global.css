@@ -1,0 +1,78 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-brand-navy: #1d1b2c;
+
+  --color-yd-purple: #8b46e8;
+  --color-yd-blue: #1f75d0;
+  --color-yd-green: hsl(152, 96%, 30%);
+  --color-yd-yellow: #b08614;
+  --color-yd-orange: #d0601c;
+  --color-yd-pink: #d3367c;
+
+  --color-fd-background: hsl(248, 30%, 98.5%);
+  --color-fd-foreground: hsl(247, 25%, 14%);
+  --color-fd-muted: hsl(248, 24%, 95%);
+  --color-fd-muted-foreground: hsl(247, 12%, 42%);
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(247, 25%, 14%);
+  --color-fd-card: hsl(0, 0%, 100%);
+  --color-fd-card-foreground: hsl(247, 25%, 14%);
+  --color-fd-border: hsl(248, 18%, 88%);
+  --color-fd-primary: var(--color-yd-purple);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-secondary: hsl(248, 24%, 95%);
+  --color-fd-secondary-foreground: hsl(247, 25%, 14%);
+  --color-fd-accent: hsl(248, 26%, 92%);
+  --color-fd-accent-foreground: hsl(247, 25%, 14%);
+  --color-fd-ring: var(--color-yd-purple);
+}
+
+.dark {
+  --color-yd-purple: #c08aff;
+  --color-yd-blue: #5aaefb;
+  --color-yd-green: #01df70;
+  --color-yd-yellow: #ecce55;
+  --color-yd-orange: #f5a05a;
+  --color-yd-pink: #f472b6;
+
+  --color-fd-background: hsl(247, 24%, 11%);
+  --color-fd-foreground: hsl(248, 30%, 94%);
+  --color-fd-muted: hsl(247, 20%, 15%);
+  --color-fd-muted-foreground: hsl(248, 14%, 68%);
+  --color-fd-popover: hsl(247, 22%, 13%);
+  --color-fd-popover-foreground: hsl(248, 30%, 94%);
+  --color-fd-card: hsl(247, 21%, 14%);
+  --color-fd-card-foreground: hsl(248, 30%, 94%);
+  --color-fd-border: hsla(248, 30%, 70%, 0.14);
+  --color-fd-primary: var(--color-yd-purple);
+  --color-fd-primary-foreground: hsl(247, 24%, 9%);
+  --color-fd-secondary: hsl(247, 20%, 17%);
+  --color-fd-secondary-foreground: hsl(248, 30%, 94%);
+  --color-fd-accent: hsl(247, 20%, 20%);
+  --color-fd-accent-foreground: hsl(248, 30%, 94%);
+  --color-fd-ring: var(--color-yd-purple);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted: hsl(247, 20%, 15%);
+  --color-fd-secondary: hsl(247, 20%, 17%);
+  --color-fd-muted-foreground: hsl(248, 14%, 68%);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Keeps the page from shifting when a dialog locks scrolling (the gutter is already reserved). */
+html > body[data-scroll-locked] {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides react-remove-scroll's inline styles */
+  margin-right: 0px !important;
+  /* biome-ignore lint/complexity/noImportantStyles: overrides react-remove-scroll's inline styles */
+  --removed-body-scroll-bar-size: 0px !important;
+}

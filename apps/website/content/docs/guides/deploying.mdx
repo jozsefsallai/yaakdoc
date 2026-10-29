@@ -1,0 +1,118 @@
+---
+title: Deploying
+description: Host the static site on Vercel, Netlify, GitHub Pages, Cloudflare Pages or any static host.
+icon: CloudUpload
+---
+
+`yaakdoc build` writes a static site to `dist/` (change it with `outDir` or `--out-dir`). There's no server to run: upload the folder to any static host.
+
+```bash
+npx yaakdoc build
+npx yaakdoc preview   # check the result at http://localhost:4000
+```
+
+Before you deploy, set [`branding.url`](/docs/guides/branding#site-url) to the site's public URL. It gives you canonical URLs, a `sitemap.xml` and absolute links in `llms.txt`.
+
+## Serving from a subfolder
+
+If the docs don't live at the root of their domain, e.g. `https://acme.dev/docs/`, set `base`:
+
+```json title="yaakdoc.config.json"
+{
+  "base": "/docs/"
+}
+```
+
+or pass `--base /docs/` to `build`. This is also what you need for GitHub Pages project sites (`https://<user>.github.io/<repo>/`).
+
+To serve the docs from an app you already have, use an [integration](/docs/integrations/nextjs) instead.
+
+## Hosts
+
+The examples assume the docs live in a folder with `yaakdoc` in its `package.json` and a `docs:build` script (see [Project setup](/docs/project-setup)). Without one, use `npx yaakdoc build` as the build command.
+
+<Tabs items={["Vercel", "Netlify", "Cloudflare Pages", "GitHub Pages"]}>
+<Tab value="Vercel">
+
+Import the repository in Vercel, choose **Other** as the framework preset, and set:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run docs:build` |
+| Output directory | `dist` |
+
+</Tab>
+
+<Tab value="Netlify">
+
+```toml title="netlify.toml"
+[build]
+  command = "npm run docs:build"
+  publish = "dist"
+```
+
+</Tab>
+
+<Tab value="Cloudflare Pages">
+
+Create a Pages project from the repository and set:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run docs:build` |
+| Build output directory | `dist` |
+
+</Tab>
+
+<Tab value="GitHub Pages">
+
+In the repository's **Settings → Pages**, set the source to **GitHub Actions**, then add:
+
+```yaml title=".github/workflows/docs.yml"
+name: Docs
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx yaakdoc build --base /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Drop `--base` if you use a custom domain or a `<user>.github.io` repository.
+
+</Tab>
+</Tabs>
+
+## Building in CI
+
+The export is a file in your repository, so docs builds are reproducible: re-export from Yaak (or use the [Yaak plugin](/docs/yaak-plugin)'s **Save as yaakdoc project...**), commit, and let CI build. A failing build (for example, an invalid config) exits with a non-zero code.
+
+To build several variants from one export, combine flags and [`--overrides`](/docs/reference/cli#overrides):
+
+```bash
+npx yaakdoc build -e Production --out-dir dist/prod
+npx yaakdoc build -e Sandbox --base /sandbox/ --out-dir dist/sandbox \
+  --overrides '{"branding":{"title":"Acme API (Sandbox)"}}'
+```

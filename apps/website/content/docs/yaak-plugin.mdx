@@ -1,0 +1,81 @@
+---
+title: Yaak plugin
+description: Build the docs from inside Yaak, with a form for every option. No Node.js required with the default theme.
+icon: Puzzle
+---
+
+The yaakdoc plugin for Yaak exports your workspace and builds the docs in one step, from the workspace menu.
+
+## Install
+
+In Yaak, open **Settings → Plugins**, search for `@yaakdoc/yaakdoc` and install it.
+
+- **With Kiseki, the default theme,** there's nothing else to install. The plugin bundles yaakdoc and a precompiled Kiseki and builds inside Yaak.
+- **Other themes** (npm packages, local paths, ejected themes) are built with the yaakdoc CLI through `npx`, so they need [Node.js](https://nodejs.org) 20.19 or later with npm. Without Node.js, the plugin tells you and offers to build with Kiseki instead.
+- **The [Yaak CLI](https://github.com/mountain-loop/yaak) is recommended.** The plugin uses it to export the workspace, because Yaak's plugin API can't see environments or gRPC and WebSocket requests. Without it, the plugin falls back to the plugin API and warns you that those parts are missing.
+
+## Actions
+
+Both actions are in the workspace menu.
+
+### Build docs with yaakdoc...
+
+Exports the workspace, shows a form with the yaakdoc options, and builds the static site into the output directory you choose. You can also pick an existing `yaakdoc.config.*` file to build on.
+
+### Save as yaakdoc project...
+
+Writes `yaakdoc.json` (the export) and `yaakdoc.config.json` into a folder. From there, you can commit it, run `npx yaakdoc` to preview it, or build it in CI.
+
+- An existing `yaakdoc.config.json` gets the form's values merged into it, unless you choose to replace it.
+- A logo, favicon or custom CSS picked from outside the folder is copied into its `assets/` folder, so the project still works after you commit or move it.
+- A pages directory inside the folder is saved as a relative path. One outside it stays absolute, so keep your pages in the project folder.
+
+## The form
+
+The form is remembered per workspace. Its **Settings** select switches between sections, and values in the other sections are kept. Together, the sections cover the whole [configuration](/docs/reference/configuration):
+
+| Section | Options |
+| --- | --- |
+| General | Theme, request pages, base path, environment, environment switcher |
+| Pages and search | [Pages directory](/docs/guides/custom-pages), API reference path, search |
+| Branding | Title, description, URL, logo, favicon, colors, fonts, header links, footer, color mode, custom CSS |
+| Code examples | [Snippets](/docs/reference/snippets) |
+| LLM outputs | [llms.txt and Markdown](/docs/guides/llms) |
+| Variables | Inlining, the variables table, hidden name patterns |
+| Slug filters | Include and exclude patterns |
+| Run in Yaak | [The button](/docs/guides/run-in-yaak) and its export |
+
+Anything else goes in the **Extra config (JSON)** field. That includes [`navigation`](/docs/guides/navigation), and a URL for the logo, favicon or custom CSS (the file pickers only take local files).
+
+<Callout title="Empty means default">
+  Empty fields and "Default" don't override anything. The value comes from the chosen config file
+  or from yaakdoc's default. For themes other than Kiseki, the form's values are passed to the CLI
+  with [`--overrides`](/docs/reference/cli#overrides).
+</Callout>
+
+### Custom CSS with Kiseki
+
+With the built-in Kiseki build, custom CSS is published as it is and linked after the theme's styles. The CLI bundles it with the theme instead. So with the plugin and Kiseki, `@import`s of npm packages and `url()`s relative to the CSS file aren't resolved. Plain CSS works the same either way.
+
+## Progress and cancelling
+
+Each action runs in a single dialog, from the export to the result. While a step runs, the dialog shows it (with the end of a command's output) and the steps already done.
+
+- **Run in background** hides the dialog, and the result then comes as a toast. Choose the same action again to bring the dialog back.
+- **Cancel** stops the export, the theme install or a CLI build. The built-in Kiseki build can't be stopped halfway, so it finishes and the dialog says so.
+
+## Themes from npm
+
+You don't have to install npm themes yourself. When a theme isn't installed next to the chosen config file, the plugin looks it up on npm (`winxp` → `@yaakdoc/theme-winxp`, then `yaakdoc-theme-winxp`) and installs it into a cache in your temp folder, which later builds reuse.
+
+- A full package name (`yaakdoc-theme-winxp`, `@acme/docs-theme`) is fetched as written.
+- A package named just `winxp` is never fetched, because it might not be a theme. To use one, install it next to your config file.
+
+## Advanced
+
+Under **Advanced** you can change the commands the plugin runs:
+
+- **yaakdoc command.** Only used for themes other than Kiseki. It defaults to `npx -y yaakdoc@<plugin version>`. Point it at a global or project-local install if you prefer.
+- **Yaak CLI command.** It defaults to `yaak`, then `npx -y @yaakapp/cli`.
+
+Private environments and secrets get the same treatment as with the CLI: they [never appear](/docs/guides/environments#secrets) in the generated docs.

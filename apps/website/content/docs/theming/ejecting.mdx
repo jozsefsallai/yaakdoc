@@ -1,0 +1,32 @@
+---
+title: Ejecting
+description: Copy the current theme into your project and change anything.
+icon: PackageOpen
+---
+
+When config and custom CSS aren't enough, eject the theme:
+
+```bash
+npx yaakdoc eject
+```
+
+This:
+
+1. copies the current theme's source into `./theme` (change it with `--out`; `--force` overwrites a non-empty folder),
+2. sets `"theme": "./theme"` in `yaakdoc.config.json` (and creates the file if there isn't one).
+
+From then on, the theme is yours. Edit the components, styles and manifest freely; the dev server hot-reloads your changes.
+
+<Callout title="No install needed">
+  The ejected theme's dependencies (React, Tailwind CSS, Radix UI, ...) are provided by yaakdoc, so
+  it works without installing anything. To pin your own versions, install the packages that `eject`
+  lists.
+</Callout>
+
+If your config is a `.ts` or `.js` file, `eject` can't edit it, and tells you to set `theme` yourself.
+
+## Ejecting Kiseki
+
+Kiseki's ejected copy includes its shadcn config (`components.json`), and `@/...` imports resolve to `theme/src`. So components copied from [shadcn/ui](https://ui.shadcn.com) work as they are.
+
+To understand what you can change, see [Writing a theme](/docs/theming/authoring).

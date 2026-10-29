@@ -1,0 +1,117 @@
+---
+title: Packages
+description: The npm packages that make up yaakdoc, and what each one is for.
+icon: Boxes
+---
+
+Most projects only need `yaakdoc`. The other packages are for themes, integrations, and tools built on yaakdoc's pieces.
+
+| Package | Description |
+| --- | --- |
+| [`yaakdoc`](https://www.npmjs.com/package/yaakdoc) | The CLI, the [Node API](/docs/reference/node-api), the Vite-based engine, the [`yaakdoc/vite`](/docs/integrations/vite) plugin and [`yaakdocMiddleware`](/docs/integrations/node-middleware). |
+| [`@yaakdoc/next`](https://www.npmjs.com/package/@yaakdoc/next) | Serves the docs from a [Next.js](/docs/integrations/nextjs) app. |
+| [`@yaakdoc/react`](https://www.npmjs.com/package/@yaakdoc/react) | Unstyled components, hooks, overrides, the island runtime and the theme contract. See [Writing a theme](/docs/theming/authoring). |
+| [`@yaakdoc/theme-kiseki`](https://www.npmjs.com/package/@yaakdoc/theme-kiseki) | [Kiseki](/docs/theming/kiseki), the default theme. |
+| [`@yaakdoc/config`](https://www.npmjs.com/package/@yaakdoc/config) | The config schema, `defineConfig` and the loader. |
+| [`@yaakdoc/core`](https://www.npmjs.com/package/@yaakdoc/core) | Parses and normalizes Yaak exports, and resolves templates and variables. |
+| [`@yaakdoc/snippets`](https://www.npmjs.com/package/@yaakdoc/snippets) | The [code example](/docs/reference/snippets) generators and `defineSnippet`. |
+| [`@yaakdoc/markdown`](https://www.npmjs.com/package/@yaakdoc/markdown) | Markdown versions of pages, `llms.txt` and `llms-full.txt`. |
+| `@yaakdoc/yaakdoc` | The [Yaak plugin](/docs/yaak-plugin), published to Yaak's plugin registry, not npm. |
+
+All public packages are released together and share one version number.
+
+## @yaakdoc/config
+
+```ts title="yaakdoc.config.ts"
+import { defineConfig } from "@yaakdoc/config"; // also re-exported from "yaakdoc"
+
+export default defineConfig({
+  branding: {
+    title: "Acme API",
+  },
+  pages: "per-request",
+});
+```
+
+- **`configSchema`** is the Zod schema. `YaakdocConfig` is the input type, and `ResolvedConfig` is the type with defaults applied.
+- **`parseConfig(input)`** validates input and applies defaults. Errors are readable `ConfigError`s.
+- **`getConfigJsonSchema()`** returns the JSON schema used by `$schema`.
+- **`loadConfig({ cwd, configFile, overrides })`**, from `@yaakdoc/config/node`, finds `yaakdoc.config.*` with [c12](https://github.com/unjs/c12), applies overrides (arrays are replaced, not merged) and resolves local paths relative to the config file.
+
+## @yaakdoc/core
+
+Parses [Yaak](https://yaak.app) exports and turns them into a documentation-friendly model. It doesn't depend on the rest of yaakdoc, so you can use it on its own:
+
+```ts
+import {
+  createVariableMap,
+  findWorkspace,
+  normalize,
+  resolveRequest,
+  selectEnvironment,
+} from "@yaakdoc/core";
+
+import { loadExport } from "@yaakdoc/core/node";
+
+const doc = await loadExport("yaak.json"); // or normalize(JSON.parse(text))
+const workspace = findWorkspace(doc);
+const env = selectEnvironment(workspace, "Production");
+
+for (const request of Object.values(workspace.requests)) {
+  const resolved = resolveRequest(request, {
+    variables: createVariableMap(workspace, env, request.breadcrumbs.map((b) => b.id)),
+    hide: ["token", "secret"],
+  });
+
+  console.log(request.kind, resolved.url);
+}
+```
+
+### What normalization does
+
+- **Schema versions.** It accepts every Yaak export version: `requests` (v1), workspace variables (v2 and earlier), `environmentId` (v3 and earlier), `base` (v4) and `parentModel`/`parentId` (current).
+- **Tree.** Folders and requests are nested and sorted (by `sortPriority`, then name). Each item gets a unique hierarchical `slug` (`products/get-a-product`) and an anchor.
+- **Inheritance.** Effective headers (workspace → folders → request) and authentication are computed. In Yaak, `null` means "inherit" and `"none"` turns auth off.
+- **Parameters.** Path parameters (`:id`) are split from query parameters.
+- **Bodies.** They're normalized to `json`, `text`, `form-urlencoded`, `multipart`, `graphql` or `binary`.
+- **Request kinds.** HTTP, gRPC and WebSocket requests are all supported.
+- **Environments.** It produces the base environment, sub environments (public and private) and folder environments.
+
+### Templates and secrets
+
+- **`resolveTemplate`** resolves `${[ variable ]}` recursively. A variable that is unknown, hidden, cyclic or defined with a template function (such as `secure(...)`) becomes a `{{placeholder}}` instead, so secrets are never inlined.
+- **`formatTemplate`** converts templates to `{{placeholders}}` without resolving anything.
+- **`createSecretMatcher`** matches variable names case-insensitively, ignoring separators: `api_key` also hides `apiKey` and `X-API-KEY`.
+
+### Sharing exports
+
+`sanitizeExport(raw, { workspaceId, folderIds, requestIds, environmentIds, hide })` returns a copy of an export that is safe to publish. [Run in Yaak](/docs/guides/run-in-yaak) uses it.
+
+- It keeps only the given workspace, folders, requests and environments.
+- It blanks secret-looking values, but keeps variable references such as `${[ api_token ]}`.
+- It removes `secure(...)` values and the workspace's encryption key challenge.
+
+### Preparing documents
+
+`prepareDocument()` builds the `PreparedDocument` that themes render. You inject the renderers (Markdown, syntax highlighting) and the code example generator, which keeps the package light and environment-agnostic.
+
+- **`createPageDoc({ path, data, body })`** creates a custom page from its front matter (`data`) and Markdown.
+- **`prepareDocument({ customPages, navigation, apiPath, renderPage })`** prepares the pages. Variables are resolved once per selectable environment, and URLs that collide with the API reference are rejected.
+- **`resolveNavigation(input, pages, { href })`** turns a navigation config into tabs of items.
+- **`walkNavigation`, `flattenNavigation` and `findNavigationTab`** iterate the navigation and find the tab of a page.
+- **`buildSearchIndex(document)`** returns the titles and descriptions of pages, folders and requests, for search.
+
+## @yaakdoc/markdown
+
+Generates Markdown and [llms.txt](https://llmstxt.org) from a `PreparedDocument`.
+
+| Function | Output |
+| --- | --- |
+| `requestToMarkdown(request, options)` | One request: method and URL, description, auth, parameters, headers, body and code examples. |
+| `folderToMarkdown(document, folder, options)` | A folder's description and links to its contents. |
+| `indexToMarkdown(document, options)` | The overview, authentication, variables and the table of contents. |
+| `pageToMarkdown(page, options)` | A custom page: title, description and body, with variables resolved for the default environment. |
+| `llmsTxt(document, options)` | `llms.txt`: the title, a summary, a section per tab and group of custom pages, then one per top-level folder. |
+| `llmsFullTxt(document, options)` | The whole documentation in one Markdown file. Pass `pages: false` for the API reference only. |
+
+`options` takes `title`, `description`, `siteUrl` and `base` (which make links absolute; recommended for `llms.txt`), and `examples` (`false` leaves out code examples).

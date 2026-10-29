@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "---Getting started---",
+    "index",
+    "quickstart",
+    "yaak-plugin",
+    "project-setup",
+    "---Guides---",
+    "...guides",
+    "---Integrations---",
+    "...integrations",
+    "---Theming---",
+    "...theming",
+    "---Reference---",
+    "...reference",
+    "---Project---",
+    "contributing"
+  ]
+}
