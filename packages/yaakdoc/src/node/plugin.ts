@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { dirname, join, sep } from "node:path";
+import nodePath, { dirname, join, type PlatformPath, sep } from "node:path";
 import type { DevEnvironment, Plugin, Rollup } from "vite";
 
 type ResolvedId = Rollup.ResolvedId;
@@ -22,6 +22,19 @@ const isBare = (id: string) =>
   !id.startsWith("@/");
 
 const json = (value: string) => JSON.stringify(value);
+
+/**
+ * Whether the module `id` is inside `dir`. Vite's ids use forward slashes even on Windows, where
+ * Node's paths use backslashes, so they're compared with `relative()` rather than as strings.
+ */
+export function isInside(dir: string, id: string, path: PlatformPath = nodePath): boolean {
+  if (id.startsWith("\0")) {
+    return false;
+  }
+
+  const rel = path.relative(dir, id.split("?")[0]!);
+  return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+}
 
 const REACT_RE = /^react(-dom)?(\/|$)/;
 const YAAKDOC_REACT_RE = /^@yaakdoc\/react(\/|$)/;
@@ -59,7 +72,7 @@ export function yaakdocPlugin(getContext: () => Context, onSsrUpdate?: () => voi
       const { theme } = getContext();
 
       // shadcn-style `@/...` imports inside the theme resolve to the theme's `src/`.
-      if (source.startsWith("@/") && importer?.startsWith(theme.root + sep)) {
+      if (source.startsWith("@/") && importer && isInside(theme.root, importer)) {
         return this.resolve(join(theme.root, "src", source.slice(2)), importer, {
           ...options,
           skipSelf: true,
