@@ -108,6 +108,20 @@ function compact<T>(value: T): T | undefined {
   return entries.length ? (Object.fromEntries(entries) as T) : undefined;
 }
 
+/** A plain path, or the object form when a dark logo, a height or the title option is set. */
+function logo(settings: Settings): NonNullable<YaakdocConfig["branding"]>["logo"] {
+  const light = text(settings.logo);
+  const dark = text(settings.logoDark);
+  const height = text(settings.logoHeight);
+  const showTitle = toggle(settings.logoShowTitle);
+
+  if (dark === undefined && height === undefined && showTitle === undefined) {
+    return light;
+  }
+
+  return { light, dark, height: height === undefined ? undefined : Number(height), showTitle };
+}
+
 /**
  * Turns the form values into yaakdoc config overrides. Empty fields and "Default" selects are left
  * out, so the config file (or yaakdoc's default) still applies to them.
@@ -130,7 +144,7 @@ export function settingsToConfig(settings: Settings): YaakdocConfig {
       title: text(settings.title),
       description: text(settings.description),
       url: text(settings.url),
-      logo: text(settings.logo),
+      logo: logo(settings),
       favicon: text(settings.favicon),
       customCss: text(settings.customCss),
       colors: { primary: text(settings.primaryColor), accent: text(settings.accentColor) },

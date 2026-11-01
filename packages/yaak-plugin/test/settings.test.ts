@@ -79,6 +79,29 @@ describe("settingsToConfig", () => {
     expect(settingsToConfig({ themeChoice: "default", theme: "./old" })).toEqual({});
   });
 
+  it("uses the logo object form only when it needs it", () => {
+    expect(settingsToConfig({ logo: "/a/logo.svg" })).toEqual({
+      branding: { logo: "/a/logo.svg" },
+    });
+
+    expect(
+      settingsToConfig({
+        logo: "/a/logo.svg",
+        logoDark: "/a/logo-dark.svg",
+        logoHeight: "28",
+        logoShowTitle: "off",
+      }),
+    ).toEqual({
+      branding: {
+        logo: { light: "/a/logo.svg", dark: "/a/logo-dark.svg", height: 28, showTitle: false },
+      },
+    });
+
+    expect(() =>
+      validateConfig(settingsToConfig({ logo: "/a/logo.svg", logoHeight: "tall" })),
+    ).toThrow(/branding\.logo/);
+  });
+
   it("merges the extra JSON last", () => {
     expect(
       settingsToConfig({

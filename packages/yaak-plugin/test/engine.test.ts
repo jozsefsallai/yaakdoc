@@ -99,4 +99,30 @@ describe("built-in engine", () => {
       }),
     ).rejects.toMatchObject({ name: "ExternalThemeError", theme: join(dir, "my-theme") });
   });
+
+  /** The fixture with a description on its "Log in" request. */
+  async function withLoginDescription(description: string) {
+    const data = JSON.parse(await readFile(FIXTURE, "utf8"));
+    const login = data.resources.httpRequests.find((r: { id: string }) => r.id === "rq_login");
+    login.description = description;
+    return data;
+  }
+
+  it("returns warnings and fails on errors in example responses", async () => {
+    const summary = await engine.buildSite({
+      exportData: await withLoginDescription("```response:200\n{ broken\n```"),
+      cwd: dir,
+      overrides: { outDir: join(dir, "warned") },
+    });
+
+    expect(summary.warnings).toEqual([expect.stringContaining('Request "Log in"')]);
+
+    await expect(
+      engine.buildSite({
+        exportData: await withLoginDescription("```response:2001\n{}\n```"),
+        cwd: dir,
+        overrides: { outDir: join(dir, "failed") },
+      }),
+    ).rejects.toThrow(/invalid status "2001"/);
+  });
 });

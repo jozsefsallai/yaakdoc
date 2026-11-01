@@ -1,5 +1,15 @@
 # @yaakdoc/yaakdoc
 
+## 0.6.1
+
+### Patch Changes
+
+- The plugin catches up with yaakdoc 0.6:
+  
+  - The build result lists warnings, such as an example response whose JSON doesn't parse, for Kiseki builds and for builds with the yaakdoc CLI. Before, they were only in the plugin's log.
+  - The Branding section has a dark mode logo, the logo's height and a "Title next to the logo" option (`branding.logo.dark`, `height` and `showTitle`). A dark mode logo picked from outside a saved project is copied into it, like the other files.
+  - The bundled engine has 0.6's changes: response headers in example responses, invalid status codes failing the build, and the logo options.
+
 ## 0.6.0
 
 ### Patch Changes

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { findYaakDataDir, intoProject, toProjectRelative } from "../src/paths";
-import { splitCommand } from "../src/run";
+import { outputWarnings, splitCommand } from "../src/run";
 
 describe("splitCommand", () => {
   it("splits words and honors quotes", () => {
@@ -72,5 +72,23 @@ describe("intoProject", () => {
     expect(await into("https://acme.dev/logo.svg")).toBe("https://acme.dev/logo.svg");
     expect(await into(join(root, "missing.svg"))).toBe(join(root, "missing.svg"));
     expect(existsSync(join(project, "assets", "missing.svg"))).toBe(false);
+  });
+});
+
+describe("outputWarnings", () => {
+  it("finds the warnings in the yaakdoc CLI's output", () => {
+    const output = [
+      "  yaakdoc v0.6.0",
+      "",
+      '\x1b[43m\x1b[30m WARN \x1b[39m\x1b[49m Request "Log in": the 200 response looks like JSON but doesn\'t parse.',
+      "[warn] Something else",
+      "  Theme        kiseki",
+      "  ✔ Built 2 pages and 24 Markdown/llms files into dist in 2681ms",
+    ].join("\n");
+
+    expect(outputWarnings(output)).toEqual([
+      'Request "Log in": the 200 response looks like JSON but doesn\'t parse.',
+      "Something else",
+    ]);
   });
 });

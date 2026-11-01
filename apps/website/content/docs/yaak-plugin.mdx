@@ -20,14 +20,14 @@ Both actions are in the workspace menu.
 
 ### Build docs with yaakdoc...
 
-Exports the workspace, shows a form with the yaakdoc options, and builds the static site into the output directory you choose. You can also pick an existing `yaakdoc.config.*` file to build on.
+Exports the workspace, shows a form with the yaakdoc options, and builds the static site into the output directory you choose. You can also pick an existing `yaakdoc.config.*` file to build on. If the export has problems that don't stop the build, such as an [example response](/docs/guides/example-responses) whose JSON doesn't parse, the result lists them as warnings. An invalid status code in an example response fails the build.
 
 ### Save as yaakdoc project...
 
 Writes `yaakdoc.json` (the export) and `yaakdoc.config.json` into a folder. From there, you can commit it, run `npx yaakdoc` to preview it, or build it in CI.
 
 - An existing `yaakdoc.config.json` gets the form's values merged into it, unless you choose to replace it.
-- A logo, favicon or custom CSS picked from outside the folder is copied into its `assets/` folder, so the project still works after you commit or move it.
+- A logo (light or dark), favicon or custom CSS picked from outside the folder is copied into its `assets/` folder, so the project still works after you commit or move it.
 - A pages directory inside the folder is saved as a relative path. One outside it stays absolute, so keep your pages in the project folder.
 
 ## The form
@@ -38,7 +38,7 @@ The form is remembered per workspace. Its **Settings** select switches between s
 | --- | --- |
 | General | Theme, request pages, base path, environment, environment switcher |
 | Pages and search | [Pages directory](/docs/guides/custom-pages), API reference path, search |
-| Branding | Title, description, URL, logo, favicon, colors, fonts, header links, footer, color mode, custom CSS |
+| Branding | Title, description, URL, logo (with a dark mode variant, its height and whether the title is shown next to it), favicon, colors, fonts, header links, footer, color mode, custom CSS |
 | Code examples | [Snippets](/docs/reference/snippets) |
 | LLM outputs | [llms.txt and Markdown](/docs/guides/llms) |
 | Variables | Inlining, the variables table, hidden name patterns |

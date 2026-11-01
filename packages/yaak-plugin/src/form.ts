@@ -321,7 +321,33 @@ export function buildForm({
           description: "Enables absolute links, canonical URLs and sitemap.xml.",
         }),
 
-        ...file("logo", "Logo", "an image shown in the header."),
+        ...file(
+          "logo",
+          "Logo",
+          "an image shown in the header. It's used in both color modes, unless you also pick a dark mode logo.",
+        ),
+
+        ...file(
+          "logoDark",
+          "Dark mode logo",
+          "the logo shown in dark mode, e.g. a light version of a dark logo.",
+        ),
+
+        {
+          type: "h_stack",
+          inputs: [
+            text("logoHeight", "Logo height", {
+              placeholder: "24",
+              description: "In pixels. Kiseki shows the logo at most 40 pixels tall.",
+            }),
+            toggle(
+              "logoShowTitle",
+              "Title next to the logo",
+              true,
+              "Turn it off when the logo already contains the name.",
+            ),
+          ],
+        },
 
         ...file("favicon", "Favicon", "the icon shown in browser tabs."),
 

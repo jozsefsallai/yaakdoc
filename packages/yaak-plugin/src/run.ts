@@ -79,6 +79,16 @@ const quoteWindows = (arg: string) =>
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matches ANSI escape codes.
 export const stripAnsi = (text: string) => text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
 
+/** The warnings in the yaakdoc CLI's output (consola prints them as ` WARN  message`). */
+export function outputWarnings(output: string): string[] {
+  return stripAnsi(output)
+    .split(/\r?\n/)
+    .flatMap((line) => {
+      const match = /^\s*(?:WARN|\[warn\]|⚠)\s+(.+?)\s*$/.exec(line);
+      return match ? [match[1]!] : [];
+    });
+}
+
 export type RunResult = { ok: boolean; output: string };
 
 export type RunOptions = {

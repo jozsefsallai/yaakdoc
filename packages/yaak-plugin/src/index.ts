@@ -4,12 +4,12 @@ import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Context, PluginDefinition, Workspace } from "@yaakapp/api";
 import { mergeConfig, type YaakdocConfig } from "@yaakdoc/config";
-import pkg from "../package.json";
+import yaakdocPkg from "yaakdoc/package.json";
 import { environmentNames, type LoadedExport, loadExport } from "./export";
 import { buildForm, type FormKind, SECTION } from "./form";
 import { intoProject, themeCacheDir, toProjectRelative, workDir } from "./paths";
 import { ProgressDialog } from "./progress";
-import { runCommand } from "./run";
+import { outputWarnings, runCommand } from "./run";
 import { loadEngine } from "./runtime";
 import {
   isChecked,
@@ -30,8 +30,10 @@ import {
   ThemeNotFoundError,
 } from "./theme";
 
-const YAAKDOC_COMMAND = `npx -y yaakdoc@${pkg.version}`;
-const SCHEMA_URL = `https://unpkg.com/yaakdoc@${pkg.version}/config.schema.json`;
+// The yaakdoc version the plugin was built with (its engine's), not the plugin's own version: the
+// plugin can get releases of its own.
+const YAAKDOC_COMMAND = `npx -y yaakdoc@${yaakdocPkg.version}`;
+const SCHEMA_URL = `https://unpkg.com/yaakdoc@${yaakdocPkg.version}/config.schema.json`;
 
 const text = (value: Settings[string]) => (typeof value === "string" ? value.trim() : "");
 
@@ -190,8 +192,9 @@ function buildBuiltIn(build: BuildRequest, overrides: YaakdocConfig = {}) {
 
 async function built(
   progress: ProgressDialog,
-  summary: { pages: number; textFiles: number } | null,
+  summary: { pages: number; textFiles: number; warnings?: string[] } | null,
   outDir: string,
+  warnings: string[] = summary?.warnings ?? [],
 ) {
   // The built-in build runs in Yaak's plugin process and can't be stopped halfway.
   if (progress.cancelled) {
@@ -205,7 +208,12 @@ async function built(
     ? `Built ${summary.pages} page${summary.pages === 1 ? "" : "s"} and ${summary.textFiles} Markdown/llms files`
     : "Built the docs";
 
-  await progress.succeed(`${files} into \`${outDir}\`.`, {
+  // Problems that didn't stop the build, e.g. an example response whose JSON doesn't parse.
+  const notes = warnings.length
+    ? `\n\n**${warnings.length === 1 ? "1 warning" : `${warnings.length} warnings`}:**\n\n${warnings.map((warning) => `- ${warning}`).join("\n")}`
+    : "";
+
+  await progress.succeed(`${files} into \`${outDir}\`.${notes}`, {
     label: "Open folder",
     url: pathToFileURL(outDir).href,
   });
@@ -372,6 +380,7 @@ async function buildWithCli(progress: ProgressDialog, build: BuildRequest, theme
     progress,
     counts ? { pages: Number(counts[1]), textFiles: Number(counts[2]) } : null,
     outDir,
+    outputWarnings(result.output),
   );
 }
 
@@ -402,6 +411,15 @@ async function projectPaths(config: YaakdocConfig, dir: string): Promise<Yaakdoc
           branding: {
             ...branding,
             ...(typeof branding.logo === "string" ? { logo: await copy(branding.logo) } : {}),
+            ...(branding.logo && typeof branding.logo === "object"
+              ? {
+                  logo: {
+                    ...branding.logo,
+                    ...(branding.logo.light ? { light: await copy(branding.logo.light) } : {}),
+                    ...(branding.logo.dark ? { dark: await copy(branding.logo.dark) } : {}),
+                  },
+                }
+              : {}),
             ...(branding.favicon ? { favicon: await copy(branding.favicon) } : {}),
             ...(branding.customCss ? { customCss: await copy(branding.customCss) } : {}),
           },

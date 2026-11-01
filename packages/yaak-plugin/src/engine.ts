@@ -43,7 +43,13 @@ export type BuildOptions = {
   overrides: YaakdocConfig;
 };
 
-export type BuildSummary = { outDir: string; pages: number; textFiles: number };
+export type BuildSummary = {
+  outDir: string;
+  pages: number;
+  textFiles: number;
+  /** Problems that didn't stop the build, e.g. an example response whose JSON doesn't parse. */
+  warnings: string[];
+};
 
 /** Builds the site into `overrides.outDir` (or the config's), like `yaakdoc build`. */
 export async function buildSite(options: BuildOptions): Promise<BuildSummary> {
@@ -97,5 +103,8 @@ export async function buildSite(options: BuildOptions): Promise<BuildSummary> {
     outDir,
     pages: written.filter((file) => file.endsWith(".html")).length,
     textFiles: written.filter((file) => file.endsWith(".md") || file.endsWith(".txt")).length,
+    warnings: context.diagnostics
+      .filter((diagnostic) => diagnostic.severity === "warning")
+      .map((diagnostic) => diagnostic.message),
   };
 }
