@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useSite } from "../context";
 import { useRunInYaak } from "../hooks";
 import { RunInYaakLink } from "../islands/run-in-yaak";
@@ -5,18 +6,31 @@ import { overridable } from "../overrides";
 import type { SiteData } from "../types";
 import { Html } from "./basic";
 
-/** Site logo (light/dark variants) linking to the docs home, falling back to the title. */
+/**
+ * Site logo (light/dark variants) linking to the docs home, falling back to the title. The title is
+ * shown next to it unless `showTitle` (or `branding.logo.showTitle`) is `false`. A configured height
+ * is exposed as `--yd-logo-height` for themes to size the logo with.
+ */
 export const Logo = overridable(
   "Logo",
-  function Logo({ className, showTitle = true }: { className?: string; showTitle?: boolean }) {
+  function Logo({ className, showTitle }: { className?: string; showTitle?: boolean }) {
     const site = useSite();
 
     const logo = site.logo;
     const href = logo?.href ?? site.base;
     const size = { width: logo?.width, height: logo?.height };
+    const hasImage = Boolean(logo?.light || logo?.dark);
+    const title = !hasImage || (showTitle ?? logo?.showTitle ?? true);
 
     return (
-      <a href={href} data-yd="logo" className={className}>
+      <a
+        href={href}
+        data-yd="logo"
+        className={className}
+        style={
+          logo?.height ? ({ "--yd-logo-height": `${logo.height}px` } as CSSProperties) : undefined
+        }
+      >
         {logo?.light ? (
           <img
             src={logo.light}
@@ -35,7 +49,7 @@ export const Logo = overridable(
           />
         ) : null}
 
-        {showTitle ? <span data-yd="site-title">{site.title}</span> : null}
+        {title ? <span data-yd="site-title">{site.title}</span> : null}
       </a>
     );
   },

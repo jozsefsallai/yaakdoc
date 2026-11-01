@@ -52,7 +52,24 @@ Set `url` to the public URL of the deployed docs. It enables:
 
 ## Logo and favicon
 
-`logo` is a path or URL, or an object with `light` and `dark` variants, `alt`, `href` (where clicking it leads), `width` and `height`. Local files are copied into the site.
+`logo` is a path or URL, or an object with `light` and `dark` variants, `alt`, `href` (where clicking it leads), `width`, `height` and `showTitle`. Local files are copied into the site.
+
+```json title="yaakdoc.config.json"
+{
+  "branding": {
+    "logo": {
+      "light": "./logo-dark-text.svg",
+      "dark": "./logo-light-text.svg",
+      "height": 28,
+      "showTitle": false
+    }
+  }
+}
+```
+
+- **Size.** `height` sets how tall the logo is shown. Kiseki uses 24 px by default and at most 40 px, so the logo fits the header. `width` only reserves space while the image loads; the width follows the image's aspect ratio.
+- **Logo only.** The site title is shown next to the logo. Set `showTitle: false` when the logo already contains the name. The title is still used as the image's `alt` text.
+- **Dark mode.** A logo with only `light` (or a plain path) is used in both color modes. If your logo is mostly white or mostly black, set `dark` too, or it will be hard to see in one of the modes.
 
 ## Colors
 

@@ -1,8 +1,8 @@
 /** Child process started by `yaakdoc/integration`: runs the dev server or a build on request. */
 import type { WorkerRequest, WorkerResponse } from "./integration";
 import { build } from "./node/build";
-import { createDevServer } from "./node/dev";
-import { mountOptions } from "./node/mount";
+import { mountBase, mountOptions } from "./node/mount";
+import { createRecoveringDevServer } from "./node/recover";
 import { freePort } from "./node/server";
 
 const reply = (message: WorkerResponse) => process.send?.(message);
@@ -16,12 +16,13 @@ process.once("message", async (request: WorkerRequest) => {
       // WebSockets, so HMR connects to this server directly.
       const port = await freePort();
 
-      const server = await createDevServer({
+      // A broken export or config shows an error page instead of failing the host app's startup.
+      const server = await createRecoveringDevServer({
         ...options,
         port,
         hmrClientPort: port,
-        host: "localhost",
         open: false,
+        base: mountBase(request.options),
       });
 
       reply({ type: "ready", url: server.url });
@@ -30,7 +31,11 @@ process.once("message", async (request: WorkerRequest) => {
       reply({ type: "done", outDir });
     }
   } catch (error) {
-    reply({ type: "error", message: (error as Error).stack ?? String(error) });
+    reply({
+      type: "error",
+      message: (error as Error).message ?? String(error),
+      stack: (error as Error).stack,
+    });
   }
 });
 

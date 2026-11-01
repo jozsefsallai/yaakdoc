@@ -27,3 +27,23 @@ Retrieve a single product by its id.
 - **No status code.** A plain `response` block is labeled "Response".
 - **Language.** JSON, XML and HTML are detected automatically. To set the language yourself, add it after the status, e.g. `response:200 yaml`.
 - **Empty bodies.** An empty block, such as `response:204`, shows "No response body".
+- **Valid status codes.** The status must be an HTTP status code from 100 to 599. A typo such as `response:2001` or `response:20` fails `yaakdoc build` (and `next build`) with the request's name. The dev server only warns, and labels the block "Response".
+- **Broken JSON.** When a body looks like JSON (or is marked `json`) but doesn't parse, yaakdoc warns. Mark the block as `jsonc` if it has comments on purpose.
+
+## Response headers
+
+Write headers at the top of the block, like in a raw HTTP response: one `Name: value` per line, then a blank line, then the body. They're shown above the body, and in the Markdown output.
+
+````md title="Request description in Yaak"
+```response:429
+Retry-After: 30
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+
+{
+  "error": "rate_limited"
+}
+```
+````
+
+The lines are only read as headers when **every** line before the first blank line is a header and a blank line follows them. A block of headers with no body needs the blank line too. Copying an example copies its body only.

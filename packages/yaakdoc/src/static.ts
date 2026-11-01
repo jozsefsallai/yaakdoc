@@ -11,6 +11,7 @@ export {
   resolveContext,
   type YaakdocOptions,
 } from "./node/context";
+export { assertNoDiagnosticErrors } from "./node/diagnostics";
 export {
   assertSafeOutDir,
   emptyOutDir,

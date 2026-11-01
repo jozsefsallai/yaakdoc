@@ -3,6 +3,7 @@ import { createPageDoc, normalize, prepareDocument, selectEnvironment } from "@y
 import { describe, expect, it } from "vitest";
 import {
   Content,
+  Logo,
   MethodBadge,
   Navigation,
   NavTabs,
@@ -110,6 +111,61 @@ describe("renderPage", () => {
 
     // second code example panel is hidden until JS switches tabs
     expect(html).toMatch(/data-yd-tab-panel="js"[^>]*hidden=""/);
+  });
+
+  it("shows example response headers above the body", async () => {
+    const request = document.requests.rq_get_product!;
+    const withHeaders = {
+      ...document,
+      requests: {
+        ...document.requests,
+        rq_get_product: {
+          ...request,
+          responses: [
+            {
+              status: 429,
+              statusText: "Too Many Requests",
+              label: "429 Too Many Requests",
+              language: "json",
+              code: "{}",
+              headers: [{ name: "Retry-After", value: "30" }],
+              html: "<pre>{}</pre>",
+              empty: false,
+            },
+          ],
+        },
+      },
+    };
+
+    const html = await renderPage({ theme: { Layout }, document: withHeaders, site, page, assets });
+
+    expect(html).toMatch(
+      /<dl data-yd="response-headers"><div data-yd="response-header"><dt>Retry-After<\/dt><dd>30<\/dd><\/div><\/dl><div data-yd="code"><pre>\{\}<\/pre>/,
+    );
+  });
+
+  it("hides the title next to a logo when branding.logo.showTitle is false", async () => {
+    const withLogo = (showTitle?: boolean) =>
+      renderPage({
+        theme: { Layout: () => <Logo /> },
+        document,
+        site: {
+          ...site,
+          logo: {
+            light: "/logo.svg",
+            alt: "Acme",
+            href: "/",
+            height: 32,
+            ...(showTitle === undefined ? {} : { showTitle }),
+          },
+        },
+        page,
+        assets,
+      });
+
+    expect(await withLogo()).toContain('data-yd="site-title"');
+    expect(await withLogo(false)).not.toContain('data-yd="site-title"');
+    expect(await withLogo(false)).toContain('style="--yd-logo-height:32px"');
   });
 
   it("preloads fonts, except roles the branding replaces", async () => {

@@ -146,7 +146,7 @@ A prepared request already contains everything a theme needs:
 - `href` and `markdownUrl`
 - `resolvedUrl`, with variables resolved and secrets as `{{placeholders}}`
 - `descriptionHtml`, sanitized Markdown
-- `bodyHtml`, `examples[].html` and `responses[]` (Shiki-highlighted example responses with `status`, `label` and `language`)
+- `bodyHtml`, `examples[].html` and `responses[]` (Shiki-highlighted example responses with `status`, `label`, `language` and `headers`)
 - headers, params and auth, each with `inheritedFrom` information
 
 A prepared custom page has `title`, `description`, `sidebarTitle`, `icon`, `href`, `markdownUrl`, `summary` and `html`.
@@ -160,11 +160,11 @@ All components are unstyled. They render semantic markup with stable `data-yd=".
 | Page structure | `Content`, `Overview`, `TreeContent`, `FolderDoc`, `ChildLinks`, `NotFound`, `Heading` |
 | Custom pages | `PageDoc`, `PageNav` (previous and next links) |
 | Requests | `RequestDoc`, `RequestBody`, `MethodBadge`, `RequestUrl`, `AuthInfo`, `KeyValueTable`, `Variables` |
-| Code and Markdown | `CodeBlock`, `CodeExamples`, `ResponseExamples`, `Markdown`, `Html` |
+| Code and Markdown | `CodeBlock`, `CodeExamples`, `ResponseExamples`, `ResponseHeaders`, `Markdown`, `Html` |
 | Environments | `EnvironmentVariants`, `EnvironmentSelect` |
 | Navigation | `Navigation` (a tab's groups, pages and the API reference), `NavTabs`, `NavTree` (the API reference alone), `NavIcon` (renders nothing; override it to show icons), `Breadcrumbs` |
 | Search | `Search` (a `SearchTrigger` and a `SearchDialog`) |
-| Site chrome | `Logo`, `SiteLinks`, `Footer`, `PageActions`, `RunInYaak`, `BrandingStyles` |
+| Site chrome | `Logo` (sets `--yd-logo-height` when `branding.logo.height` is set, and hides the title when `branding.logo.showTitle` is `false`), `SiteLinks`, `Footer`, `PageActions`, `RunInYaak`, `BrandingStyles` |
 
 A few attributes are useful when styling with plain CSS:
 

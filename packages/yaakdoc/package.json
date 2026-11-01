@@ -29,6 +29,11 @@
       "types": "./dist/integration.d.ts",
       "default": "./dist/integration.js"
     },
+    "./cli": {
+      "@yaakdoc/source": "./src/cli/index.ts",
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
     "./config.schema.json": "./config.schema.json",
     "./package.json": "./package.json"
   },

@@ -6,6 +6,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "yaakdoc": "./bin/yaakdoc.js"
+  },
   "exports": {
     ".": {
       "@yaakdoc/source": "./src/index.ts",
@@ -33,6 +36,7 @@
   "author": "József Sallai @jozsefsallai",
   "license": "MIT",
   "files": [
+    "/bin",
     "/dist",
     "/README.md",
     "/LICENSE"
@@ -67,6 +71,6 @@
     "next": "16.4.1"
   },
   "dependencies": {
-    "yaakdoc": "workspace:^"
+    "yaakdoc": "workspace:*"
   }
 }

@@ -10,6 +10,8 @@ icon: Layers
 npm i @yaakdoc/next
 ```
 
+It comes with the `yaakdoc` CLI of the same version (`npx yaakdoc build`, `pnpm exec yaakdoc dev`, ...), so you don't need to install `yaakdoc` separately. If you do, pin it to the exact version of `@yaakdoc/next`, so the CLI and `next build` build the same way.
+
 ```ts title="next.config.ts"
 import type { NextConfig } from "next";
 import { createNextYaakdoc } from "@yaakdoc/next";
@@ -40,10 +42,81 @@ public/docs
 
 The docs are configured inline, so you don't need a `yaakdoc.config.*` file. If there is one, `config` is merged over it. See the [options](#options).
 
+## Using with other plugins
+
+`withYaakdoc` composes like other Next.js config plugins. Put it **outermost**, so its rewrites come first and it sees the final config (including `basePath`). It accepts both config styles.
+
+A config object:
+
+```ts title="next.config.ts"
+import createNextIntlPlugin from "next-intl/plugin";
+import createMDX from "@next/mdx";
+import { createNextYaakdoc } from "@yaakdoc/next";
+
+const withNextIntl = createNextIntlPlugin();
+const withMDX = createMDX();
+const withYaakdoc = createNextYaakdoc({
+  path: "/developers",
+  export: "./docs/api/yaak.json",
+});
+
+export default withYaakdoc(withNextIntl(withMDX({
+  pageExtensions: ["ts", "tsx", "mdx"],
+})));
+```
+
+A phase function, e.g. with a PWA plugin that needs one. `withYaakdoc(...)` returns a phase function too, so call it with the same arguments:
+
+```ts title="next.config.ts"
+import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
+import createNextIntlPlugin from "next-intl/plugin";
+import { createNextYaakdoc } from "@yaakdoc/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+});
+
+const withNextIntl = createNextIntlPlugin();
+
+const withYaakdoc = createNextYaakdoc({
+  path: "/developers",
+  export: "./docs/api/yaak.json",
+});
+
+export default async function config(
+  phase: string,
+  { defaultConfig }: { defaultConfig: NextConfig },
+) {
+  const nextConfig: NextConfig = { reactStrictMode: true };
+
+  return withYaakdoc(withSerwist(withNextIntl(nextConfig)))(phase, { defaultConfig });
+}
+```
+
+## Adding yaakdoc to an existing app
+
+The docs are built into `public/<path>` and served at `<path>`. In an app that already has middleware, linters or a service worker, check each of these:
+
+- **Git.** Ignore the build output: `public/docs` in `.gitignore`.
+- **Linters and formatters.** Exclude the generated site, e.g. `"!public/docs"` in Biome's `files.includes`, `public/docs` in `.prettierignore`, or `ignores: ["public/docs/**"]` in an ESLint flat config.
+- **Middleware.** Locale, auth and redirect middleware (`proxy.ts` since Next.js 16) run for the docs' path too. next-intl, for example, rewrites `/docs` into its `[locale]` route. Exclude the path in the `matcher`, and in any path checks of your own:
+
+  ```ts title="proxy.ts"
+  export const config = {
+    // Everything except the API, Next's files, the docs and files with an extension.
+    matcher: ["/((?!api|_next|_vercel|docs|.*\\..*).*)"],
+  };
+  ```
+
+- **Service workers and PWAs.** A precache built from `public/` includes the whole docs site, so every visitor would download it. Exclude the docs' folder in your plugin's options for public files, e.g. Serwist's `globPublicPatterns` or next-pwa's `publicExcludes`.
+- **PostCSS and Tailwind.** Nothing to do. The docs' theme builds its own CSS and ignores the app's PostCSS config.
+
 ## How it works
 
-- **`next dev`.** The yaakdoc dev server starts in a child process, and the docs are proxied to it with rewrites. Editing the export or the theme reloads the page.
-- **`next build`.** The docs are prerendered into `public/<path>` and served as static files, so they're deployed with the app, on Vercel or any other host. The build replaces that folder each time, and refuses to touch one that yaakdoc didn't create.
+- **`next dev`.** The yaakdoc dev server starts in a child process, and the docs are proxied to it with rewrites. Editing the export, the config, the pages or the theme reloads the page. If the docs can't load (a missing export, an unknown environment, an invalid config...), the error is logged and shown at the docs' path, and the rest of the app keeps working. Fix the file and the docs load by themselves, without restarting `next dev`.
+- **`next build`.** The docs are prerendered into `public/<path>` and served as static files, so they're deployed with the app, on Vercel or any other host. The build replaces that folder each time, and refuses to touch one that yaakdoc didn't create. Errors in the export or config fail the build.
 - **`next start`.** The docs are served from `public/<path>` through rewrites.
 - **`output: "export"`.** The docs are part of the exported site, and no rewrites are added.
 
@@ -51,6 +124,7 @@ The docs are configured inline, so you don't need a `yaakdoc.config.*` file. If 
 
 - **Trailing slashes.** yaakdoc links to `/docs/page/`. With Next's default `trailingSlash: false`, these redirect to `/docs/page`, which then serves the page.
 - **Not found pages.** An unknown page under `/docs` shows your app's 404 page.
+- **Dependencies.** The docs are built by yaakdoc's own engine (Vite, React and the theme), in a separate process. They never end up in your app's bundle, and yaakdoc's React doesn't have to match your app's. Your lockfile gets these packages, though, even if your app uses other versions of them.
 
 ## Options
 

@@ -24,13 +24,17 @@ export const CONTENT_TYPES: Record<string, string> = {
   ".woff2": "font/woff2",
 };
 
-/** Interface to listen on: a given host, all interfaces (`true`), or localhost. */
+/**
+ * Interface to listen on: a given host, all interfaces (`true`), or the IPv4 loopback. Not
+ * `localhost`: Node may resolve it to `::1` only, which browsers outside the machine's network
+ * namespace can't reach (e.g. Windows with WSL's mirrored networking).
+ */
 export const listenHostname = (host: string | boolean) =>
-  typeof host === "string" ? host : host ? "0.0.0.0" : "localhost";
+  typeof host === "string" ? host : host ? "0.0.0.0" : "127.0.0.1";
 
-/** URL to print/open for a server (all-interfaces hosts are shown as localhost). */
+/** URL to print/open for a server (loopback and all-interfaces hosts are shown as localhost). */
 export function serverUrl(host: string | boolean, port: number, base: string): string {
-  const hostname = listenHostname(host);
+  const hostname = typeof host === "string" ? host : "localhost";
   return `http://${hostname === "0.0.0.0" ? "localhost" : hostname}:${port}${base}`;
 }
 
@@ -60,7 +64,7 @@ export function freePort(): Promise<number> {
     const server = createServer();
 
     server.once("error", reject);
-    server.listen(0, "localhost", () => {
+    server.listen(0, "127.0.0.1", () => {
       const { port } = server.address() as AddressInfo;
       server.close(() => resolvePort(port));
     });

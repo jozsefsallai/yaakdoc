@@ -168,11 +168,23 @@ export type ResponseExample = {
   /** Display label, e.g. `200 OK` or `Response`. */
   label: string;
   language: string;
+  /** The body. */
   code: string;
-  /** Syntax-highlighted HTML. */
+  /** Response headers written at the top of the block (empty when none). */
+  headers: Array<{ name: string; value: string }>;
+  /** Syntax-highlighted HTML of the body. */
   html: string;
   /** `true` when the example has no body (e.g. `204 No Content`). */
   empty: boolean;
+};
+
+/** A problem found while preparing the document, e.g. an invalid example response. */
+export type Diagnostic = {
+  /** Errors fail `yaakdoc build`; the dev server only warns. */
+  severity: "warning" | "error";
+  message: string;
+  /** Name of the request the problem is in. */
+  request?: string;
 };
 
 export type EnvironmentRef = { id: string; name: string; color: string | null };

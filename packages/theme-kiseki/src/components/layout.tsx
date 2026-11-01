@@ -39,7 +39,7 @@ function Brand({ className }: { className?: string }) {
     <Logo
       className={cn(
         "flex min-w-0 items-center gap-2.5 text-[0.9375rem] font-semibold tracking-tight [&_[data-yd=site-title]]:truncate",
-        "[&_img]:h-6 [&_img]:w-auto [&_img[data-yd-logo=dark]]:hidden dark:[&_img[data-yd-logo=dark]]:block dark:[&_img[data-yd-logo=light]]:hidden",
+        "[&_img]:h-(--yd-logo-height,1.5rem) [&_img]:max-h-10 [&_img]:w-auto [&_img[data-yd-logo=dark]]:hidden dark:[&_img[data-yd-logo=dark]]:block dark:[&_img[data-yd-logo=light]]:hidden",
         className,
       )}
     />

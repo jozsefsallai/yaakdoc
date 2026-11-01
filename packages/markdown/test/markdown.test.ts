@@ -63,6 +63,31 @@ describe("request markdown", () => {
     expect(md).toContain("| `file` | `@./shoe.png` |");
   });
 
+  it("prints example responses with their headers", () => {
+    const md = requestToMarkdown(
+      {
+        ...doc.requests.rq_upload_image!,
+        responses: [
+          {
+            status: 429,
+            statusText: "Too Many Requests",
+            label: "429 Too Many Requests",
+            language: "json",
+            code: '{ "error": "slow down" }',
+            headers: [{ name: "Retry-After", value: "30" }],
+            html: "",
+            empty: false,
+          },
+        ],
+      },
+      options,
+    );
+
+    expect(md).toContain(
+      '### 429 Too Many Requests\n\n```http\nRetry-After: 30\n```\n\n```json\n{ "error": "slow down" }\n```',
+    );
+  });
+
   it("never contains secret values", () => {
     const full = llmsFullTxt(doc, options);
 

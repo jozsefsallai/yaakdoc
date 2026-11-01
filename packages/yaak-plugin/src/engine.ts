@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import type { YaakdocConfig } from "@yaakdoc/config";
 import kiseki from "@yaakdoc/theme-kiseki";
 import {
+  assertNoDiagnosticErrors,
   emptyOutDir,
   publicAsset,
   resolveContext,
@@ -66,6 +67,7 @@ export async function buildSite(options: BuildOptions): Promise<BuildSummary> {
 
   const { outDir, base } = context.config;
 
+  assertNoDiagnosticErrors(context);
   await emptyOutDir(outDir, context.root);
 
   for (const [file, content] of Object.entries(files)) {

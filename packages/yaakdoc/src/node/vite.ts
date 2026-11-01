@@ -40,6 +40,7 @@ export async function createViteConfig(
     cacheDir,
     plugins: [yaakdocPlugin(getContext, extra.onSsrUpdate), ...themePlugins],
     resolve: { alias: styleAliases(context) },
+    css: { postcss: postcssConfig(context.theme.root) },
     oxc: {
       jsx: { runtime: "automatic", importSource: "react" },
     },
@@ -73,6 +74,34 @@ export async function createViteConfig(
       },
     },
   };
+}
+
+const POSTCSS_CONFIGS = [
+  ".postcssrc",
+  ".postcssrc.json",
+  ".postcssrc.yaml",
+  ".postcssrc.yml",
+  ".postcssrc.js",
+  ".postcssrc.cjs",
+  ".postcssrc.mjs",
+  ".postcssrc.ts",
+  "postcss.config.js",
+  "postcss.config.cjs",
+  "postcss.config.mjs",
+  "postcss.config.ts",
+  "postcss.config.cts",
+  "postcss.config.mts",
+];
+
+/**
+ * The theme's own PostCSS config, if its folder has one; otherwise none. Vite would search upward
+ * from the project root and pick up a host app's config (e.g. Next.js's `["@tailwindcss/postcss"]`
+ * form, which Vite can't even load), although themes build their CSS with Vite plugins.
+ */
+function postcssConfig(themeRoot: string): string | { plugins: [] } {
+  return POSTCSS_CONFIGS.some((file) => existsSync(join(themeRoot, file)))
+    ? themeRoot
+    : { plugins: [] };
 }
 
 /**

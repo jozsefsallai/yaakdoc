@@ -20,7 +20,7 @@ export type WorkerRequest =
 export type WorkerResponse =
   | { type: "ready"; url: string }
   | { type: "done"; outDir: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; stack?: string | undefined };
 
 export type DocsWorker = {
   /** URL of the docs dev server, including the mount path. */
@@ -74,9 +74,17 @@ function runWorker(request: WorkerRequest) {
   });
 
   const response = new Promise<WorkerResponse>((resolve, reject) => {
-    child.once("message", (message: WorkerResponse) =>
-      message.type === "error" ? reject(new Error(message.message)) : resolve(message),
-    );
+    child.once("message", (message: WorkerResponse) => {
+      if (message.type !== "error") {
+        resolve(message);
+        return;
+      }
+
+      // Keep the worker's stack, so the error points at where it happened.
+      const error = new Error(message.message);
+      if (message.stack) error.stack = message.stack;
+      reject(error);
+    });
 
     child.once("error", reject);
 

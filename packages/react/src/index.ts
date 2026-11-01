@@ -39,6 +39,8 @@ export {
   type CodeExamplesProps,
   ResponseExamples,
   type ResponseExamplesProps,
+  ResponseHeaders,
+  type ResponseHeadersProps,
   statusClass,
 } from "./primitives/code";
 export {

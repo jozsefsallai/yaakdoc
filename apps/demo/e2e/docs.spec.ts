@@ -257,6 +257,22 @@ test("example responses are tabbed by status", async ({ page, request }) => {
   expect(markdown).toContain("### 404 Not Found");
 });
 
+test("example responses show their headers above the body", async ({ page, request }) => {
+  await page.goto("/reference/");
+
+  const panel = page.locator('#authentication-log-in [data-yd="response-examples"]');
+  await panel.getByRole("tab", { name: "429 Too Many Requests" }).click();
+
+  const visible = panel.locator("[data-yd-tab-panel]").filter({ visible: true });
+  await expect(visible.locator('[data-yd="response-headers"]')).toContainText("Retry-After");
+  await expect(visible.locator('[data-yd="response-headers"]')).toContainText("30");
+  await expect(visible.locator("pre")).toContainText("rate_limited");
+  await expect(visible.locator("pre")).not.toContainText("Retry-After");
+
+  const markdown = await (await request.get("/reference/authentication/log-in.md")).text();
+  expect(markdown).toContain("```http\nRetry-After: 30\nX-RateLimit-Limit: 5");
+});
+
 test.describe("custom pages", () => {
   test("the home page is the introduction, without JavaScript too", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });

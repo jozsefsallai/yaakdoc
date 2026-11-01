@@ -32,7 +32,7 @@ export function selectEnvironment(
       const available = workspace.environments.map((env) => `"${env.name}"`).join(", ");
 
       throw new Error(
-        `Environment "${preference}" not found in workspace "${workspace.name}".${available ? ` Available: ${available}.` : ""}`,
+        `Environment "${preference}" not found in workspace "${workspace.name}". ${available ? `Available: ${available}.` : "The workspace has no environments."}`,
       );
     }
 

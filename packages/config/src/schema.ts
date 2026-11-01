@@ -24,8 +24,18 @@ export const logoSchema = z.union([
       .string()
       .optional()
       .meta({ description: "Where clicking the logo leads. Defaults to the docs home." }),
-    width: z.number().optional(),
-    height: z.number().optional(),
+    width: z.number().optional().meta({
+      description:
+        "Width of the logo in pixels. Reserves space while it loads; the theme sizes the logo from its height.",
+    }),
+    height: z.number().optional().meta({
+      description:
+        "Height of the logo in pixels. Kiseki shows the logo at this height (default 24, at most 40).",
+    }),
+    showTitle: z.boolean().optional().meta({
+      description:
+        "Whether to show the site title next to the logo (default: `true`). Set it to `false` when the logo already contains the name.",
+    }),
   }),
 ]);
 
@@ -220,7 +230,10 @@ export const configSchema = z
     server: z
       .object({
         port: z.number().int().min(0).max(65535).default(4000),
-        host: z.union([z.boolean(), z.string()]).default(false),
+        host: z.union([z.boolean(), z.string()]).default(false).meta({
+          description:
+            "Interface the dev and preview servers listen on: `false` for the local machine only (127.0.0.1), `true` for all interfaces, or an address.",
+        }),
         open: z.boolean().default(false),
       })
       .prefault({}),

@@ -5,6 +5,7 @@ import type { ResolvedConfig, YaakdocConfig } from "@yaakdoc/config";
 import { loadConfig } from "@yaakdoc/config/node";
 import {
   buildSearchIndex,
+  type Diagnostic,
   findWorkspace,
   isUrl,
   normalize,
@@ -90,6 +91,8 @@ export type Context = {
   watchFiles: string[];
   /** Directories whose Markdown files trigger a rebuild when added, changed or removed. */
   watchDirs: string[];
+  /** Problems found in the export, e.g. invalid example responses. Errors fail the build. */
+  diagnostics: Diagnostic[];
 };
 
 /** Loads config, export and theme, and prepares everything needed to render the site. */
@@ -102,25 +105,58 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     ...(options.overrides ? { overrides: options.overrides } : {}),
   });
 
+  /** Runs `run`, adding where the config value `key` was set to the message of its errors. */
+  const explain = <T>(key: keyof YaakdocConfig, run: () => T): T => {
+    const origin =
+      options.overrides?.[key] !== undefined
+        ? `Set by the \`${key}\` option.`
+        : configFile
+          ? `Set by \`${key}\` in ${configFile}.`
+          : null;
+
+    const annotate = (error: unknown) => {
+      if (origin && error instanceof Error) {
+        error.message = `${error.message}\n${origin}`;
+      }
+
+      throw error;
+    };
+
+    try {
+      const result = run();
+      return (result instanceof Promise ? result.catch(annotate) : result) as T;
+    } catch (error) {
+      return annotate(error);
+    }
+  };
+
   const exportPath =
     options.exportData === undefined ? (config.export ?? (await detectExport(root))) : null;
-  const rawExport = exportPath ? await readExport(exportPath) : options.exportData;
+  const rawExport = exportPath
+    ? await (config.export
+        ? explain("export", () => readExport(exportPath))
+        : readExport(exportPath))
+    : options.exportData;
 
   const source = normalize(rawExport);
 
-  const workspace = findWorkspace(source, config.workspace);
+  const workspace = explain("workspace", () => findWorkspace(source, config.workspace));
+
+  const { environment: preferred, environments: selectable } = config;
 
   const environments =
-    config.environments === "public"
+    selectable === "public"
       ? workspace.environments.filter((env) => env.public)
-      : (config.environments ?? []).map((name) => selectEnvironment(workspace, name)!);
+      : explain("environments", () =>
+          (selectable ?? []).map((name) => selectEnvironment(workspace, name)!),
+        );
 
   const environment =
-    config.environment === false
+    preferred === false
       ? null
-      : config.environment === undefined && environments[0]
+      : preferred === undefined && environments[0]
         ? environments[0]
-        : selectEnvironment(workspace, config.environment);
+        : explain("environment", () => selectEnvironment(workspace, preferred));
 
   const pages = config.pagesDir ? await loadPagesDir(config.pagesDir) : [];
   const apiPath = config.apiPath ?? (pages.some((page) => page.id === "index") ? "reference" : "");
@@ -134,6 +170,7 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
 
   const assets = new Map<string, string>();
   const asset = (path: string | undefined) => publicAsset(path, config.base, assets);
+  const diagnostics: Diagnostic[] = [];
 
   const document = await prepareDocument({
     workspace,
@@ -152,6 +189,7 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
     highlight: renderer.highlight,
     examples: (request) => generateExamples(request, snippets),
     meta: { yaakVersion: source.yaakVersion, exportedAt: source.exportedAt },
+    onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
   });
 
   const site = await createSiteData(config, document, theme, asset, renderer.markdown);
@@ -235,6 +273,7 @@ export async function resolveContext(options: YaakdocOptions = {}): Promise<Cont
       ...assets.values(),
     ],
     watchDirs: config.pagesDir ? [config.pagesDir] : [],
+    diagnostics,
   };
 }
 
@@ -376,6 +415,7 @@ async function createSiteData(
       href: branding.logo.href ?? config.base,
       ...(branding.logo.width ? { width: branding.logo.width } : {}),
       ...(branding.logo.height ? { height: branding.logo.height } : {}),
+      ...(branding.logo.showTitle !== undefined ? { showTitle: branding.logo.showTitle } : {}),
     };
   }
 

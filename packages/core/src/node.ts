@@ -1,5 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { normalize, YaakExportError } from "./normalize";
 import type { YaakDocument } from "./types";
 
@@ -41,7 +41,7 @@ export async function readExport(path: string): Promise<unknown> {
         ? "file not found"
         : (error as Error).message;
 
-    throw new YaakExportError(`Could not read Yaak export ${basename(absolute)}: ${reason}`);
+    throw new YaakExportError(`Could not read the Yaak export at ${absolute}: ${reason}`);
   }
 }
 

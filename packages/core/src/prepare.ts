@@ -13,6 +13,7 @@ import { createSecretMatcher, formatTemplate, tokenizeTemplate } from "./templat
 import { walkTree } from "./tree";
 import type {
   CodeExample,
+  Diagnostic,
   EnvironmentDoc,
   Header,
   HttpBody,
@@ -66,6 +67,8 @@ export type PrepareOptions = {
   examples: (request: ResolvedRequest) => Array<Omit<CodeExample, "html">>;
   /** Export metadata passed through to the prepared document. */
   meta?: { yaakVersion?: string; exportedAt?: string | null };
+  /** Called for each problem found, e.g. an invalid example response. */
+  onDiagnostic?: (diagnostic: Diagnostic) => void;
 };
 
 export const REDACTED = "<redacted>";
@@ -161,8 +164,29 @@ export async function prepareDocument(options: PrepareOptions): Promise<Prepared
       examples,
       variants,
       responses: await Promise.all(
-        responses.map(async (response) => {
+        responses.map(async ({ invalidStatus, invalidJson, ...response }) => {
           const text = response.status ? statusText(response.status) : "";
+
+          const report = (severity: Diagnostic["severity"], message: string) =>
+            options.onDiagnostic?.({
+              severity,
+              message: `Request "${request.name}": ${message}`,
+              request: request.name,
+            });
+
+          if (invalidStatus !== undefined) {
+            report(
+              "error",
+              `invalid status "${invalidStatus}" in a response block (use an HTTP status code from 100 to 599).`,
+            );
+          }
+
+          if (invalidJson) {
+            report(
+              "warning",
+              `the ${response.status ?? "example"} response looks like JSON but doesn't parse. Fix it, or mark the block as \`jsonc\` if the comments are intentional.`,
+            );
+          }
 
           return {
             ...response,

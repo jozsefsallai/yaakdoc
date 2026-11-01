@@ -1,4 +1,4 @@
-import { cp, mkdtemp, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { createServer as createViteServer, type ViteDevServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDevServer, type YaakdocMiddleware, yaakdocMiddleware } from "../src/index";
+import { createRecoveringDevServer } from "../src/node/recover";
+import { freePort } from "../src/node/server";
 import { yaakdoc } from "../src/vite";
 import { FIXTURE_EXPORT, hostApp, pagesProject } from "./helpers";
 
@@ -92,6 +94,80 @@ describe("dev server with custom pages", () => {
 
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("New things.");
+  });
+});
+
+/** Fetches `url` as a page until it answers with `status`. */
+async function waitForStatus(url: string, status: number, timeout = 15_000) {
+  const start = Date.now();
+
+  for (;;) {
+    // Refused while a recovering server switches from its error page to the docs.
+    const response = await fetch(url, { headers: { accept: "text/html" } }).catch(() => null);
+
+    if (response?.status === status) {
+      return response;
+    }
+
+    if (Date.now() - start > timeout) {
+      throw new Error(`${url} still answers ${response?.status}`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
+describe("dev server with a broken export", () => {
+  let server: Awaited<ReturnType<typeof createDevServer>>;
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), "yaakdoc-test-"));
+    await cp(FIXTURE_EXPORT, join(dir, "yaak.json"));
+    server = await createDevServer({ cwd: dir, port: 0 });
+  });
+
+  afterAll(() => server?.close());
+
+  it("shows the error until the export is fixed", async () => {
+    await writeFile(join(dir, "yaak.json"), "{ not json");
+
+    const broken = await waitForStatus(server.url, 500);
+    expect(await broken.text()).toContain("Couldn't load the docs");
+
+    await cp(FIXTURE_EXPORT, join(dir, "yaak.json"));
+
+    expect(await (await waitForStatus(server.url, 200)).text()).toContain("Upload an image");
+  });
+});
+
+describe("recovering dev server (integrations)", () => {
+  it("serves an error page while the export is missing, then the docs", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "yaakdoc-test-"));
+    const port = await freePort();
+
+    const server = await createRecoveringDevServer({
+      cwd: dir,
+      port,
+      base: "/docs/",
+      overrides: { base: "/docs/", export: "./api/yaak.json" },
+      publicDir: false,
+    });
+
+    try {
+      expect(server.url).toBe(`http://localhost:${port}/docs/`);
+
+      const broken = await fetch(server.url, { headers: { accept: "text/html" } });
+      expect(broken.status).toBe(500);
+      expect(await broken.text()).toContain(join(dir, "api", "yaak.json"));
+
+      await mkdir(join(dir, "api"));
+      await cp(FIXTURE_EXPORT, join(dir, "api", "yaak.json"));
+
+      expect(await (await waitForStatus(server.url, 200)).text()).toContain("Upload an image");
+    } finally {
+      await server.close();
+    }
   });
 });
 

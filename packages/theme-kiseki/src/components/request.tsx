@@ -7,6 +7,7 @@ import {
   Html,
   Markdown,
   RequestUrl,
+  ResponseHeaders,
   statusClass,
   useThemeOptions,
 } from "@yaakdoc/react";
@@ -239,6 +240,11 @@ export function ResponsePanel({
           data-status={response.status ?? undefined}
           className="max-h-[28rem] overflow-auto"
         >
+          <ResponseHeaders
+            headers={response.headers}
+            className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 border-b border-code-panel-border px-4 py-3 font-mono text-xs [&>div]:contents [&_dt]:text-code-panel-foreground/55 [&_dd]:break-all [&_dd]:text-code-panel-foreground"
+          />
+
           {response.empty ? (
             <p className="p-4 text-xs text-code-panel-foreground/55 italic">No response body</p>
           ) : (

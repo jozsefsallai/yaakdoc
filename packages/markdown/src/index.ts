@@ -175,8 +175,14 @@ export function requestToMarkdown(
     parts.push(heading(level + 1, "Example responses"));
 
     for (const response of request.responses) {
+      const headers = response.headers.map((header) => `${header.name}: ${header.value}`);
+
       parts.push(
-        `${heading(level + 2, response.label)}\n\n${response.empty ? "No response body." : fence(response.code, response.language)}`,
+        [
+          heading(level + 2, response.label),
+          ...(headers.length > 0 ? [fence(headers.join("\n"), "http")] : []),
+          response.empty ? "No response body." : fence(response.code, response.language),
+        ].join("\n\n"),
       );
     }
   }

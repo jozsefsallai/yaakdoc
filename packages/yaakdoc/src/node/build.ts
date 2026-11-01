@@ -5,6 +5,7 @@ import type { Assets } from "@yaakdoc/react";
 import { glob } from "tinyglobby";
 import { type Manifest, build as viteBuild } from "vite";
 import { type Context, resolveContext, type YaakdocOptions } from "./context";
+import { assertNoDiagnosticErrors } from "./diagnostics";
 import { findFontPreloads } from "./fonts";
 import { VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
 import { assertSafeOutDir, type RenderEntry, withBase, writeSite } from "./site";
@@ -39,6 +40,7 @@ export async function build(options: YaakdocOptions = {}): Promise<BuildResult> 
 export async function buildWithContext(context: Context): Promise<BuildResult> {
   const outDir = context.config.outDir;
 
+  assertNoDiagnosticErrors(context);
   assertSafeOutDir(outDir, context.root);
 
   const { assets, ssrEntry } = await bundleTheme(context, outDir);

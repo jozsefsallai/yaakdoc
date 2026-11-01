@@ -21,6 +21,8 @@ import {
   resolveContext,
   type YaakdocOptions,
 } from "./context";
+import { warnDiagnostics } from "./diagnostics";
+import { errorPage, viteClientScript } from "./error-page";
 import { cssUrls, findFontPreloads } from "./fonts";
 import { styleEntries, VIRTUAL_CLIENT, VIRTUAL_SERVER } from "./plugin";
 import { CONTENT_TYPES, listen, type Middleware, serverUrl } from "./server";
@@ -67,27 +69,12 @@ export type DevServer = {
 export async function createDevServer(options: DevServerOptions = {}): Promise<DevServer> {
   const httpServer = createHttpServer();
 
-  const { middleware, vite, getContext, close } = await createDevMiddleware({
-    ...options,
-    hmr: {
-      server: httpServer,
-      ...(options.hmrClientPort ? { clientPort: options.hmrClientPort } : {}),
-    },
-  });
+  const dev = await createDevMiddleware({ ...options, hmr: devServerHmr(httpServer, options) });
+  const { vite, getContext, close } = dev;
 
   const { config } = getContext();
 
-  httpServer.on("request", (req: IncomingMessage, res: ServerResponse) =>
-    middleware(req, res, () => {
-      if ((req.url ?? "/").startsWith(config.base)) {
-        res.statusCode = 404;
-        res.end("Not found");
-      } else {
-        res.writeHead(302, { Location: config.base });
-        res.end();
-      }
-    }),
-  );
+  httpServer.on("request", devRequestHandler(dev));
 
   const host = options.host ?? config.server.host;
   const port = await listen(httpServer, options.port ?? config.server.port, host);
@@ -110,6 +97,33 @@ export async function createDevServer(options: DevServerOptions = {}): Promise<D
   };
 }
 
+/** HMR through the dev server's own HTTP server. */
+export function devServerHmr(
+  httpServer: Server,
+  options: Pick<DevServerOptions, "hmrClientPort">,
+): HmrOptions {
+  return {
+    server: httpServer,
+    ...(options.hmrClientPort ? { clientPort: options.hmrClientPort } : {}),
+  };
+}
+
+/** Serves the docs; other paths redirect to the docs' base. */
+export function devRequestHandler({ middleware, getContext }: DevMiddleware) {
+  return (req: IncomingMessage, res: ServerResponse) =>
+    middleware(req, res, () => {
+      const { base } = getContext().config;
+
+      if ((req.url ?? "/").startsWith(base)) {
+        res.statusCode = 404;
+        res.end("Not found");
+      } else {
+        res.writeHead(302, { Location: base });
+        res.end();
+      }
+    });
+}
+
 /**
  * The development server as a middleware, for mounting the docs inside another server: SSR, HMR
  * for theme code/CSS and reload on export changes, all under the configured base path.
@@ -118,6 +132,10 @@ export async function createDevMiddleware(
   options: DevMiddlewareOptions = {},
 ): Promise<DevMiddleware> {
   let context = await resolveContext(options);
+  warnDiagnostics(context);
+
+  /** Set while the export or config is broken after a change; the docs show it until it's fixed. */
+  let failure: Error | undefined;
 
   const getContext = () => context;
 
@@ -219,6 +237,18 @@ export async function createDevMiddleware(
           return;
         }
 
+        if (failure && (route || isHtmlRequest(req, pathname))) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.end(
+            errorPage(failure, {
+              title: "Couldn't load the docs",
+              script: viteClientScript(context.config.base),
+            }),
+          );
+          return;
+        }
+
         if (route || isHtmlRequest(req, pathname)) {
           const html = await render(route ?? context.notFound, req.url ?? "/");
           res.statusCode = route ? 200 : 404;
@@ -235,7 +265,12 @@ export async function createDevMiddleware(
 
         res.statusCode = 500;
         res.setHeader("Content-Type", "text/html; charset=utf-8");
-        res.end(errorPage(error as Error, context.config.base));
+        res.end(
+          errorPage(error as Error, {
+            title: "Render error",
+            script: viteClientScript(context.config.base),
+          }),
+        );
       }
     },
   );
@@ -271,6 +306,8 @@ export async function createDevMiddleware(
           }
 
           context = next;
+          failure = undefined;
+          warnDiagnostics(next);
 
           for (const file of next.watchFiles) {
             if (!watched.has(resolve(file))) {
@@ -293,6 +330,8 @@ export async function createDevMiddleware(
           fullReload();
         } catch (error) {
           consola.error((error as Error).message);
+          failure = error as Error;
+          fullReload();
         }
       }, 50);
     };
@@ -335,14 +374,4 @@ function wantsMarkdown(req: IncomingMessage) {
 
 function isHtmlRequest(req: IncomingMessage, pathname: string) {
   return (req.headers.accept ?? "").includes("text/html") && !extname(pathname);
-}
-
-const escapeHtml = (value: string) =>
-  value.replace(
-    /[&<>"]/g,
-    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]!,
-  );
-
-function errorPage(error: Error, base: string) {
-  return `<!doctype html><meta charset="utf-8"><title>yaakdoc error</title><style>body{font:14px/1.5 ui-monospace,monospace;padding:2rem;background:#1e1e2e;color:#f5e0dc}pre{white-space:pre-wrap;color:#f38ba8}</style><h1>Render error</h1><pre>${escapeHtml(error.stack ?? error.message)}</pre><script type="module" src="${base}@vite/client"></script>`;
 }

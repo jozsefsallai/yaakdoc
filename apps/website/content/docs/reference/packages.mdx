@@ -9,7 +9,7 @@ Most projects only need `yaakdoc`. The other packages are for themes, integratio
 | Package | Description |
 | --- | --- |
 | [`yaakdoc`](https://www.npmjs.com/package/yaakdoc) | The CLI, the [Node API](/docs/reference/node-api), the Vite-based engine, the [`yaakdoc/vite`](/docs/integrations/vite) plugin and [`yaakdocMiddleware`](/docs/integrations/node-middleware). |
-| [`@yaakdoc/next`](https://www.npmjs.com/package/@yaakdoc/next) | Serves the docs from a [Next.js](/docs/integrations/nextjs) app. |
+| [`@yaakdoc/next`](https://www.npmjs.com/package/@yaakdoc/next) | Serves the docs from a [Next.js](/docs/integrations/nextjs) app. Depends on the exact same `yaakdoc` version and includes its CLI. |
 | [`@yaakdoc/react`](https://www.npmjs.com/package/@yaakdoc/react) | Unstyled components, hooks, overrides, the island runtime and the theme contract. See [Writing a theme](/docs/theming/authoring). |
 | [`@yaakdoc/theme-kiseki`](https://www.npmjs.com/package/@yaakdoc/theme-kiseki) | [Kiseki](/docs/theming/kiseki), the default theme. |
 | [`@yaakdoc/config`](https://www.npmjs.com/package/@yaakdoc/config) | The config schema, `defineConfig` and the loader. |
@@ -19,6 +19,8 @@ Most projects only need `yaakdoc`. The other packages are for themes, integratio
 | `@yaakdoc/yaakdoc` | The [Yaak plugin](/docs/yaak-plugin), published to Yaak's plugin registry, not npm. |
 
 All public packages are released together and share one version number.
+
+`yaakdoc` depends on React and Vite itself, instead of using your project's copies. It's a build tool: it renders the docs in its own process, and the output is static HTML with small islands, so its React never mixes with your app's. That's also what lets `npx yaakdoc` work in a folder without `node_modules`.
 
 ## @yaakdoc/config
 

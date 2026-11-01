@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { normalize, prepareDocument, REDACTED, selectEnvironment, summarize } from "../src/index";
+import type { Diagnostic } from "../src/types";
 
 const ws = normalize(
   JSON.parse(readFileSync(new URL("./fixtures/current.json", import.meta.url), "utf8")),
@@ -116,6 +117,34 @@ describe("example responses", () => {
       ["200 OK", "json", "<pre>{}</pre>"],
       ["418", "text", "<pre>teapot</pre>"],
     ]);
+  });
+
+  it("report invalid status codes and broken JSON", async () => {
+    const withResponses = structuredClone(ws);
+    withResponses.requests.rq_get_product!.description =
+      "```response:2001\n{}\n```\n\n```response:200\n{ broken\n```";
+
+    const diagnostics: Diagnostic[] = [];
+    const doc = await prepare({
+      workspace: withResponses,
+      onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    });
+
+    const name = withResponses.requests.rq_get_product!.name;
+
+    expect(diagnostics.map((d) => [d.severity, d.request])).toEqual([
+      ["error", name],
+      ["warning", name],
+    ]);
+
+    expect(diagnostics[0]!.message).toContain('invalid status "2001"');
+
+    expect(doc.requests.rq_get_product!.responses[0]).toMatchObject({
+      status: null,
+      label: "Response",
+    });
+
+    expect(doc.requests.rq_get_product!.responses[0]).not.toHaveProperty("invalidStatus");
   });
 });
 

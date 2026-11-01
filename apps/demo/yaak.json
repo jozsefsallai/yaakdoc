@@ -320,7 +320,7 @@
         "method": "POST",
         "url": "${[ base_url ]}/auth/login",
         "sortPriority": 0,
-        "description": "Exchange user credentials for an access token.\n\nThe token expires after **1 hour**; use [Refresh token](#authentication-refresh-token) to get a new one.\n\n```response:200\n{\n  \"accessToken\": \"eyJhbGciOi...\",\n  \"refreshToken\": \"rt_8f2k...\",\n  \"expiresIn\": 3600\n}\n```\n\n```response:401\n{\n  \"error\": \"invalid_credentials\",\n  \"message\": \"Email or password is incorrect.\"\n}\n```",
+        "description": "Exchange user credentials for an access token.\n\nThe token expires after **1 hour**; use [Refresh token](#authentication-refresh-token) to get a new one.\n\n```response:200\n{\n  \"accessToken\": \"eyJhbGciOi...\",\n  \"refreshToken\": \"rt_8f2k...\",\n  \"expiresIn\": 3600\n}\n```\n\n```response:401\n{\n  \"error\": \"invalid_credentials\",\n  \"message\": \"Email or password is incorrect.\"\n}\n```\n\n```response:429\nRetry-After: 30\nX-RateLimit-Limit: 5\nX-RateLimit-Remaining: 0\n\n{\n  \"error\": \"rate_limited\",\n  \"message\": \"Too many login attempts. Try again in 30 seconds.\"\n}\n```",
         "headers": [
           {
             "enabled": true,

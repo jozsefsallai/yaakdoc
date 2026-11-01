@@ -50,7 +50,9 @@ export {
 } from "./request";
 export {
   extractResponses,
+  isStatusCode,
   type ResponseExampleSource,
+  type ResponseHeader,
   statusText,
 } from "./responses";
 export { type SanitizeOptions, sanitizeExport } from "./sanitize";

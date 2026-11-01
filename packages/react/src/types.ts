@@ -20,6 +20,8 @@ export type SiteLogo = {
   href: string;
   width?: number;
   height?: number;
+  /** Whether the title is shown next to the logo (default: `true`). */
+  showTitle?: boolean;
 };
 
 /** Site-wide, serializable data derived from the yaakdoc config and the export. */

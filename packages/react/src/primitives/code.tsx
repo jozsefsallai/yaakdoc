@@ -1,4 +1,4 @@
-import type { CodeExample, PreparedRequest } from "@yaakdoc/core";
+import type { CodeExample, PreparedRequest, ResponseExample } from "@yaakdoc/core";
 import { CopyButton } from "../islands/copy";
 import { TabList, tabGroupIds, tabPanelProps, visibleTabPanelSelector } from "../islands/tabs";
 import { overridable } from "../overrides";
@@ -139,6 +139,8 @@ export const ResponseExamples = overridable(
             data-status={response.status ?? undefined}
             data-status-class={statusClass(response.status)}
           >
+            <ResponseHeaders headers={response.headers} />
+
             {response.empty ? (
               <p data-yd="empty-response">No response body</p>
             ) : (
@@ -147,6 +149,32 @@ export const ResponseExamples = overridable(
           </div>
         ))}
       </section>
+    );
+  },
+);
+
+export type ResponseHeadersProps = {
+  headers: ResponseExample["headers"];
+  className?: string;
+};
+
+/** The headers of an example response, as a list of `name: value` pairs (nothing when none). */
+export const ResponseHeaders = overridable(
+  "ResponseHeaders",
+  function ResponseHeaders({ headers, className }: ResponseHeadersProps) {
+    if (headers.length === 0) {
+      return null;
+    }
+
+    return (
+      <dl data-yd="response-headers" className={className}>
+        {headers.map((header, index) => (
+          <div key={String(index)} data-yd="response-header">
+            <dt>{header.name}</dt>
+            <dd>{header.value}</dd>
+          </div>
+        ))}
+      </dl>
     );
   },
 );

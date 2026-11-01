@@ -168,6 +168,78 @@ describe("build (per-request pages, base path, branding)", () => {
   });
 });
 
+describe("build in a host app", () => {
+  it("ignores the host's PostCSS config", async () => {
+    // The standard Next.js + Tailwind 4 form, which Vite's PostCSS loader rejects. Vite searches up
+    // to the package root (the host's package.json).
+    const host = await mkdtemp(join(tmpdir(), "yaakdoc-host-"));
+    await writeFile(join(host, "package.json"), '{ "name": "host", "private": true }');
+    await writeFile(
+      join(host, "postcss.config.mjs"),
+      'export default { plugins: ["@tailwindcss/postcss"] };\n',
+    );
+
+    const docs = join(host, "docs", "api");
+    await mkdir(docs, { recursive: true });
+    await cp(FIXTURE_EXPORT, join(docs, "yaak.json"));
+
+    await build({ cwd: docs });
+
+    expect(existsSync(join(docs, "dist", "index.html"))).toBe(true);
+  });
+});
+
+describe("build errors", () => {
+  /** A project whose "Log in" request has `description` (the fixture's other requests are kept). */
+  async function projectWithDescription(description: string) {
+    const dir = await project();
+    const data = JSON.parse(await readFile(join(dir, "yaak.json"), "utf8"));
+    const login = data.resources.httpRequests.find((r: { id: string }) => r.id === "rq_login");
+    login.description = description;
+    await writeFile(join(dir, "yaak.json"), JSON.stringify(data));
+    return dir;
+  }
+
+  it("fails on an example response with an invalid status code", async () => {
+    const dir = await projectWithDescription("```response:2001\n{}\n```");
+
+    await expect(build({ cwd: dir })).rejects.toThrow(
+      /Request "Log in": invalid status "2001" in a response block/,
+    );
+    expect(existsSync(join(dir, "dist"))).toBe(false);
+  });
+
+  it("builds despite a broken JSON example (a warning)", async () => {
+    const dir = await projectWithDescription("```response:200\n{ broken\n```");
+    const { context } = await build({ cwd: dir });
+
+    expect(context.diagnostics).toEqual([
+      expect.objectContaining({ severity: "warning", request: "Log in" }),
+    ]);
+  });
+
+  it("names the export's full path and where it was set", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "yaakdoc-test-"));
+
+    await expect(
+      build({ cwd: dir, overrides: { export: "./docs/api/yaak.json" } }),
+    ).rejects.toThrow(
+      `Could not read the Yaak export at ${join(dir, "docs", "api", "yaak.json")}: file not found\nSet by the \`export\` option.`,
+    );
+  });
+
+  it("lists the environments and the config file for an unknown environment", async () => {
+    const dir = await project();
+    await writeFile(join(dir, "yaakdoc.config.json"), JSON.stringify({ environment: "Nope" }));
+
+    await expect(build({ cwd: dir })).rejects.toThrow(
+      new RegExp(
+        `Environment "Nope" not found in workspace ".+"\\. Available: ".+"\\.\\nSet by \`environment\` in ${join(dir, "yaakdoc.config.json").replaceAll("/", "\\/")}\\.`,
+      ),
+    );
+  });
+});
+
 describe("preview", () => {
   it("serves a built site", async () => {
     const dir = await project();
