@@ -11,7 +11,10 @@
       "@yaakdoc/next",
       "@yaakdoc/react",
       "@yaakdoc/snippets",
-      "@yaakdoc/theme-kiseki"
+      "@yaakdoc/theme-blueprint",
+      "@yaakdoc/theme-editorial",
+      "@yaakdoc/theme-kiseki",
+      "@yaakdoc/theme-terminal"
     ]
   ],
   "linked": [],

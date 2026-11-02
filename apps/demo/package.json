@@ -5,12 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "yaakdoc",
-    "build": "yaakdoc build",
+    "build": "yaakdoc build && pnpm build:themes",
     "preview": "yaakdoc preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:themes": "yaakdoc build -t terminal --base /terminal/ -o dist/terminal && yaakdoc build -t blueprint --base /blueprint/ -o dist/blueprint && yaakdoc build -t editorial --base /editorial/ -o dist/editorial",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@yaakdoc/theme-blueprint": "workspace:*",
+    "@yaakdoc/theme-editorial": "workspace:*",
+    "@yaakdoc/theme-terminal": "workspace:*",
+    "sharp": "^0.35.5",
     "yaakdoc": "workspace:*"
   }
 }

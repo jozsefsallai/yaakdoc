@@ -14,15 +14,18 @@ yaakdoc generates static, themable, LLM-friendly API documentation sites from [Y
 | `packages/markdown` | `@yaakdoc/markdown` | Markdown versions of pages, `llms.txt` and `llms-full.txt`. |
 | `packages/react` | `@yaakdoc/react` | Unstyled components, hooks, the override system, the island runtime and the theme contract (`./theme` is Node-safe). |
 | `packages/theme-kiseki` | `@yaakdoc/theme-kiseki` | The default theme (Tailwind CSS v4 + shadcn/ui). Ships TSX **source**; there's no build step. |
+| `packages/theme-blueprint` | `@yaakdoc/theme-blueprint` | An official theme: a technical drawing, with a title block, a sheet index and requests as schematics. Same stack and structure as Kiseki. |
+| `packages/theme-editorial` | `@yaakdoc/theme-editorial` | An official theme: magazine-style, with serif type, a masthead, numbered figures and side notes. Same stack and structure as Kiseki. |
+| `packages/theme-terminal` | `@yaakdoc/theme-terminal` | An official theme: monospace, a shell prompt, a file-tree sidebar and a tmux-style status line. Same stack and structure as Kiseki. |
 | `packages/yaakdoc` | `yaakdoc` | CLI (citty), Node API and the Vite-based engine (dev server, SSR, static build, eject, init). Also the integrations that mount the docs in other apps: `yaakdocMiddleware`, the `yaakdoc/vite` plugin and `yaakdoc/integration` (the worker launcher used by `@yaakdoc/next`). |
 | `packages/next` | `@yaakdoc/next` | `createNextYaakdoc(options)` returns `withYaakdoc(nextConfig)`, which serves the docs from a Next.js app. Never loads the engine in-process; it uses `yaakdoc/integration`'s worker. Built as ESM and CJS. |
 | `packages/yaak-plugin` | `@yaakdoc/yaakdoc` | The Yaak plugin (private; published to Yaak's registry with `yaak plugin publish`). Workspace actions that export the workspace and build it with a bundled engine (`yaakdoc/static` and a precompiled Kiseki), or with the yaakdoc CLI for other themes. |
 | `packages/tsconfig` | `@repo/tsconfig` | Shared tsconfigs (private). |
-| `apps/demo` | `demo` | Demo docs (`yaak.json`, `yaakdoc.config.json`) and the Playwright e2e tests. |
+| `apps/demo` | `demo` | Demo docs (`yaak.json`, `yaakdoc.config.json`) and the Playwright e2e tests. `pnpm build` also builds the demo with each official theme other than Kiseki under `dist/<theme>/`. |
 | `apps/next-demo` | `next-demo` | A Next.js app serving the demo docs at `/docs` with `@yaakdoc/next`, and its Playwright e2e tests. |
 | `apps/website` | `website` | The website (https://yaakdoc.dev): the landing page and the documentation. Next.js + Fumadocs; MDX pages in `content/docs`. |
 
-Package dependencies: config, snippets and markdown depend on core; react depends on core and config; theme-kiseki depends on react; yaakdoc depends on all of them; next depends on yaakdoc; the Yaak plugin bundles config and, through its prebuild, yaakdoc/static and Kiseki. Keep `@yaakdoc/core` free of the other packages, and don't add dependency cycles.
+Package dependencies: config, snippets and markdown depend on core; react depends on core and config; theme-kiseki and the other official themes (theme-blueprint, theme-editorial, theme-terminal) depend on react; yaakdoc depends on all of them; next depends on yaakdoc; the Yaak plugin bundles config and, through its prebuild, yaakdoc/static and Kiseki. Keep `@yaakdoc/core` free of the other packages, and don't add dependency cycles.
 
 ## Commands
 

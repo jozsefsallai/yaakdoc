@@ -1,0 +1,50 @@
+---
+title: Blueprint
+description: A technical-drawing theme with a title block, a sheet index and requests drawn as schematics.
+icon: DraftingCompass
+---
+
+**Blueprint** is an official yaakdoc theme that draws your API docs as technical drawings. It's built with [Tailwind CSS v4](https://tailwindcss.com) and Radix UI, and uses IBM Plex Sans and Mono, bundled locally, so it makes no external requests.
+
+[See it live](https://demo.yaakdoc.dev/blueprint/).
+
+```npm
+npm i -D @yaakdoc/theme-blueprint
+```
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "blueprint"
+}
+```
+
+- A header drawn as a title block, with the navigation tabs, the environment and the sheet number: the page's position among the pages in navigation order, with the API reference counting as one sheet.
+- The navigation as a numbered sheet index.
+- Requests drawn as schematics. Path parameters in the URL get numbered callouts, with a legend below.
+- Parameters, headers and variables as numbered parts lists, and code examples and responses in detail frames.
+- A drafting grid behind the content. Dark mode is a blueprint (white lines on blue), light mode a whiteprint (blue lines on white).
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "blueprint",
+  "themeOptions": {
+    "grid": true,
+    "sidebarWidth": "18rem",
+    "navOpenDepth": 2
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `grid` | `true` | Draw the drafting grid behind the content. |
+| `sidebarWidth` | `"18rem"` | Any CSS length. |
+| `navOpenDepth` | `2` | Folder levels expanded in the navigation by default. Folders that contain the current page or section are always open. |
+
+## Customizing
+
+- **Colors and fonts.** Use [`branding.colors` and `branding.fonts`](/docs/guides/branding). `branding.colors.background` replaces the blueprint blue, and the lines follow the foreground color.
+- **Small CSS tweaks.** Use [`branding.customCss`](/docs/guides/branding#custom-css).
+- **Everything else.** [Eject](/docs/theming/ejecting) the theme. It has the same structure as Kiseki.

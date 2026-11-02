@@ -1,0 +1,384 @@
+/*
+ * Editorial – a magazine-style yaakdoc theme.
+ *
+ * Colors are shadcn/ui-style tokens. Branding from yaakdoc.config.json arrives as `--yd-*` custom
+ * properties and takes precedence over the defaults below. Light is paper, dark a night-reading
+ * mode, both with `light-dark()`, driven by `color-scheme` (set from `data-theme` on <html>, or the
+ * OS setting without JavaScript).
+ */
+@import "tailwindcss" source(none);
+@source "./";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light dark;
+  --radius: 0.25rem;
+
+  --background: var(
+    --yd-color-background,
+    light-dark(oklch(0.982 0.008 85), oklch(0.205 0.008 65))
+  );
+  --foreground: var(--yd-color-foreground, light-dark(oklch(0.23 0.012 60), oklch(0.9 0.014 80)));
+  /* Oxblood, the classic accent of print. */
+  --primary: var(--yd-color-primary, light-dark(oklch(0.47 0.15 28), oklch(0.76 0.11 40)));
+  --primary-foreground: light-dark(oklch(0.99 0.004 85), oklch(0.2 0.01 60));
+  --brand-accent: var(--yd-color-accent, var(--primary));
+  --muted: light-dark(oklch(0.955 0.01 85), oklch(0.245 0.009 65));
+  --muted-foreground: light-dark(oklch(0.48 0.015 65), oklch(0.7 0.015 75));
+  --accent: light-dark(oklch(0.94 0.014 80), oklch(0.27 0.01 65));
+  --accent-foreground: var(--foreground);
+  --popover: light-dark(oklch(0.99 0.005 85), oklch(0.23 0.009 65));
+  --popover-foreground: var(--foreground);
+  --border: light-dark(oklch(0.87 0.012 80), oklch(0.33 0.01 65));
+  --rule: color-mix(in oklch, var(--foreground) 85%, transparent);
+  --input: var(--border);
+  --ring: color-mix(in oklch, var(--primary) 55%, transparent);
+
+  /* Method colors, muted to sit with the type. */
+  --method-get: light-dark(oklch(0.5 0.11 155), oklch(0.75 0.1 155));
+  --method-post: light-dark(oklch(0.48 0.12 250), oklch(0.75 0.09 245));
+  --method-put: light-dark(oklch(0.55 0.11 70), oklch(0.8 0.11 80));
+  --method-patch: light-dark(oklch(0.48 0.13 310), oklch(0.75 0.1 310));
+  --method-delete: light-dark(oklch(0.5 0.16 25), oklch(0.72 0.13 28));
+  --method-other: var(--muted-foreground);
+  --method-grpc: light-dark(oklch(0.48 0.09 195), oklch(0.76 0.08 195));
+  --method-ws: light-dark(oklch(0.48 0.1 225), oklch(0.76 0.08 225));
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-serif: var(
+    --yd-font-sans,
+    "Source Serif 4 Variable",
+    ui-serif,
+    Georgia,
+    Cambria,
+    "Times New Roman",
+    serif
+  );
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(
+    --yd-font-mono,
+    "JetBrains Mono Variable",
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-rule: var(--rule);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Small, letter-spaced sans-serif labels: kickers, captions, table heads. */
+@utility ed-kicker {
+  @apply font-sans text-[0.6875rem] font-semibold tracking-[0.16em] text-muted-foreground uppercase;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-pt-20 antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background font-serif text-foreground;
+    font-feature-settings: "kern", "liga", "onum";
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+@layer components {
+  /* Shiki dual themes: pick the variant matching the element's color scheme. */
+  .shiki,
+  .shiki span {
+    color: light-dark(var(--shiki-light), var(--shiki-dark));
+  }
+
+  /* Method colors as a custom property (used by badges and the contents). */
+  [data-method],
+  [data-yd="nav-link"] {
+    --method: var(--method-other);
+  }
+
+  [data-method="get"],
+  [data-yd="nav-link"]:has(> [data-method="get"]) {
+    --method: var(--method-get);
+  }
+
+  [data-method="post"],
+  [data-yd="nav-link"]:has(> [data-method="post"]) {
+    --method: var(--method-post);
+  }
+
+  [data-method="put"],
+  [data-yd="nav-link"]:has(> [data-method="put"]) {
+    --method: var(--method-put);
+  }
+
+  [data-method="patch"],
+  [data-yd="nav-link"]:has(> [data-method="patch"]) {
+    --method: var(--method-patch);
+  }
+
+  [data-method="delete"],
+  [data-yd="nav-link"]:has(> [data-method="delete"]) {
+    --method: var(--method-delete);
+  }
+
+  [data-method="grpc"],
+  [data-yd="nav-link"]:has(> [data-method="grpc"]) {
+    --method: var(--method-grpc);
+  }
+
+  [data-method="ws"],
+  [data-yd="nav-link"]:has(> [data-method="ws"]) {
+    --method: var(--method-ws);
+  }
+
+  /* Request URL parts */
+  [data-yd="url-variable"] {
+    @apply text-primary;
+  }
+
+  [data-yd="url-param"] {
+    @apply font-semibold text-primary italic;
+  }
+
+  /* Figures are numbered through the page: "Fig. 3". */
+  .ed-article {
+    counter-reset: figure;
+  }
+
+  .ed-figure {
+    counter-increment: figure;
+  }
+
+  .ed-figure-number::before {
+    content: "Fig. " counter(figure);
+    @apply mr-2 font-semibold text-foreground;
+  }
+
+  /* A drop cap on the first paragraph. */
+  .ed-dropcap > p:first-of-type::first-letter {
+    @apply float-left mt-1 mr-2 font-serif text-[4.1em] leading-[0.82] font-semibold text-primary;
+  }
+
+  /* Rendered Markdown */
+  .ed-prose {
+    @apply text-[1.125rem] leading-[1.7];
+
+    & > * + *,
+    & > [data-yd-env] > * + *,
+    & > * + [data-yd-env] > :first-child {
+      @apply mt-5;
+    }
+
+    & h1,
+    & h2,
+    & h3,
+    & h4 {
+      @apply mt-12 font-semibold tracking-tight text-foreground;
+    }
+
+    & h1 {
+      @apply text-3xl;
+    }
+
+    & h2 {
+      @apply text-2xl;
+    }
+
+    & h3 {
+      @apply text-xl italic;
+    }
+
+    & a {
+      @apply text-primary underline decoration-primary/35 decoration-1 underline-offset-[0.2em] hover:decoration-primary;
+    }
+
+    & strong {
+      @apply font-semibold;
+    }
+
+    & ul {
+      @apply list-disc pl-6 marker:text-primary;
+    }
+
+    & ol {
+      @apply list-decimal pl-6 marker:text-muted-foreground;
+    }
+
+    & li + li {
+      @apply mt-2;
+    }
+
+    & blockquote {
+      @apply border-l-2 border-primary pl-6 text-[1.25rem] text-muted-foreground italic;
+    }
+
+    & :not(pre) > code {
+      @apply rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.8em];
+    }
+
+    & pre {
+      @apply overflow-x-auto rounded-md bg-muted p-5 font-mono text-[0.8125rem] leading-6;
+    }
+
+    & table {
+      @apply w-full border-collapse border-y-2 border-rule font-sans text-sm;
+    }
+
+    & th {
+      @apply ed-kicker border-b border-rule px-3 py-2 text-left;
+    }
+
+    & td {
+      @apply border-b border-border px-3 py-2 align-top;
+    }
+
+    & hr {
+      @apply mx-auto my-12 w-24 border-rule;
+    }
+
+    & img {
+      @apply rounded-md;
+    }
+
+    & :is(h1, h2, h3, h4, h5, h6)[id] {
+      scroll-margin-top: var(--header-offset, 5rem);
+    }
+  }
+
+  /* The contents, set like a book's table of contents. */
+  .ed-contents {
+    @apply font-sans text-[0.8125rem];
+
+    & [data-yd="nav-list"][data-depth]:not([data-depth="0"]) {
+      @apply ml-3 pl-2;
+    }
+
+    & summary {
+      @apply flex cursor-pointer list-none items-center gap-1.5 py-1.5 font-serif text-[0.9375rem] font-semibold select-none hover:text-primary;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::after {
+        content: "+";
+        @apply ml-auto font-sans text-xs font-normal text-muted-foreground;
+      }
+    }
+
+    & details[open] > summary::after {
+      content: "–";
+    }
+
+    & [data-yd="nav-link"] {
+      @apply flex items-center gap-2 py-1 text-muted-foreground hover:text-foreground;
+    }
+
+    & [data-yd="nav-link"][aria-current] {
+      @apply font-medium text-primary;
+    }
+
+    & [data-yd="nav-link"][data-type="page"] {
+      @apply font-serif text-[0.9375rem];
+    }
+
+    & [data-yd="nav-label"] {
+      @apply min-w-0 truncate;
+    }
+
+    & [data-yd-nav-group] + [data-yd-nav-item],
+    & * + [data-yd-nav-group],
+    & [data-yd-nav-group] + [data-yd-nav-api] {
+      @apply mt-6;
+    }
+
+    & [data-yd="nav-group-title"] {
+      @apply ed-kicker mb-2 flex items-center gap-2 border-b border-rule pb-1.5 text-foreground;
+    }
+
+    & [data-yd-nav-group] > [data-yd="nav-list"] {
+      @apply m-0 p-0;
+    }
+  }
+
+  /* Tabs as the section names of the masthead */
+  .ed-sections {
+    & ul {
+      @apply flex h-full items-stretch justify-center gap-7 overflow-x-auto [scrollbar-width:none];
+    }
+
+    & li {
+      @apply flex;
+    }
+
+    & [data-yd="nav-tab"] {
+      @apply ed-kicker flex items-center gap-2 border-b-2 border-transparent whitespace-nowrap hover:text-foreground;
+    }
+
+    & [data-yd="nav-tab"][aria-current] {
+      @apply border-primary text-foreground;
+    }
+  }
+
+  /* Contents drawer off-canvas below wide screens */
+  .ed-drawer {
+    @media (width < 80rem) {
+      @apply invisible -translate-x-full transition-[translate,visibility] duration-200 motion-reduce:transition-none;
+
+      &[data-open="true"] {
+        @apply visible translate-x-0;
+      }
+    }
+  }
+
+  /* Code in figures */
+  :is([data-yd="code-examples"], [data-yd="response-examples"]) [data-yd-tab-panel] pre {
+    @apply m-0 overflow-x-auto px-5 py-4 font-mono text-[0.8125rem] leading-6;
+  }
+}

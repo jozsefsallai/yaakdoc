@@ -1,0 +1,57 @@
+---
+title: Terminal
+description: A monospace theme for CLI-first APIs, with a shell prompt, a file-tree sidebar and a tmux-style status line.
+icon: SquareTerminal
+---
+
+**Terminal** is an official yaakdoc theme for APIs whose users live in a terminal. It's built with [Tailwind CSS v4](https://tailwindcss.com) and Radix UI, and uses JetBrains Mono, bundled locally, so it makes no external requests.
+
+[See it live](https://demo.yaakdoc.dev/terminal/).
+
+```npm
+npm i -D @yaakdoc/theme-terminal
+```
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "terminal"
+}
+```
+
+- A shell prompt for the current page in the top bar, such as `acme-store-api:~/guides/authentication$`.
+- The navigation drawn as a file tree, and a folder's contents as an `ls -l` listing.
+- Code examples and example responses in tmux-style panes. Responses start with their status line, such as `HTTP/1.1 201 Created`.
+- A status line at the bottom with the navigation tabs as tmux windows, the environment switcher and the color mode.
+- Light ("paper") and dark ("phosphor") mode, following the system setting until the reader picks one.
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "terminal",
+  "themeOptions": {
+    "palette": "green",
+    "cursor": true,
+    "sidebarWidth": "19rem",
+    "navOpenDepth": 2
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `palette` | `"green"` | Phosphor color for prompts, links and highlights: `"green"`, `"amber"` or `"mono"`. A `branding.colors.primary` takes precedence. |
+| `cursor` | `true` | Show a blinking cursor after the prompt. It doesn't blink when the reader prefers reduced motion. |
+| `sidebarWidth` | `"19rem"` | Any CSS length. |
+| `navOpenDepth` | `2` | Folder levels expanded in the navigation by default. Folders that contain the current page or section are always open. |
+
+## Keyboard
+
+- <kbd>/</kbd> or <kbd>Cmd</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd> opens search.
+- <kbd>[</kbd> and <kbd>]</kbd> go to the previous and next page, in navigation order. They work on custom pages and the API reference overview, and not while you type in a field.
+
+## Customizing
+
+- **Colors and fonts.** Use [`branding.colors` and `branding.fonts`](/docs/guides/branding). Terminal uses the monospace font everywhere, so `branding.fonts.mono` replaces JetBrains Mono.
+- **Small CSS tweaks.** Use [`branding.customCss`](/docs/guides/branding#custom-css).
+- **Everything else.** [Eject](/docs/theming/ejecting) the theme. It has the same structure as Kiseki.

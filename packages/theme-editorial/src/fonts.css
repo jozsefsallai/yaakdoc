@@ -1,0 +1,10 @@
+/*
+ * Source Serif 4 (with italics), Inter and JetBrains Mono, bundled locally. Loaded as a stylesheet
+ * (not from the client script) so the font faces are declared in <head>. The latin files are
+ * preloaded, and `font-display` is set to `optional` (`preloadFonts` and `fontDisplay()` in
+ * theme.ts), so text never switches fonts after rendering.
+ */
+@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/source-serif-4/wght-italic.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";

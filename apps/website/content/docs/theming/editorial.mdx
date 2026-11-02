@@ -1,0 +1,51 @@
+---
+title: Editorial
+description: A magazine-style theme for prose-heavy APIs, with serif type, a masthead, numbered figures and side notes.
+icon: Newspaper
+---
+
+**Editorial** is an official yaakdoc theme for APIs that are mostly prose: guides, concepts and long descriptions. It's built with [Tailwind CSS v4](https://tailwindcss.com) and Radix UI, and uses Source Serif 4, Inter and JetBrains Mono, bundled locally, so it makes no external requests.
+
+[See it live](https://demo.yaakdoc.dev/editorial/).
+
+```npm
+npm i -D @yaakdoc/theme-editorial
+```
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "editorial"
+}
+```
+
+- A masthead with the site's name and description, and the navigation tabs as its sections.
+- Serif type in a comfortable reading column, with a drop cap on the overview's introduction.
+- A table of contents next to the content on wide screens, and in a drawer on smaller ones.
+- Code examples and example responses as numbered figures with captions.
+- Parameters and headers as side notes in the margin on very wide screens, and inline below the request otherwise.
+- Light ("paper") and dark ("night reading") mode, following the system setting until the reader picks one.
+
+## Options
+
+```json title="yaakdoc.config.json"
+{
+  "theme": "editorial",
+  "themeOptions": {
+    "measure": "68ch",
+    "dropCap": true,
+    "navOpenDepth": 2
+  }
+}
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `measure` | `"68ch"` | Width of the reading column (any CSS length). |
+| `dropCap` | `true` | Start the overview's introduction with a drop cap. |
+| `navOpenDepth` | `2` | Folder levels expanded in the contents by default. Folders that contain the current page or section are always open. |
+
+## Customizing
+
+- **Colors and fonts.** Use [`branding.colors` and `branding.fonts`](/docs/guides/branding). `branding.fonts.sans` replaces the serif reading font, and `branding.fonts.mono` the code font. Labels and buttons stay in Inter.
+- **Small CSS tweaks.** Use [`branding.customCss`](/docs/guides/branding#custom-css).
+- **Everything else.** [Eject](/docs/theming/ejecting) the theme. It has the same structure as Kiseki.
