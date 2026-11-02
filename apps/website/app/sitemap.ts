@@ -5,6 +5,7 @@ import { source } from "@/lib/source";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: site.url, changeFrequency: "weekly", priority: 1 },
+    { url: new URL("/themes", site.url).toString(), changeFrequency: "daily", priority: 0.8 },
     ...source.getPages().map((page) => ({
       url: new URL(page.url, site.url).toString(),
       changeFrequency: "weekly" as const,

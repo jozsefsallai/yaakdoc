@@ -10,7 +10,7 @@ export function baseOptions(): BaseLayoutProps {
     githubUrl: site.github,
     links: [
       { text: "Docs", url: "/docs", active: "nested-url" },
-      { text: "Themes", url: "/docs/theming", active: "nested-url" },
+      { text: "Themes", url: "/themes", active: "nested-url" },
       { text: "Demo", url: site.demo, external: true },
     ],
   };

@@ -43,13 +43,13 @@ Point the package's main export at the manifest, and ship the source. Themes are
 }
 ```
 
-- **Keywords.** Add `yaakdoc-theme`, so the theme can be found on npm.
+- **Keywords.** Add `yaakdoc-theme`, so the theme can be found on npm and shows up in the [theme gallery](/themes). The gallery refreshes hourly.
 - **Dependencies.** List what your theme imports (e.g. `@yaakdoc/react`, Tailwind CSS) in `dependencies`. React is provided by yaakdoc.
 - **README.** Document your `themeOptions`, and add a screenshot.
 
 ## Theme metadata
 
-Add a `yaakdoc` field to `package.json`:
+Add a `yaakdoc` field to `package.json`. The [theme gallery](/themes) uses it for the theme's card:
 
 ```json title="package.json"
 {

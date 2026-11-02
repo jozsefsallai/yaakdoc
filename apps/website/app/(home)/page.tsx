@@ -20,6 +20,7 @@ import { CopyCommand } from "@/components/home/copy-command";
 import { Screenshot, ThemedImage } from "@/components/home/screenshot";
 import { ShowcaseVideo } from "@/components/home/showcase-video";
 import { LogoMark, Wordmark } from "@/components/logo";
+import { ThemeCard } from "@/components/themes/theme-card";
 import { cn } from "@/lib/cn";
 import { site } from "@/lib/site";
 import { getThemes } from "@/lib/themes";
@@ -38,7 +39,7 @@ function Snippet({ code, lang, title }: { code: string; lang: string; title?: st
 }
 
 export default async function HomePage() {
-  const themes = await getThemes();
+  const themes = (await getThemes()).filter((theme) => theme.official);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -590,52 +591,7 @@ function Themes({ themes }: { themes: Awaited<ReturnType<typeof getThemes>> }) {
     >
       <div className="grid gap-6 md:grid-cols-2">
         {themes.map((theme) => (
-          <article
-            key={theme.package}
-            className="flex flex-col overflow-hidden rounded-xl border bg-fd-card"
-          >
-            {theme.preview ? (
-              <div className="border-b">
-                <ThemedImage
-                  light={theme.preview.light}
-                  dark={theme.preview.dark}
-                  alt={`${theme.displayName} theme`}
-                  sizes="(min-width: 768px) 560px, 100vw"
-                />
-              </div>
-            ) : null}
-
-            <div className="flex flex-1 flex-col gap-2 p-6">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-lg">{theme.displayName}</h3>
-                {theme.official ? (
-                  <span className="rounded-full border px-2 py-0.5 text-fd-muted-foreground text-xs">
-                    Default
-                  </span>
-                ) : null}
-              </div>
-
-              <p className="text-fd-muted-foreground text-sm">{theme.description}</p>
-
-              <code className="mt-1 w-fit rounded bg-fd-muted px-1.5 py-0.5 text-xs">
-                "theme": "{theme.shortName}"
-              </code>
-
-              <div className="mt-auto flex gap-4 pt-4 text-sm">
-                {theme.docs ? <DocsLink href={theme.docs}>Docs</DocsLink> : null}
-
-                {theme.demo ? (
-                  <a
-                    href={theme.demo}
-                    className="mt-4 inline-flex items-center gap-1.5 font-medium text-fd-primary hover:underline"
-                  >
-                    Demo
-                    <ArrowUpRight className="size-3.5" />
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </article>
+          <ThemeCard key={theme.package} theme={theme} sizes="(min-width: 768px) 560px, 100vw" />
         ))}
 
         <article className="flex flex-col justify-center gap-4 rounded-xl border border-dashed p-8">
@@ -655,6 +611,7 @@ function Themes({ themes }: { themes: Awaited<ReturnType<typeof getThemes>> }) {
           <div className="flex flex-wrap gap-x-5">
             <DocsLink href="/docs/theming/authoring">Writing a theme</DocsLink>
             <DocsLink href="/docs/theming/publishing">Publishing</DocsLink>
+            <DocsLink href="/themes">Browse all themes</DocsLink>
           </div>
         </article>
       </div>
