@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/theme-terminal",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Terminal - a monospace yaakdoc theme with a shell prompt, a file-tree sidebar and a tmux-style status line.",
   "type": "module",
   "exports": {
