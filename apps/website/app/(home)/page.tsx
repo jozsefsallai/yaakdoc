@@ -88,13 +88,13 @@ function Hero() {
     <section className="overflow-hidden">
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pt-16 text-center sm:px-6 md:pt-24">
         <Link
-          href="/docs/yaak-plugin"
+          href="/themes"
           className="mb-8 inline-flex items-center gap-2 rounded-full border bg-fd-card/60 py-1 pr-3 pl-1 text-fd-muted-foreground text-sm backdrop-blur transition-colors hover:text-fd-foreground"
         >
           <span className="rounded-full bg-yd-blue/15 px-2 py-0.5 font-medium text-xs text-yd-blue">
             New
           </span>
-          Build your docs right from Yaak with the plugin
+          yaakdoc theme gallery
           <ArrowRight className="size-3.5" />
         </Link>
 
