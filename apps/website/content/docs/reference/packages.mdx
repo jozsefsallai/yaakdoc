@@ -21,7 +21,7 @@ Most projects only need `yaakdoc`. The other packages are for themes, integratio
 | [`@yaakdoc/markdown`](https://www.npmjs.com/package/@yaakdoc/markdown) | Markdown versions of pages, `llms.txt` and `llms-full.txt`. |
 | `@yaakdoc/yaakdoc` | The [Yaak plugin](/docs/yaak-plugin), published to Yaak's plugin registry, not npm. |
 
-All npm packages are released together and share one version number. The Yaak plugin has versions of its own.
+The npm packages are released together and share one version number, except Terminal, Blueprint and Editorial: like any other theme, they have versions of their own and work with the yaakdoc versions their `@yaakdoc/react` range allows. The Yaak plugin has versions of its own too.
 
 `yaakdoc` depends on React and Vite itself, instead of using your project's copies. It's a build tool: it renders the docs in its own process, and the output is static HTML with small islands, so its React never mixes with your app's. That's also what lets `npx yaakdoc` work in a folder without `node_modules`.
 

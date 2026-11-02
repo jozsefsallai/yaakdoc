@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/theme-editorial",
-  "version": "0.6.0",
+  "version": "0.0.0",
   "description": "Editorial - a magazine-style yaakdoc theme with serif type, a masthead, numbered figures and side notes.",
   "type": "module",
   "exports": {

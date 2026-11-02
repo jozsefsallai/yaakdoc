@@ -1,6 +1,6 @@
 {
   "name": "@yaakdoc/theme-blueprint",
-  "version": "0.6.0",
+  "version": "0.0.0",
   "description": "Blueprint - a technical-drawing yaakdoc theme with a title block, a sheet index and requests drawn as schematics.",
   "type": "module",
   "exports": {
